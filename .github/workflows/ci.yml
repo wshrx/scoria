@@ -43,7 +43,17 @@ jobs:
           python tools/check_public_tree.py
           python tools/check_public_tree.py --history
       - name: Test offline research tooling
-        run: python -m unittest discover -s tests -v
+        run: |
+          set +e
+          python -m unittest discover -s tests -v 2>&1 | tee /tmp/unittest.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            # The log is only readable with a token; put the tail in an annotation so the
+            # failing test is visible on the run page.
+            message=$(tail -80 /tmp/unittest.log | tr '\n' ' ' | sed 's/%/%25/g')
+            echo "::error title=Python tests failed::${message}"
+          fi
+          exit "$status"
       - name: Install Rust toolchain and the ALSA and udev headers the client links against
         if: steps.rust.outputs.required != 'false'
         run: |
