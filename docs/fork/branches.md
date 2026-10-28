@@ -32,9 +32,17 @@ A change that cannot fast-forward (because `main` moved) goes back to `dev` with
 
 ## Hosting
 
-`origin` is `git@github.com:wshrx/scoria.git`; `upstream` stays Horizon for engine updates.
-Pushes to `main`, `dev` and `nightly` go to GitHub. No agent-checkpoint tooling is part of the
-repository any more.
+| Remote | Where | Carries |
+|---|---|---|
+| `origin` | Entire, `/et/redmoon/scoria` (private) | everything: `main`, `dev`, `nightly`, feature branches, tags |
+| `github` | `git@github.com:wshrx/scoria.git` (public) | only `main` and `nightly` |
+| `upstream` | Horizon | the engine, for merges |
+
+- `git push` goes to **Entire** (`remote.pushDefault = origin`).
+- `git push github` sends exactly `main` and `nightly` (the configured `remote.github.push`
+  refspecs), from any branch; it never publishes `dev`.
+- Tags stay on Entire; push one to GitHub only when a release needs it.
+- `flint-ui` is a different repository (the UI), on GitHub and Entire; it is not the launcher.
 
 ## Notes
 

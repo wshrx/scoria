@@ -4,7 +4,8 @@ Scoria is a fork of [Horizon](https://github.com/horizon-rust/horizon): Minecraf
 written in Rust, with a launcher that plays without a Microsoft account.
 
 - **Upstream:** `upstream` = `https://github.com/horizon-rust/horizon.git`. Never commit to it.
-- **This repository:** `origin` = `git@github.com:wshrx/scoria.git` (GitHub).
+- **This repository:** `origin` = Entire `/et/redmoon/scoria` (everything), `github` =
+  `git@github.com:wshrx/scoria.git` (`main` and `nightly` only).
 - **Licence:** MIT, as upstream (see `LICENSE` and `THIRD_PARTY_NOTICES.md`). Scoria's own changes
   are MIT too. Minecraft is a trademark of Mojang Synergies AB; Scoria is unofficial and ships no
   Mojang code, assets or data.
@@ -35,6 +36,8 @@ session file (`docs/microsoft-account.md`, "Handing the session to the game").
 - [adr/0003-launcher-ui-flint-ui.md](adr/0003-launcher-ui-flint-ui.md): the launcher UI waits for
   flint-ui.
 - [adr/0004-rename-to-scoria.md](adr/0004-rename-to-scoria.md): Basalt becomes Scoria.
+- [adr/0005-two-remotes.md](adr/0005-two-remotes.md): Entire keeps everything, GitHub gets
+  `main` and `nightly`.
 - [branches.md](branches.md): `main`, `dev`, `nightly` and the merge/test rules.
 - Upstream docs stay authoritative for the engine: [`docs/README.md`](../README.md),
   [`AGENTS.md`](../../AGENTS.md), [`docs/parity-workflow.md`](../parity-workflow.md).
