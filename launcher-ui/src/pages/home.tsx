@@ -6,7 +6,6 @@ import type { DownloadProgress, Snapshot } from "../api"
 import { downloadMinecraft, play, prepare } from "../api"
 import { useT } from "../i18n"
 import { BONE, CHROME_MUTED, Meter } from "../visual"
-import type { Page } from "../shell"
 
 function megabytes(bytes: number): string {
   if (bytes >= 1_000_000_000) return `${(bytes / 1e9).toFixed(1)} GB`
@@ -16,11 +15,9 @@ function megabytes(bytes: number): string {
 export function HomePage({
   data,
   onRefresh,
-  onPage,
 }: {
   data: Snapshot
   onRefresh: () => void
-  onPage: (page: Page) => void
 }) {
   const theme = useTheme()
   const t = useT()
@@ -245,25 +242,9 @@ export function HomePage({
         <Text mono size="xs" style={{ color: CHROME_MUTED }}>
           {`${t("Worlds")} · ${data.worlds.length}`}
         </Text>
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => onPage("instances")}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            height: 24,
-            paddingLeft: 8,
-            paddingRight: 8,
-            borderRadius: 999,
-            cursor: "pointer",
-            hover: { backgroundColor: "#FFFFFF14" },
-          }}
-        >
-          <Text mono size="xs" style={{ color: CHROME_MUTED }}>
-            {`${t("Instances")} · ${data.instances.length}`}
-          </Text>
-        </div>
+        <Text mono size="xs" style={{ color: CHROME_MUTED }}>
+          {`${t("Instances")} · ${data.instances.length}`}
+        </Text>
         <div style={{ flexGrow: 1 }} />
       </div>
     </div>

@@ -90,7 +90,7 @@ export function App() {
       <LangProvider lang={data.language === "ru" ? "ru" : "en"}>
         <Fonts />
         <Shell page={page} onPage={setPage} data={data} frameless={frameless}>
-          {page === "home" ? <HomePage data={data} onRefresh={refresh} onPage={setPage} /> : null}
+          {page === "home" ? <HomePage data={data} onRefresh={refresh} /> : null}
           {page === "instances" ? <InstancesPage data={data} onRefresh={refresh} /> : null}
           {page === "servers" ? <ServersPage /> : null}
           {page === "settings" ? (
