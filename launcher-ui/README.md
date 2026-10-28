@@ -47,6 +47,10 @@ SCORIA_UI_HEADLESS=1 bun app.tsx
 | `select_version` | `{ "tag": "v0.2.93" }` | the version list |
 | `remove_version` | `{ "tag": "v0.2.93" }` | the version list |
 | `install_latest` | — | installs the newest release from `sources.json` |
+| `servers` | — | the selected instance's servers.dat |
+| `add_server` | `{ "name": "SMP", "ip": "host:port" }` | the server list |
+| `remove_server` | `{ "index": 0 }` | the server list |
+| `set_language` | `{ "value": "en"\|"ru"\|"system" }` | the new state |
 
 The engine is stateless between calls; it reads the same `accounts.json`, `settings.json` and
 instances the CLI does.
@@ -55,6 +59,7 @@ instances the CLI does.
 
 - **Home**: Play, Prepare, worlds.
 - **Instances**: release, ported packs, modpacks; which are prepared.
-- **Settings**: offline name, launcher behaviour, dark appearance.
+- **Servers**: the instance's servers.dat; join, add, remove. Offline-mode only.
+- **Settings**: offline name, launcher behaviour, appearance, versions, language (EN/RU).
 
 There is no Microsoft account anywhere: offline profiles are the only identity.

@@ -1,14 +1,16 @@
 import { useState } from "react"
 import { Icon, Text, useTheme } from "@/lib/flint"
+import { useT } from "../i18n"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { Snapshot } from "../api"
 import { play, prepare } from "../api"
 import { Terrain } from "../terrain"
 
-/** Overview: one loud version, one Play, then the worlds as a list. */
+/** Overview: one loud {t("version")}, one Play, then the worlds as a list. */
 export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () => void }) {
   const theme = useTheme()
+  const t = useT()
   const [note, setNote] = useState<string | null>(null)
   const [log, setLog] = useState<string | null>(null)
   const [busy, setBusy] = useState<"play" | "prepare" | null>(null)
@@ -35,11 +37,11 @@ export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () =>
               <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-end", gap: 12, marginTop: 6 }}>
                 <Text style={{ fontSize: 50, lineHeight: 52, fontWeight: "700" }}>{data.version}</Text>
                 <Badge variant={data.prepared ? "success" : "secondary"} dot>
-                  {data.prepared ? "ready" : "needs preparing"}
+                  {t(data.prepared ? "ready" : "needs preparing")}
                 </Badge>
               </div>
               <Text size="sm" tone="muted" style={{ marginTop: 10, maxWidth: 520 }}>
-                Your own Minecraft files, prepared locally. No account, no session, no telemetry.
+                {t("Your own Minecraft files, prepared locally. No account, no session, no telemetry.")}
               </Text>
               <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, marginTop: 22 }}>
                 <Button
@@ -54,7 +56,7 @@ export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () =>
                   }}
                 >
                   <Icon name="play" size={14} color={theme.colors.primaryForeground} />
-                  <Text style={{ color: theme.colors.primaryForeground }}>Play</Text>
+                  <Text style={{ color: theme.colors.primaryForeground }}>{t("Play")}</Text>
                 </Button>
                 <Button
                   size="lg"
@@ -70,7 +72,7 @@ export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () =>
                     })
                   }}
                 >
-                  Prepare
+                  {t("Prepare")}
                 </Button>
                 <div style={{ flexGrow: 1 }} />
                 <Text mono size="xs" tone="muted">
@@ -95,14 +97,14 @@ export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () =>
                 flexShrink: 0,
               }}
             >
-              <Text mono size="xs" tone="muted">PLAYING AS</Text>
+              <Text mono size="xs" tone="muted">{t("Playing as").toUpperCase()}</Text>
               <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6 }}>
                 <Badge variant="success" dot>offline</Badge>
                 <Text size="md" weight="semibold">{data.offlineName}</Text>
               </div>
-              <Text mono size="xs" tone="muted" style={{ marginTop: 18 }}>PROFILE</Text>
+              <Text mono size="xs" tone="muted" style={{ marginTop: 18 }}>{t("PROFILE")}</Text>
               <Text size="xs" tone="muted">Local name and skin, kept in accounts.json.</Text>
-              <Text mono size="xs" tone="muted" style={{ marginTop: 18 }}>FILES</Text>
+              <Text mono size="xs" tone="muted" style={{ marginTop: 18 }}>{t("FILES")}</Text>
               <Text size="xs" tone="muted">Freesm / Prism / official install, detected automatically.</Text>
             </div>
           </div>
@@ -110,14 +112,14 @@ export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () =>
         </div>
 
         <div style={{ display: "flex", flexDirection: "row", alignItems: "baseline", gap: 10 }}>
-          <Text size="lg" weight="semibold">Worlds</Text>
+          <Text size="lg" weight="semibold">{t("Worlds")}</Text>
           <Text mono size="xs" tone="muted">{data.worlds.length} SAVES</Text>
         </div>
 
         <div style={panel}>
           {data.worlds.length === 0 ? (
             <div style={{ padding: 20 }}>
-              <Text size="sm" tone="muted">No worlds yet. Play and create one.</Text>
+              <Text size="sm" tone="muted">{t("No worlds yet. Play and create one.")}</Text>
             </div>
           ) : (
             data.worlds.map((world, index) => (
@@ -140,7 +142,7 @@ export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () =>
                 }}
                 onClick={() => {
                   setNote(null)
-                  void play(world.name).then(setNote)
+                  void play({ world: world.name }).then(setNote)
                 }}
               >
                 <div
@@ -170,7 +172,7 @@ export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () =>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16, width: 280, flexShrink: 0 }}>
         <div style={{ ...panel, padding: 16, gap: 10 }}>
-          <Text mono size="xs" tone="muted">PROFILE</Text>
+          <Text mono size="xs" tone="muted">{t("PROFILE")}</Text>
           <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
             <div
               style={{
@@ -191,16 +193,16 @@ export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () =>
               <Text mono size="xs" tone="muted">OFFLINE</Text>
             </div>
           </div>
-          <Text size="xs" tone="muted">No Microsoft account. Online-mode servers are out of scope.</Text>
+          <Text size="xs" tone="muted">{t("No Microsoft account. Online-mode servers are out of scope.")}</Text>
         </div>
 
         <div style={{ ...panel, padding: 16, gap: 8 }}>
-          <Text mono size="xs" tone="muted">ENGINE</Text>
+          <Text mono size="xs" tone="muted">{t("ENGINE")}</Text>
           {[
-            ["version", data.version],
-            ["branch", data.branch],
-            ["resources", data.prepared ? "prepared" : "missing"],
-            ["mode", data.live ? "live" : "preview"],
+            [t("version"), data.version],
+            [t("branch"), data.branch],
+            [t("resources"), data.prepared ? t("prepared") : t("missing")],
+            [t("mode"), data.live ? t("live") : t("preview")],
           ].map(([key, value]) => (
             <div key={key} style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
               <Text size="xs" tone="muted">{key}</Text>
@@ -210,9 +212,9 @@ export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () =>
         </div>
 
         <div style={{ ...panel, padding: 16, gap: 6 }}>
-          <Text mono size="xs" tone="muted">NO ACCOUNT</Text>
+          <Text mono size="xs" tone="muted">{t("NO ACCOUNT")}</Text>
           <Text size="xs" tone="muted">
-            LAN, offline-mode servers and Play with friends work. The game never receives a session.
+            {t("LAN, offline-mode servers and Play with friends work. The game never receives a session.")}
           </Text>
         </div>
       </div>

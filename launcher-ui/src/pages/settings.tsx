@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import type { Snapshot } from "../api"
 import { installLatest, removeVersion, selectVersion, setOfflineName, setWhilePlaying, versions, type VersionInfo } from "../api"
+import { useT } from "../i18n"
 
 const MODES: { value: "stay" | "minimize" | "hide"; label: string }[] = [
   { value: "stay", label: "Stay" },
@@ -19,13 +20,16 @@ export function SettingsPage({
   dark,
   onToggleTheme,
   onRefresh,
+  onLanguage,
 }: {
   data: Snapshot
   dark: boolean
   onToggleTheme: () => void
   onRefresh: () => void
+  onLanguage: (value: "en" | "ru" | "system") => void
 }) {
   const theme = useTheme()
+  const t = useT()
   const [name, setName] = useState(data.offlineName)
   const [note, setNote] = useState<string | null>(null)
   const [installed, setInstalled] = useState<VersionInfo[]>([])
@@ -54,10 +58,10 @@ export function SettingsPage({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 720 }}>
       <div style={panel}>
-        <Text mono size="xs" tone="muted">OFFLINE PROFILE</Text>
+        <Text mono size="xs" tone="muted">{t("OFFLINE PROFILE")}</Text>
         <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-end", gap: 10 }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, width: 260 }}>
-            <Label>Player name</Label>
+            <Label>{t("Player name")}</Label>
             <Input
               value={name}
               placeholder="Builder_1"
@@ -75,7 +79,7 @@ export function SettingsPage({
                 .catch((error: Error) => setNote(error.message))
             }}
           >
-            Save
+            {t("Save")}
           </Button>
           <Badge variant="success" dot>offline</Badge>
         </div>
@@ -86,8 +90,8 @@ export function SettingsPage({
       </div>
 
       <div style={panel}>
-        <Text mono size="xs" tone="muted">WHILE PLAYING</Text>
-        <Text size="xs" tone="muted">What this window does when the game starts.</Text>
+        <Text mono size="xs" tone="muted">{t("WHILE PLAYING")}</Text>
+        <Text size="xs" tone="muted">{t("What this window does when the game starts.")}</Text>
         <div style={{ display: "flex", flexDirection: "row", gap: 6 }}>
           {MODES.map((mode) => (
             <Button
@@ -100,7 +104,7 @@ export function SettingsPage({
                   .catch((error: Error) => setNote(error.message))
               }}
             >
-              {mode.label}
+              {t(mode.label)}
             </Button>
           ))}
         </div>
@@ -109,15 +113,15 @@ export function SettingsPage({
 
         <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 14 }}>
           <div style={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
-            <Text>Dark appearance</Text>
-            <Text size="xs" tone="muted">Basalt and ember; the light theme is warm paper.</Text>
+            <Text>{t("Dark appearance")}</Text>
+            <Text size="xs" tone="muted">{t("Basalt and ember; the light theme is warm paper.")}</Text>
           </div>
           <Switch checked={dark} onCheckedChange={() => onToggleTheme()} />
         </div>
       </div>
 
       <div style={panel}>
-        <Text mono size="xs" tone="muted">LAUNCHER</Text>
+        <Text mono size="xs" tone="muted">{t("LAUNCHER")}</Text>
         <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
           <Text size="xs" tone="muted">version</Text>
           <Text mono size="xs">{data.version}</Text>
@@ -137,8 +141,28 @@ export function SettingsPage({
       </div>
 
       <div style={panel}>
+        <Text mono size="xs" tone="muted">{t("LANGUAGE")}</Text>
+        <div style={{ display: "flex", flexDirection: "row", gap: 6 }}>
+          {[
+            ["en", "English"],
+            ["ru", "Русский"],
+            ["system", t("System")],
+          ].map(([value, label]) => (
+            <Button
+              key={value}
+              size="sm"
+              variant={data.language === value ? "secondary" : "ghost"}
+              onClick={() => onLanguage(value as "en" | "ru" | "system")}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div style={panel}>
         <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Text mono size="xs" tone="muted">VERSIONS</Text>
+          <Text mono size="xs" tone="muted">{t("VERSIONS")}</Text>
           <div style={{ flexGrow: 1 }} />
           <Button
             size="sm"
@@ -153,7 +177,7 @@ export function SettingsPage({
                 .catch((error: Error) => setNote(error.message))
             }}
           >
-            Install latest
+            {t("Install latest")}
           </Button>
         </div>
         {installed.length === 0 ? (
@@ -193,7 +217,7 @@ export function SettingsPage({
                       .catch((error: Error) => setNote(error.message))
                   }}
                 >
-                  Select
+                  {t("Select")}
                 </Button>
               )}
               <Button
@@ -213,7 +237,7 @@ export function SettingsPage({
                     .catch((error: Error) => setNote(error.message))
                 }}
               >
-                {confirming === version.tag ? "Confirm" : "Remove"}
+                {confirming === version.tag ? t("Confirm") : t("Remove")}
               </Button>
             </div>
           ))
@@ -221,7 +245,7 @@ export function SettingsPage({
       </div>
 
       <div style={panel}>
-        <Text mono size="xs" tone="muted">DATA</Text>
+        <Text mono size="xs" tone="muted">{t("DATA")}</Text>
         <Text size="xs" tone="muted">
           No telemetry, no consent screen, no analytics. The launcher talks to GitHub only when you
           ask for a build.

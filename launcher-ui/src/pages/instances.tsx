@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { Snapshot } from "../api"
 import { createInstance, selectInstance } from "../api"
+import { useT } from "../i18n"
 
 const KIND: Record<string, string> = {
   release: "release",
@@ -15,6 +16,7 @@ const KIND: Record<string, string> = {
 /** Every profile as a row; clicking one makes it what Play uses. */
 export function InstancesPage({ data, onRefresh }: { data: Snapshot; onRefresh: () => void }) {
   const theme = useTheme()
+  const t = useT()
   const [creating, setCreating] = useState(false)
   const [name, setName] = useState("")
   const [note, setNote] = useState<string | null>(null)
@@ -35,13 +37,13 @@ export function InstancesPage({ data, onRefresh }: { data: Snapshot; onRefresh: 
         <Text size="sm" tone="muted">Separate game folders, each with its own worlds, options and packs.</Text>
         <div style={{ flexGrow: 1 }} />
         <Button variant="ghost" size="sm" onClick={() => setCreating((value) => !value)}>
-          {creating ? "Cancel" : "New instance"}
+          {creating ? t("Cancel") : t("New instance")}
         </Button>
       </div>
 
       {creating ? (
         <div style={{ ...panel, padding: 14, gap: 10 }}>
-          <Text mono size="xs" tone="muted">NEW INSTANCE</Text>
+          <Text mono size="xs" tone="muted">NEW {t("INSTANCE")}</Text>
           <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
             <div style={{ width: 260 }}>
               <Input
@@ -63,7 +65,7 @@ export function InstancesPage({ data, onRefresh }: { data: Snapshot; onRefresh: 
                   .catch((error: Error) => setNote(error.message))
               }}
             >
-              Create
+              {t("Create")}
             </Button>
           </div>
           {note ? <Text size="xs" tone="muted">{note}</Text> : null}
@@ -85,10 +87,10 @@ export function InstancesPage({ data, onRefresh }: { data: Snapshot; onRefresh: 
             borderColor: theme.colors.border,
           }}
         >
-          <Text mono size="xs" tone="muted" style={{ flexGrow: 1 }}>INSTANCE</Text>
+          <Text mono size="xs" tone="muted" style={{ flexGrow: 1 }}>{t("INSTANCE")}</Text>
           <Text mono size="xs" tone="muted" style={{ width: 80 }}>MINECRAFT</Text>
-          <Text mono size="xs" tone="muted" style={{ width: 90 }}>KIND</Text>
-          <Text mono size="xs" tone="muted" style={{ width: 90 }}>STATUS</Text>
+          <Text mono size="xs" tone="muted" style={{ width: 90 }}>{t("KIND")}</Text>
+          <Text mono size="xs" tone="muted" style={{ width: 90 }}>{t("STATUS")}</Text>
         </div>
         {data.instances.map((instance, index) => (
           <div
@@ -119,7 +121,7 @@ export function InstancesPage({ data, onRefresh }: { data: Snapshot; onRefresh: 
             <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, minWidth: 0 }}>
               <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6 }}>
                 <Text weight="medium">{instance.name}</Text>
-                {instance.selected ? <Badge variant="outline">selected</Badge> : null}
+                {instance.selected ? <Badge variant="outline">{t("selected")}</Badge> : null}
               </div>
               <Text mono size="xs" tone="muted">{instance.id}</Text>
             </div>
@@ -127,7 +129,7 @@ export function InstancesPage({ data, onRefresh }: { data: Snapshot; onRefresh: 
             <Text size="xs" tone="muted" style={{ width: 90 }}>{KIND[instance.kind] ?? instance.kind}</Text>
             <div style={{ width: 90 }}>
               <Badge variant={instance.prepared ? "success" : "secondary"} dot>
-                {instance.prepared ? "ready" : "prepare"}
+                {t(instance.prepared ? "ready" : "prepare")}
               </Badge>
             </div>
             <Icon
@@ -142,7 +144,7 @@ export function InstancesPage({ data, onRefresh }: { data: Snapshot; onRefresh: 
       {note ? <Text size="xs" tone="muted">{note}</Text> : null}
 
       <div style={{ ...panel, padding: 16, gap: 6 }}>
-        <Text mono size="xs" tone="muted">DETECTED INSTALLS</Text>
+        <Text mono size="xs" tone="muted">{t("DETECTED INSTALLS")}</Text>
         <Text size="xs" tone="muted">
           The official launcher, Prism, Freesm, MultiMC and the Modrinth App are found automatically.
           Nothing is downloaded; preparation reads the files you already have.

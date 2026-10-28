@@ -79,6 +79,10 @@ fn dispatch(
         "select_version" => select_version(params),
         "remove_version" => remove_version(params),
         "install_latest" => install_latest(),
+        "servers" => servers(),
+        "add_server" => add_server(params),
+        "remove_server" => remove_server(params),
+        "set_language" => set_language(params),
         other => Err(format!("unknown method {other}")),
     }
 }
@@ -147,6 +151,7 @@ fn state() -> Result<Value, String> {
         "selectedInstance": instance.id,
         "appearance": appearance,
         "whilePlaying": settings.while_playing.name(),
+        "language": settings.language.map(|l| l.code()).unwrap_or("system"),
         "worlds": worlds,
         "instances": instances,
     }))
@@ -202,6 +207,9 @@ fn play(params: &Value) -> Result<Value, String> {
     crate::instances::apply(&mut cmd, &instance)?;
     if let Some(world) = params.get("world").and_then(Value::as_str) {
         cmd.arg("--world").arg(world);
+    }
+    if let Some(server) = params.get("server").and_then(Value::as_str) {
+        cmd.arg("--server").arg(server);
     }
     if let Some(name) = accounts.name_arg() {
         cmd.arg("--name").arg(name);
@@ -334,6 +342,61 @@ fn install_latest() -> Result<Value, String> {
         .ok_or("No build for this platform in the release feed.")?;
     backend::install_tag(&release.tag, false, |_| {})?;
     versions()
+}
+
+fn servers() -> Result<Value, String> {
+    let instance = crate::instances::selected();
+    let list = crate::server_list::List::load(&instance.home);
+    let servers: Vec<Value> = list
+        .servers()
+        .into_iter()
+        .enumerate()
+        .map(|(index, server)| json!({ "index": index, "name": server.name, "ip": server.ip }))
+        .collect();
+    Ok(json!({ "instance": instance.name, "servers": servers }))
+}
+
+fn add_server(params: &Value) -> Result<Value, String> {
+    let name = params
+        .get("name")
+        .and_then(Value::as_str)
+        .ok_or("add_server needs {\"name\": \"…\", \"ip\": \"…\"}")?;
+    let ip = params
+        .get("ip")
+        .and_then(Value::as_str)
+        .ok_or("add_server needs {\"name\": \"…\", \"ip\": \"…\"}")?;
+    let instance = crate::instances::selected();
+    let mut list = crate::server_list::List::load(&instance.home);
+    list.add(name, ip)?;
+    list.save(&instance.home)?;
+    servers()
+}
+
+fn remove_server(params: &Value) -> Result<Value, String> {
+    let index = params
+        .get("index")
+        .and_then(Value::as_u64)
+        .ok_or("remove_server needs {\"index\": 0}")? as usize;
+    let instance = crate::instances::selected();
+    let mut list = crate::server_list::List::load(&instance.home);
+    list.remove(index)?;
+    list.save(&instance.home)?;
+    servers()
+}
+
+fn set_language(params: &Value) -> Result<Value, String> {
+    use crate::i18n::Language;
+    let value = params
+        .get("value")
+        .and_then(Value::as_str)
+        .ok_or("set_language needs {\"value\": \"system|en|ru\"}")?;
+    let mut settings = backend::Settings::load();
+    settings.language = match value {
+        "system" | "default" => None,
+        code => Some(Language::parse(code).ok_or_else(|| format!("{code}: say system, en or ru"))?),
+    };
+    settings.save();
+    state()
 }
 
 fn set_offline_name(params: &Value) -> Result<Value, String> {

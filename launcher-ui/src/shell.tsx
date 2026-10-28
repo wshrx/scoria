@@ -1,20 +1,23 @@
 import type { ReactNode } from "react"
 import { Icon, Text, useTheme, type IconName } from "@/lib/flint"
+import { useT } from "./i18n"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { Snapshot } from "./api"
 
-export type Page = "home" | "instances" | "settings"
+export type Page = "home" | "instances" | "servers" | "settings"
 
 const NAV: { id: Page; label: string; icon: IconName }[] = [
   { id: "home", label: "Home", icon: "home" },
   { id: "instances", label: "Instances", icon: "layers" },
+  { id: "servers", label: "Servers", icon: "server" },
   { id: "settings", label: "Settings", icon: "sliders" },
 ]
 
 const TITLES: Record<Page, string> = {
   home: "Overview",
   instances: "Instances",
+  servers: "Servers",
   settings: "Settings",
 }
 
@@ -30,6 +33,7 @@ export interface ShellProps {
 /** A rail, a thin header and a page. The rail carries icons, not labels. */
 export function Shell({ page, onPage, dark, onToggleTheme, data, children }: ShellProps) {
   const theme = useTheme()
+  const t = useT()
 
   return (
     <div
@@ -87,7 +91,7 @@ export function Shell({ page, onPage, dark, onToggleTheme, data, children }: She
               key={item.id}
               variant="ghost"
               size="icon"
-              aria-label={item.label}
+              aria-label={t(item.label)}
               style={{
                 width: 40,
                 height: 40,
@@ -110,7 +114,7 @@ export function Shell({ page, onPage, dark, onToggleTheme, data, children }: She
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Toggle theme"
+          aria-label={t("Toggle theme")}
           style={{ width: 40, height: 40 }}
           onClick={onToggleTheme}
         >
@@ -140,11 +144,11 @@ export function Shell({ page, onPage, dark, onToggleTheme, data, children }: She
             tone="muted"
             style={{ fontFamily: theme.font.mono }}
           >
-            SCORIA / {TITLES[page].toUpperCase()}
+            SCORIA / {t(TITLES[page]).toUpperCase()}
           </Text>
           <div style={{ flexGrow: 1 }} />
           <Badge variant={data.live ? "success" : "secondary"} dot>
-            {data.live ? "engine" : "preview"}
+            {t(data.live ? "engine" : "preview")}
           </Badge>
           <Text mono size="xs" tone="muted">{data.version}</Text>
         </div>

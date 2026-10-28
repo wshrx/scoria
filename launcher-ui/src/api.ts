@@ -34,6 +34,7 @@ export interface Snapshot {
   offlineName: string
   selectedInstance: string
   appearance: "dark" | "light" | "system"
+  language: "en" | "fr" | "ru" | "system"
   whilePlaying: "stay" | "minimize" | "hide"
   worlds: World[]
   instances: Instance[]
@@ -47,6 +48,7 @@ const preview: Snapshot = {
   offlineName: "Builder_1",
   selectedInstance: "release",
   appearance: "dark",
+  language: "en",
   whilePlaying: "stay",
   worlds: [
     { name: "Survival", mode: "Survival", lastPlayed: "2 hours ago", size: "184 MB" },
@@ -191,11 +193,11 @@ export async function snapshot(): Promise<Snapshot> {
 }
 
 /** Starts the game. Returns the line the UI shows under the Play button. */
-export async function play(world?: string): Promise<string> {
+export async function play(options: { world?: string; server?: string } = {}): Promise<string> {
   try {
     const started = await call<{ pid: number; version: string; instance: string }>(
       "play",
-      world ? { world } : {},
+      options,
       30_000,
     )
     return `Started ${started.version} as ${started.instance} (pid ${started.pid}).`
@@ -273,4 +275,31 @@ export async function removeVersion(tag: string): Promise<void> {
 
 export async function installLatest(): Promise<void> {
   await call("install_latest", {}, 30 * 60_000)
+}
+
+
+export interface SavedServer {
+  index: number
+  name: string
+  ip: string
+}
+
+export async function savedServers(): Promise<SavedServer[]> {
+  const result = await call<{ instance: string; servers: SavedServer[] }>("servers", {}, 5000)
+  return result.servers
+}
+
+export async function addServer(name: string, ip: string): Promise<SavedServer[]> {
+  const result = await call<{ servers: SavedServer[] }>("add_server", { name, ip }, 5000)
+  return result.servers
+}
+
+export async function removeServer(index: number): Promise<SavedServer[]> {
+  const result = await call<{ servers: SavedServer[] }>("remove_server", { index }, 5000)
+  return result.servers
+}
+
+export async function setLanguage(value: "en" | "ru" | "system"): Promise<Snapshot> {
+  const state = await call<Omit<Snapshot, "live">>("set_language", { value }, 5000)
+  return { ...state, live: true }
 }

@@ -36,7 +36,8 @@ offline names are the primary identity since P1.
   `set_while_playing` and `backup_world` as JSON lines; `src/api.ts` spawns it and falls back to
   a preview snapshot when the binary is absent. The header says `engine` or `preview`.
 - The screens act: Play and world rows start the game, instance rows select, New instance works,
-  Settings persists appearance and the while-playing mode, Prepare reads Freesm/Prism/official
+  Servers joins/adds/removes servers.dat entries, Settings persists appearance, while-playing and
+  language, versions select/remove/install, Prepare streams its log from Freesm/Prism/official
   installs.
 - `bun run typecheck`, `bun run build` (106 MB) and the headless smoke pass.
 - Not yet: install/update of versions from the UI, packaging the UI beside the engine in releases,

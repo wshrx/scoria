@@ -3,12 +3,14 @@ import { existsSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { useGpuixRequired } from "@gpuix/react"
 import { Text, ThemeProvider, registerFlintFonts } from "@/lib/flint"
-import { setAppearance, snapshot, type Snapshot } from "./api"
+import { setAppearance, setLanguage, snapshot, type Snapshot } from "./api"
 import { Shell, type Page } from "./shell"
 import { HomePage } from "./pages/home"
 import { InstancesPage } from "./pages/instances"
+import { ServersPage } from "./pages/servers"
 import { SettingsPage } from "./pages/settings"
 import { scoriaDark, scoriaLight } from "./theme"
+import { LangProvider } from "./i18n"
 
 /** Fonts need a live renderer, so they are registered after the window exists. */
 function Fonts() {
@@ -59,6 +61,7 @@ export function App() {
 
   return (
     <ThemeProvider theme={theme}>
+      <LangProvider lang={data.language === "ru" ? "ru" : "en"}>
       <Fonts />
       <Shell
         page={page}
@@ -69,15 +72,20 @@ export function App() {
       >
         {page === "home" ? <HomePage data={data} onRefresh={refresh} /> : null}
         {page === "instances" ? <InstancesPage data={data} onRefresh={refresh} /> : null}
+        {page === "servers" ? <ServersPage /> : null}
         {page === "settings" ? (
           <SettingsPage
             data={data}
             dark={dark}
             onToggleTheme={toggleTheme}
             onRefresh={refresh}
+            onLanguage={(value) => {
+              void setLanguage(value).then(apply)
+            }}
           />
         ) : null}
       </Shell>
+      </LangProvider>
     </ThemeProvider>
   )
 }
