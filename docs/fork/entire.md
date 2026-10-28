@@ -11,8 +11,9 @@
   `/gh/<owner>/<repo>` (зеркало GitHub). Наш путь — **`/et/redmoon/basalt`**.
 - `git remote` указывает не на HTTPS, а на схему Entire:
   `entire://aws-eu-central-1.entire.io/et/redmoon/basalt`.
-- У нас **включён только хостинг**. Захват сессий (`entire enable`) не запускался:
-  `entire status` в репозитории отвечает `not set up`.
+- У нас включены и хостинг, и **checkpoints**: `entire enable --agent opencode` (2026-10-28).
+  `entire status` → `Enabled · branch main`, агент OpenCode, чекпоинты синхронизируются в
+  `origin` (Entire), backend — git refs (`refs/entire/checkpoints/…`).
 
 ## Что умеет
 
@@ -92,9 +93,14 @@ entire trail ...              # Trails и eval'ы
 
 - `origin` = Entire (`/et/redmoon/basalt`), `upstream` = Horizon. Push идёт в Entire,
   GitHub-зеркало можно добавить позже через `entire repo mirror add`.
-- Пока Entire — только удалённый хостинг; агентские сессии/чекпоинты не пишутся.
-- Если включим `entire enable`, получим аудит того, как AI писал код, но обязаны сначала
-  решить вопрос публичности транскриптов и проверить совместимость с `.githooks`.
+- Entire включён (`--agent opencode`): каждый коммит получает чекпоинт, а push в `origin`
+  отправляет и код, и сессии. Репозиторий на Entire **Private**, поэтому транскрипты не публичны.
+- `.githooks/pre-commit` (наш `check_public_tree.py`) сохранён и по-прежнему запускается;
+  Entire добавил `prepare-commit-msg`, `commit-msg`, `post-commit`, `post-rewrite` и обернул
+  `pre-push` (`pre-push.pre-entire`). После `git config core.hooksPath .githooks` всё это живёт
+  в `.githooks/`.
+- Отключить захват: `entire disable` (или `--uninstall`); остановить только выгрузку сессий:
+  `entire configure --local --skip-push-sessions`.
 - Для CI: push в GitHub-зеркало по-прежнему триггерит GitHub Actions; прямые push в
   Entire-native репозиторий — нет.
 
