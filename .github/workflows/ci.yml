@@ -50,7 +50,7 @@ jobs:
           if [ "$status" -ne 0 ]; then
             # The log is only readable with a token; put the tail in an annotation so the
             # failing test is visible on the run page.
-            message=$(tail -80 /tmp/unittest.log | tr '\n' ' ' | sed 's/%/%25/g')
+            message=$(grep -E '^(FAIL|ERROR):|^Ran [0-9]+ tests|^FAILED' /tmp/unittest.log | tail -20 | tr '\n' ' ' | sed 's/%/%25/g' | cut -c1-1800)
             echo "::error title=Python tests failed::${message}"
           fi
           exit "$status"
