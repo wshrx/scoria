@@ -87,7 +87,7 @@ if __name__ == "__main__":
     unittest.main()
 
 
-WORKFLOWS = Path(__file__).resolve().parents[1] / ".github" / "workflows"
+WORKFLOWS = Path(__file__).resolve().parents[1] / ".github" / "workflows-disabled"
 
 
 class UntrustedBuildTests(unittest.TestCase):

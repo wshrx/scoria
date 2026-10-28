@@ -205,7 +205,7 @@ impl Launcher {
                         summary.map_or_else(|| tr("Modpack").into(), |p| p.summary()),
                     )
                 }
-                InstanceKind::Pack => (false, tr("From Horizon's registry").into()),
+                InstanceKind::Pack => (false, tr("From Basalt's registry").into()),
             };
             let dot = matches!(i.kind, InstanceKind::Default | InstanceKind::Own).then(|| {
                 div()

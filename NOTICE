@@ -1,0 +1,17 @@
+Basalt
+======
+
+Basalt is a fork of Horizon (https://github.com/horizon-rust/horizon), MIT licensed.
+
+Upstream copyright and licence: see LICENSE. Basalt's changes are MIT licensed too.
+
+Basalt contains no Minecraft code, assets or data. It prepares game resources from an installation
+the player already has, and never downloads Mojang's files. Minecraft is a trademark of Mojang
+Synergies AB; Basalt is unofficial and not approved by or associated with Mojang or Microsoft.
+
+Upstream's own notice follows.
+
+---
+
+Horizon is MIT licensed for its original work only; dependencies keep their own licences.
+Third-party credits and licences are in THIRD_PARTY_NOTICES.md.

@@ -273,7 +273,8 @@ pub const SHADERS_ON_HORIZON: &str =
 /// soon: its API needs a paid key, so no search or install goes to it; `curseforge` is kept for
 /// then.
 pub fn sources() -> Vec<Box<dyn Source>> {
-    vec![Box::new(modrinth::Modrinth), Box::new(horizon::Registry)]
+    // Basalt: Horizon's registry is removed until Basalt runs its own (ADR-0001, P2).
+    vec![Box::new(modrinth::Modrinth)]
 }
 
 /// The source of that id, when this launcher can use it.

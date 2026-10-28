@@ -11,6 +11,9 @@ use crate::backend::{self, Release, ASSET};
 use crate::instances::{self, Instance};
 use horizon_release_sign::NIGHTLY;
 
+/// Whether Basalt ships a Nightly channel (off: Horizon's nightlies are not our builds).
+pub const BASALT_NIGHTLY: bool = false;
+
 /// The Nightly instance's id (its folder in `instances/`) and name.
 pub const INSTANCE: &str = "nightly";
 const NAME: &str = "Nightly";
@@ -46,6 +49,10 @@ fn is_date(text: &str) -> bool {
 
 /// The current nightly build, or None while there is none.
 pub fn latest() -> Result<Option<Release>, String> {
+    // Basalt: no Nightly channel. Horizon's `nightly` pre-release is not a Basalt build.
+    if !BASALT_NIGHTLY {
+        return Ok(None);
+    }
     let url = format!(
         "https://api.github.com/repos/{}/releases/tags/{NIGHTLY}",
         backend::REPO

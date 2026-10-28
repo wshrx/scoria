@@ -1,5 +1,9 @@
 # Third-party notices
 
+Basalt is a fork of Horizon (https://github.com/horizon-rust/horizon, MIT). Horizon's original work
+and its third-party notices are reproduced below unchanged.
+
+
 ## wgpu-hal
 
 `third_party/wgpu-hal` is [wgpu-hal](https://github.com/gfx-rs/wgpu) 30.0.1 by the gfx-rs
