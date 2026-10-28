@@ -4,7 +4,7 @@ Scoria is a fork of [Horizon](https://github.com/horizon-rust/horizon): Minecraf
 written in Rust, with a launcher that plays without a Microsoft account.
 
 - **Upstream:** `upstream` = `https://github.com/horizon-rust/horizon.git`. Never commit to it.
-- **This repository:** `origin` = `git@github.com:wshrx/flint-ui.git` (GitHub).
+- **This repository:** `origin` = `git@github.com:wshrx/scoria.git` (GitHub).
 - **Licence:** MIT, as upstream (see `LICENSE` and `THIRD_PARTY_NOTICES.md`). Scoria's own changes
   are MIT too. Minecraft is a trademark of Mojang Synergies AB; Scoria is unofficial and ships no
   Mojang code, assets or data.

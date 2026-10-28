@@ -32,7 +32,7 @@ A change that cannot fast-forward (because `main` moved) goes back to `dev` with
 
 ## Hosting
 
-`origin` is `git@github.com:wshrx/flint-ui.git`; `upstream` stays Horizon for engine updates.
+`origin` is `git@github.com:wshrx/scoria.git`; `upstream` stays Horizon for engine updates.
 Pushes to `main`, `dev` and `nightly` go to GitHub. No agent-checkpoint tooling is part of the
 repository any more.
 

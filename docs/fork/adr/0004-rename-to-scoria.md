@@ -48,5 +48,5 @@ under the same name.
 
 ## Later
 
-The repository moved again, from Entire to GitHub (`git@github.com:wshrx/flint-ui.git`); the
+The repository moved again, from Entire to GitHub (`git@github.com:wshrx/scoria.git`); the
 Entire repository and its checkpoint tooling were removed. The product name Scoria is unchanged.
