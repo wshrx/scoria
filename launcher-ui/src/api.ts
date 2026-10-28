@@ -21,9 +21,29 @@ export interface Instance {
   id: string
   name: string
   version: string
+  minecraft: string
   kind: "release" | "modpack" | "port"
   prepared: boolean
   selected: boolean
+}
+
+export interface FileCount {
+  done: number
+  total: number
+}
+
+/** Minecraft's files in Scoria's own folder, and where they come from. */
+export interface GameFiles {
+  version: string
+  path: string
+  source: string
+  manifestSha1: string | null
+  installed: boolean
+  manifest: boolean
+  client: boolean
+  libraries: FileCount
+  assets: FileCount
+  missingBytes: number
 }
 
 export interface Snapshot {
@@ -38,6 +58,7 @@ export interface Snapshot {
   whilePlaying: "stay" | "minimize" | "hide"
   worlds: World[]
   instances: Instance[]
+  minecraft: GameFiles
 }
 
 const preview: Snapshot = {
@@ -55,10 +76,22 @@ const preview: Snapshot = {
     { name: "Creative flat", mode: "Creative", lastPlayed: "yesterday", size: "12 MB" },
   ],
   instances: [
-    { id: "release", name: "Scoria", version: "26.3", kind: "release", prepared: true, selected: true },
-    { id: "atm10", name: "All the Mods 10", version: "26.3", kind: "modpack", prepared: false, selected: false },
-    { id: "ports", name: "YUNG's dungeons", version: "26.3", kind: "port", prepared: true, selected: false },
+    { id: "release", name: "Scoria", version: "v0.2.94", minecraft: "26.3", kind: "release", prepared: true, selected: true },
+    { id: "atm10", name: "All the Mods 10", version: "v0.2.94", minecraft: "26.3", kind: "modpack", prepared: false, selected: false },
+    { id: "ports", name: "YUNG's dungeons", version: "v0.2.94", minecraft: "26.3", kind: "port", prepared: true, selected: false },
   ],
+  minecraft: {
+    version: "26.3",
+    path: "~/.local/share/horizon-launcher/minecraft",
+    source: "https://piston-meta.mojang.com",
+    manifestSha1: "11f1aefe473eefba0af62e3286c33b692807b2eb",
+    installed: true,
+    manifest: true,
+    client: true,
+    libraries: { done: 114, total: 114 },
+    assets: { done: 2409, total: 2409 },
+    missingBytes: 0,
+  },
 }
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -206,15 +239,17 @@ export async function play(options: { world?: string; server?: string } = {}): P
   }
 }
 
-/** Prepares the selected version from the player's own Minecraft installation. */
+/** Prepares the selected version from the player's own Minecraft installation, downloading the
+ * pinned game files from Mojang first when they are not on this machine. */
 export async function prepare(
   instance?: string,
   onLog?: (line: string) => void,
+  download = true,
 ): Promise<string> {
   try {
     const result = await call<{ prepared: boolean; log: string[] }>(
       "prepare",
-      instance ? { instance } : {},
+      { ...(instance ? { instance } : {}), download },
       30 * 60_000,
       (event) => {
         if (event.event === "log" && typeof event.line === "string") onLog?.(event.line)
@@ -227,6 +262,28 @@ export async function prepare(
   } catch (error) {
     return `Preparation failed: ${(error as Error).message}`
   }
+}
+
+export interface DownloadProgress {
+  done: number
+  total: number
+}
+
+/** Downloads whatever Minecraft 26.3 is missing from Mojang's piston-meta. */
+export async function downloadMinecraft(
+  onLog?: (line: string) => void,
+  onProgress?: (progress: DownloadProgress) => void,
+): Promise<GameFiles> {
+  return call<GameFiles>("download_minecraft", {}, 60 * 60_000, (event) => {
+    if (event.event === "log" && typeof event.line === "string") onLog?.(event.line)
+    if (
+      event.event === "progress" &&
+      typeof event.done === "number" &&
+      typeof event.total === "number"
+    ) {
+      onProgress?.({ done: event.done, total: event.total })
+    }
+  })
 }
 
 /** Renames the offline profile through the engine (the same accounts.json the CLI uses). */

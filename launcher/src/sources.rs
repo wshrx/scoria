@@ -33,7 +33,7 @@ impl Pins {
         })
     }
 
-    fn manifest_accepted(&self, path: &Path) -> bool {
+    pub(crate) fn manifest_accepted(&self, path: &Path) -> bool {
         sha1_file(path).is_some_and(|sha1| self.manifests.contains(&sha1))
     }
 }

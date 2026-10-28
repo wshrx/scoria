@@ -20,6 +20,7 @@ pub mod launch;
 pub mod modpacks;
 pub mod mojang;
 pub mod packs;
+pub mod piston;
 pub mod process;
 pub mod proxy;
 pub mod screenshots;

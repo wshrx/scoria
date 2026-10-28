@@ -15,7 +15,7 @@ queue (the hub, or `/suggest` on Discord) rather than to issues, which are for b
 ## Build it
 
 You need Rust (stable), Python 3.10+, JDK 25, and on Linux the ALSA and udev headers (`libasound2-dev libudev-dev`).
-Horizon never downloads the game: it prepares its resources from your own copy of Minecraft 26.3, as described in
+The launcher prepares its resources from your own copy of Minecraft 26.3, or downloads that version from Mojang when there is none, as described in
 [Build from source](README.md#build-from-source).
 
 ```sh

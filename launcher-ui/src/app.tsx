@@ -7,6 +7,7 @@ import { setAppearance, setLanguage, snapshot, type Snapshot } from "./api"
 import { Shell, type Page } from "./shell"
 import { HomePage } from "./pages/home"
 import { InstancesPage } from "./pages/instances"
+import { FilesPage } from "./pages/files"
 import { ServersPage } from "./pages/servers"
 import { SettingsPage } from "./pages/settings"
 import { scoriaDark, scoriaLight } from "./theme"
@@ -27,7 +28,12 @@ function Fonts() {
 
 export function App() {
   const [dark, setDark] = useState(true)
-  const [page, setPage] = useState<Page>("home")
+  const [page, setPage] = useState<Page>(() => {
+    const requested = process.env.SCORIA_UI_PAGE
+    return requested === "instances" || requested === "files" || requested === "servers" || requested === "settings"
+      ? requested
+      : "home"
+  })
   const [data, setData] = useState<Snapshot | null>(null)
 
   const apply = (state: Snapshot) => {
@@ -72,6 +78,7 @@ export function App() {
       >
         {page === "home" ? <HomePage data={data} onRefresh={refresh} onPage={setPage} /> : null}
         {page === "instances" ? <InstancesPage data={data} onRefresh={refresh} /> : null}
+        {page === "files" ? <FilesPage data={data} onRefresh={refresh} /> : null}
         {page === "servers" ? <ServersPage /> : null}
         {page === "settings" ? (
           <SettingsPage

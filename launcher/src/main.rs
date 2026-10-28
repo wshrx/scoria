@@ -2082,8 +2082,8 @@ impl Launcher {
                     .child(play),
             );
 
-        // Scoria never downloads the game: preparation reads an installation the player already
-        // has (the official launcher, Prism, Freesm, MultiMC...).
+        // Preparation reads an installation the player already has (the official launcher,
+        // Prism, Freesm, MultiMC...), and downloads the pinned version from Mojang when none has it.
         let resources_value = backend::resources_summary(prepared, !silent, &version);
         let mut prepare = button(
             "prepare",

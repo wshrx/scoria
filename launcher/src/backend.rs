@@ -1348,8 +1348,7 @@ pub fn preparer(
             Ok(body)
         };
         let linked = data_dir().join("linked-minecraft");
-        // Scoria never downloads the game: the files come from an install the player already
-        // has, or preparation stops with the list of folders that were checked.
+        // Scoria downloads the pinned game from Mojang when no install on the machine has it.
         let resolved = sources::resolve(minecraft, &pins, &known, &linked, &fetch, log);
         if reused {
             assets_folder(resolved, &chosen, &version, log)
@@ -1357,7 +1356,23 @@ pub fn preparer(
             match resolved? {
                 sources::Resolved::Folder(dir) => dir,
                 sources::Resolved::NotFound(checked) => {
-                    return Err(sources::not_found(&version, &checked, minecraft));
+                    log(format!(
+                        "Minecraft {version} was not found; downloading it from Mojang"
+                    ));
+                    crate::mojang::CANCEL.store(false, std::sync::atomic::Ordering::Relaxed);
+                    let files = crate::piston::download(
+                        &pins,
+                        &own,
+                        crate::piston::JOBS,
+                        &fetch,
+                        &crate::mojang::CANCEL,
+                        log,
+                        &|_, _| {},
+                    )?;
+                    if !files.installed {
+                        return Err(sources::not_found(&version, &checked, minecraft));
+                    }
+                    own.clone()
                 }
             }
         }
@@ -1829,6 +1844,29 @@ pub fn remove_version(tag: &str) -> Result<(), String> {
 
 /// The Minecraft folder to prepare from: the one given, the one chosen in the launcher, or the
 /// official launcher's default. It may be absent when imported files can be reused.
+/// Scoria's own Minecraft folder, in the official launcher's layout. A version downloaded from
+/// piston-meta lands here; preparation reads it like any other install.
+pub fn minecraft_folder() -> PathBuf {
+    data_dir().join("minecraft")
+}
+
+/// The game files a version pins (`research-lock.json`).
+pub fn pins(tag: &str) -> Result<sources::Pins, String> {
+    read_json(&version_dir(tag).join("research-lock.json"))
+        .and_then(|lock| sources::Pins::read(&lock))
+        .ok_or_else(|| format!("{tag}'s research-lock.json doesn't pin the Minecraft files"))
+}
+
+/// A URL's body, through the player's proxy when one is set.
+pub fn fetch_bytes(url: &str) -> Result<Vec<u8>, String> {
+    let mut body = Vec::new();
+    get(url)?
+        .into_reader()
+        .read_to_end(&mut body)
+        .map_err(|e| e.to_string())?;
+    Ok(body)
+}
+
 pub fn minecraft_dir(requested: Option<PathBuf>) -> Result<PathBuf, String> {
     Ok(requested
         .or(Settings::load().minecraft_dir)

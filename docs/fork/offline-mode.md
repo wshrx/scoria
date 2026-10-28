@@ -8,14 +8,14 @@ Scoria starts the game without a Microsoft account. This page is the player-faci
 1. Install Scoria and open the launcher. Pick a name (3–16 letters, digits or `_`); that is your
    offline profile. It is kept in `accounts.json` next to the launcher's data, with the skins you
    choose for it.
-2. Press **Play**. No sign-in, no keychain, no network.
-3. If the game says it is not prepared, point the launcher at an installation of Minecraft: Java
-   Edition 26.3 you already have (see below) and press **Prepare** once.
+2. Press **Play**. No sign-in, no keychain, no account.
+3. If the game says it is not prepared, press **Prepare** once. Scoria reads an installation of
+   Minecraft: Java Edition 26.3 you already have, or downloads the pinned version from Mojang
+   (see below).
 
 ## Where the game files come from
 
-Scoria never downloads the game itself (client jar, libraries, assets). Preparation reads a copy
-you already installed, and
+Preparation first looks for a copy you already installed, and
 `launcher/src/sources.rs` looks in:
 
 - the official launcher (`~/.minecraft`, Flatpak included);
@@ -29,10 +29,14 @@ launcher's own runtime (`<root>/java/<runtime>`, or the `JavaPath` in an instanc
 `instance.cfg`); if there is none it can download Mojang's JDK (a JDK, not game content).
 Sounds are optional and come from the same installation.
 
-The 26.3 **server jar** is the one Mojang file preparation fetches (into
-`<launcher data>/server-jars/26.3.jar`) when it is not there yet; put it there yourself to avoid
-the download. There is no `--download` flag and no "download the game" button: the client jar,
-libraries and assets always come from your install.
+When none of those folders has 26.3, the launcher downloads it from Mojang's own metadata,
+piston-meta and piston-data (`launcher/src/piston.rs`), into `minecraft/` in its data folder in
+the official launcher's layout: the version file, the client jar, this system's libraries, the
+asset index and every asset object. Each file is checked against the size and sha1 Mojang lists,
+and a stopped download keeps what it finished. The same download is on the **Game files** page.
+
+The 26.3 **server jar** is the other Mojang file preparation fetches (into
+`<launcher data>/server-jars/26.3.jar`) when it is not there yet.
 
 ## No Microsoft account at all
 

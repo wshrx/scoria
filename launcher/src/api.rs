@@ -79,6 +79,8 @@ fn dispatch(
         "select_version" => select_version(params),
         "remove_version" => remove_version(params),
         "install_latest" => install_latest(),
+        "minecraft" => minecraft(),
+        "download_minecraft" => download_minecraft(id, params, emit),
         "servers" => servers(),
         "add_server" => add_server(params),
         "remove_server" => remove_server(params),
@@ -136,6 +138,7 @@ fn state() -> Result<Value, String> {
                 "id": i.id,
                 "name": i.name,
                 "version": short_version(&version),
+                "minecraft": short_version(&backend::game_version(&version)),
                 "kind": kind,
                 "prepared": backend::is_prepared(&version),
                 "selected": i.id == instance.id,
@@ -154,11 +157,19 @@ fn state() -> Result<Value, String> {
         "language": settings.language.map(|l| l.code()).unwrap_or("system"),
         "worlds": worlds,
         "instances": instances,
+        "minecraft": minecraft_json(&tag),
     }))
 }
 
 fn prepare(id: &Value, params: &Value, emit: &mut dyn FnMut(Value)) -> Result<Value, String> {
     let tag = requested_tag(params)?;
+    if params
+        .get("download")
+        .and_then(Value::as_bool)
+        .unwrap_or(false)
+    {
+        ensure_minecraft(&tag, id, emit)?;
+    }
     let settings = backend::Settings::load();
     let minecraft = backend::minecraft_dir(settings.minecraft_dir.clone())?;
     let log: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
@@ -342,6 +353,96 @@ fn install_latest() -> Result<Value, String> {
         .ok_or("No build for this platform in the release feed.")?;
     backend::install_tag(&release.tag, false, |_| {})?;
     versions()
+}
+
+/// The selected version's Minecraft files: what is on disk, and where they came from.
+fn minecraft() -> Result<Value, String> {
+    let tag = selected_tag()?;
+    Ok(minecraft_json(&tag))
+}
+
+fn minecraft_json(tag: &str) -> Value {
+    let dest = backend::minecraft_folder();
+    let pins = match backend::pins(tag) {
+        Ok(pins) => pins,
+        Err(error) => {
+            return json!({
+                "version": backend::game_version(tag),
+                "path": dest.display().to_string(),
+                "source": crate::piston::SOURCE,
+                "manifestSha1": null,
+                "installed": false,
+                "manifest": false,
+                "client": false,
+                "libraries": { "done": 0, "total": 0 },
+                "assets": { "done": 0, "total": 0 },
+                "missingBytes": 0,
+                "error": error,
+            });
+        }
+    };
+    let files = crate::piston::status(&pins, &dest);
+    json!({
+        "version": pins.version,
+        "path": dest.display().to_string(),
+        "source": crate::piston::SOURCE,
+        "manifestSha1": pins.manifests.first(),
+        "installed": files.installed,
+        "manifest": files.manifest,
+        "client": files.client,
+        "libraries": { "done": files.libraries.done, "total": files.libraries.total },
+        "assets": { "done": files.assets.done, "total": files.assets.total },
+        "missingBytes": files.missing_bytes,
+    })
+}
+
+fn download_minecraft(
+    id: &Value,
+    params: &Value,
+    emit: &mut dyn FnMut(Value),
+) -> Result<Value, String> {
+    let tag = requested_tag(params)?;
+    ensure_minecraft(&tag, id, emit)
+}
+
+/// Fetches from piston-meta whatever the version lacks; logs and progress go to the request.
+fn ensure_minecraft(tag: &str, id: &Value, emit: &mut dyn FnMut(Value)) -> Result<Value, String> {
+    let pins = backend::pins(tag)?;
+    let dest = backend::minecraft_folder();
+    if crate::piston::status(&pins, &dest).installed {
+        return Ok(minecraft_json(tag));
+    }
+    crate::mojang::CANCEL.store(false, std::sync::atomic::Ordering::Relaxed);
+    let log: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+    let events = std::cell::RefCell::new(emit);
+    let sink_log = log.clone();
+    let sink = |line: String| {
+        {
+            let mut log = sink_log.lock().unwrap();
+            log.push(line.clone());
+            if log.len() > 200 {
+                log.remove(0);
+            }
+        }
+        if let Ok(mut emit) = events.try_borrow_mut() {
+            emit(json!({ "id": id, "event": "log", "line": line }));
+        }
+    };
+    let progress = |done: usize, total: usize| {
+        if let Ok(mut emit) = events.try_borrow_mut() {
+            emit(json!({ "id": id, "event": "progress", "done": done, "total": total }));
+        }
+    };
+    crate::piston::download(
+        &pins,
+        &dest,
+        crate::piston::JOBS,
+        &|url| backend::fetch_bytes(url),
+        &crate::mojang::CANCEL,
+        &sink,
+        &progress,
+    )?;
+    Ok(minecraft_json(tag))
 }
 
 fn servers() -> Result<Value, String> {

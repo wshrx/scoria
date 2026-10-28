@@ -1,27 +1,19 @@
 import type { ReactNode } from "react"
 import { useWindowSize } from "@gpuix/react"
 import { Icon, Text, useTheme, type IconName } from "@/lib/flint"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import type { Snapshot } from "./api"
 import { useT } from "./i18n"
-import { gradient } from "./visual"
+import { Mark } from "./visual"
 
-export type Page = "home" | "instances" | "servers" | "settings"
+export type Page = "home" | "instances" | "files" | "servers" | "settings"
 
 const NAV: { id: Page; label: string; icon: IconName }[] = [
-  { id: "home", label: "Home", icon: "home" },
+  { id: "home", label: "Play", icon: "home" },
   { id: "instances", label: "Instances", icon: "layers" },
+  { id: "files", label: "Game files", icon: "hardDrive" },
   { id: "servers", label: "Servers", icon: "server" },
   { id: "settings", label: "Settings", icon: "sliders" },
 ]
-
-const TITLES: Record<Page, string> = {
-  home: "Overview",
-  instances: "Instances",
-  servers: "Servers",
-  settings: "Settings",
-}
 
 export interface ShellProps {
   page: Page
@@ -32,147 +24,184 @@ export interface ShellProps {
   children?: ReactNode
 }
 
-/** A floating rail, a hairline header, and a page on a warm basalt field. */
+/** A masthead, a wide sheet of content, and a hairline that keeps the window honest. */
 export function Shell({ page, onPage, dark, onToggleTheme, data, children }: ShellProps) {
   const theme = useTheme()
   const t = useT()
   const { width } = useWindowSize()
+  const compact = width < 1080
 
   return (
     <div
       style={{
         display: "flex",
-        flexDirection: "row",
+        flexDirection: "column",
         width: "100%",
         height: "100%",
-        background: gradient("#0C0908", "#060504", 160),
+        backgroundColor: theme.colors.background,
       }}
     >
       <div
         style={{
           display: "flex",
+          flexDirection: "row",
+          alignItems: "stretch",
+          height: 66,
+          flexShrink: 0,
+          paddingLeft: compact ? 20 : 32,
+          paddingRight: compact ? 16 : 28,
+          gap: compact ? 16 : 30,
+          borderBottomWidth: 1,
+          borderStyle: "solid",
+          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.background,
+        }}
+      >
+        <div
+          style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 11, cursor: "pointer" }}
+          onClick={() => onPage("home")}
+        >
+          <Mark size={24} />
+          <Text
+            style={{
+              fontSize: 16,
+              lineHeight: 20,
+              fontWeight: "700",
+              color: theme.colors.foreground,
+            }}
+          >
+            Scoria
+          </Text>
+          {compact ? null : (
+            <Text mono size="xs" tone="muted" style={{ marginLeft: 2 }}>
+              {data.minecraft.version}
+            </Text>
+          )}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "row", alignItems: "stretch", gap: 2, flexGrow: 1 }}>
+          {NAV.map((item) => {
+            const active = page === item.id
+            return (
+              <div
+                key={item.id}
+                role="tab"
+                tabIndex={0}
+                aria-selected={active}
+                onClick={() => onPage(item.id)}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 7,
+                  height: 66,
+                  paddingLeft: compact ? 10 : 13,
+                  paddingRight: compact ? 10 : 13,
+                  borderBottomWidth: 2,
+                  borderStyle: "solid",
+                  borderColor: active ? theme.colors.primary : "transparent",
+                  cursor: "pointer",
+                  hover: { backgroundColor: theme.colors.accent },
+                }}
+              >
+                <Icon
+                  name={item.icon}
+                  size={14}
+                  color={active ? theme.colors.primary : theme.colors.mutedForeground}
+                />
+                {compact ? null : (
+                  <Text
+                    size="sm"
+                    weight={active ? "semibold" : "regular"}
+                    style={{ color: active ? theme.colors.foreground : theme.colors.mutedForeground }}
+                  >
+                    {t(item.label)}
+                  </Text>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 14 }}>
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <div
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: 3,
+                backgroundColor: data.live ? theme.colors.success : theme.colors.mutedForeground,
+                boxShadow: data.live
+                  ? { offsetX: 0, offsetY: 0, blurRadius: 8, spreadRadius: 1, color: "#8ED9B266" }
+                  : undefined,
+              }}
+            />
+            <Text mono size="xs" tone="muted">
+              {t(data.live ? "engine" : "preview")}
+            </Text>
+          </div>
+
+          {compact ? null : (
+            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Text size="sm" style={{ color: theme.colors.foreground }}>
+                {data.offlineName}
+              </Text>
+              <Text mono size="xs" tone="muted">
+                {t("offline")}
+              </Text>
+            </div>
+          )}
+
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label={t("Toggle theme")}
+            onClick={onToggleTheme}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 30,
+              height: 30,
+              borderRadius: theme.radius.sm,
+              borderWidth: 1,
+              borderStyle: "solid",
+              borderColor: theme.colors.border,
+              cursor: "pointer",
+              hover: { backgroundColor: theme.colors.accent },
+            }}
+          >
+            <Icon name={dark ? "sun" : "moon"} size={14} color={theme.colors.mutedForeground} />
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          width: 76,
-          flexShrink: 0,
-          gap: 8,
-          paddingTop: 18,
-          paddingBottom: 16,
-          borderRightWidth: 1,
-          borderStyle: "solid",
-          borderColor: "#FFFFFF0D",
-          background: gradient("#100C0B", "#090706", 180),
+          flexGrow: 1,
+          minHeight: 0,
+          overflow: "scroll",
+          scrollbarColor: theme.colors.border,
+          scrollbarWidth: 8,
         }}
       >
         <div
           style={{
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 42,
-            height: 42,
-            marginBottom: 16,
-            borderRadius: 14,
-            background: gradient("#FF7A45", "#B33A12", 150),
-            boxShadow: { offsetX: 0, offsetY: 10, blurRadius: 26, spreadRadius: -6, color: "#FF6B3566" },
+            flexDirection: "column",
+            gap: 30,
+            width: "100%",
+            maxWidth: 1440,
+            paddingLeft: compact ? 20 : 40,
+            paddingRight: compact ? 20 : 40,
+            paddingTop: 30,
+            paddingBottom: 48,
           }}
         >
-          <Text
-            style={{
-              color: theme.colors.primaryForeground,
-              fontFamily: theme.font.mono,
-              fontSize: 19,
-              fontWeight: "700",
-            }}
-          >
-            S
-          </Text>
-        </div>
-
-        {NAV.map((item) => {
-          const active = page === item.id
-          return (
-            <Button
-              key={item.id}
-              variant="ghost"
-              size="icon"
-              aria-label={t(item.label)}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 13,
-                backgroundColor: active ? theme.colors.primary : "transparent",
-                boxShadow: active
-                  ? { offsetX: 0, offsetY: 10, blurRadius: 24, spreadRadius: -8, color: "#FF6B3577" }
-                  : undefined,
-              }}
-              onClick={() => onPage(item.id)}
-            >
-              <Icon
-                name={item.icon}
-                size={18}
-                color={active ? theme.colors.primaryForeground : theme.colors.mutedForeground}
-              />
-            </Button>
-          )
-        })}
-
-        <div style={{ flexGrow: 1 }} />
-
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={t("Toggle theme")}
-          style={{ width: 44, height: 44, borderRadius: 13 }}
-          onClick={onToggleTheme}
-        >
-          <Icon name={dark ? "sun" : "moon"} size={17} color={theme.colors.mutedForeground} />
-        </Button>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, minWidth: 0 }}>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 10,
-            height: 52,
-            flexShrink: 0,
-            paddingLeft: 32,
-            paddingRight: 24,
-            borderBottomWidth: 1,
-            borderStyle: "solid",
-            borderColor: "#FFFFFF0A",
-          }}
-        >
-          <Text mono size="xs" tone="muted">
-            SCORIA / <Text mono size="xs" style={{ color: theme.colors.foreground }}>{t(TITLES[page]).toUpperCase()}</Text>
-          </Text>
-          <div style={{ flexGrow: 1 }} />
-          <Badge variant={data.live ? "success" : "secondary"} dot>
-            {t(data.live ? "engine" : "preview")}
-          </Badge>
-          <Text mono size="xs" tone="muted">{data.version}</Text>
-        </div>
-
-        <div style={{ flexGrow: 1, minHeight: 0, overflow: "scroll" }}>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 24,
-              width: "100%",
-              maxWidth: width > 1500 ? 1480 : 1240,
-              alignSelf: "center",
-              paddingLeft: 32,
-              paddingRight: 32,
-              paddingTop: 28,
-              paddingBottom: 40,
-            }}
-          >
-            {children}
-          </div>
+          {children}
         </div>
       </div>
     </div>

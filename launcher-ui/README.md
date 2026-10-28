@@ -12,7 +12,8 @@ bun run typecheck
 bun run build          # dist/scoria-launcher-ui, one Linux binary (~106 MB)
 ```
 
-The UI talks to the Rust engine over JSON lines:
+The UI talks to the Rust engine over JSON lines. The engine downloads Minecraft 26.3 from
+Mojang's piston-meta when it is not already prepared:
 
 ```
 horizon-launcher api   # stdin: {"id":1,"method":"state"}  stdout: {"id":1,"ok":true,...}
@@ -35,7 +36,7 @@ SCORIA_UI_HEADLESS=1 bun app.tsx
 | Method | Params | Result |
 |---|---|---|
 | `state` | — | version, branch, prepared, offlineName, selectedInstance, appearance, whilePlaying, worlds, instances |
-| `prepare` | `{ "instance": "horizon" }` (optional) | prepared, log (last 200 lines) |
+| `prepare` | `{ "instance": "horizon", "download": true }` (both optional) | prepared, log (last 200 lines); `download` fetches Minecraft from Mojang first when it is missing |
 | `play` | `{ "instance": "horizon", "world": "Survival" }` (both optional) | pid, version, instance |
 | `select_instance` | `{ "id": "horizon" }` | the new state |
 | `create_instance` | `{ "name": "Survival testing" }` | the new state |
@@ -47,6 +48,8 @@ SCORIA_UI_HEADLESS=1 bun app.tsx
 | `select_version` | `{ "tag": "v0.2.93" }` | the version list |
 | `remove_version` | `{ "tag": "v0.2.93" }` | the version list |
 | `install_latest` | — | installs the newest release from `sources.json` |
+| `minecraft` | — | the pinned Minecraft version, its folder, source and per-file counts |
+| `download_minecraft` | — | downloads what 26.3 lacks from piston-meta and piston-data; `log` and `progress` events on the same id |
 | `servers` | — | the selected instance's servers.dat |
 | `add_server` | `{ "name": "SMP", "ip": "host:port" }` | the server list |
 | `remove_server` | `{ "index": 0 }` | the server list |
@@ -57,9 +60,10 @@ instances the CLI does.
 
 ## Screens
 
-- **Home**: Play, Prepare, worlds.
+- **Play**: the hero, Play/Prepare, worlds, and this install's file state.
 - **Instances**: release, ported packs, modpacks; which are prepared.
+- **Game files**: Minecraft 26.3 from piston-meta, per-file progress, launcher builds.
 - **Servers**: the instance's servers.dat; join, add, remove. Offline-mode only.
-- **Settings**: offline name, launcher behaviour, appearance, versions, language (EN/RU).
+- **Settings**: offline name, appearance, launcher behaviour, language (EN/RU), build facts.
 
 There is no Microsoft account anywhere: offline profiles are the only identity.
