@@ -17,7 +17,6 @@ pub mod instances;
 pub mod launch;
 pub mod modpacks;
 pub mod mojang;
-pub mod nightly;
 pub mod packs;
 pub mod process;
 pub mod proxy;

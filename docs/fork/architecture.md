@@ -80,6 +80,8 @@ P1 removes the gate itself:
 - The 26.3 **server jar** is still fetched from Mojang once for data generation unless it is
   already in `<data>/server-jars/26.3.jar`. That is the only remaining Mojang game file (the
   client jar, libraries and assets never are).
+- P2 removes the Nightly channel: `launcher/src/nightly.rs`, `Settings::nightly`, the settings
+  row and the Nightly instance logic are gone; `backend::Msg` has no `Nightly*` variants.
 - P2 removes telemetry from the launcher: `launcher/src/telemetry.rs` and
   `launcher/src/collection.rs` are deleted, so are the consent screen, the `data` CLI command,
   the "I'm playing" ping and benchmark uploads. `backend::client_command` sets

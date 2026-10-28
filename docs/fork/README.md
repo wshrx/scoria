@@ -58,7 +58,8 @@ The launcher is its own workspace. Basalt's copy is at `/home/shrx/dev/basalt/la
 - **P2 (in progress):** the Mojang game download is gone (`--download`, `download_for_owner`,
   `mojang::download`); Freesm/Prism are auto-detected and their Java 25 is reused. Telemetry is
   removed from the launcher (consent screen, `data` command, ping, benchmark upload) and the game
-  is launched with `HORIZON_TELEMETRY_URL=off`. Still to do: the remaining registry and nightly
-  code, then CI.
+  is launched with `HORIZON_TELEMETRY_URL=off`. The Nightly channel is gone too: no
+  `nightly.rs`, no setting, no Nightly instance. Still to do: the remaining registry code, then
+  CI.
 - P3 (paused): the launcher UI moves to Redmoon's **flint-ui** once it has code; the GPUIX plan
   is deferred (ADR-0003). P4: full RU/EN documentation. P5: Basalt's own signed releases.

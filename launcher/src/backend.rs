@@ -2420,10 +2420,6 @@ pub enum Msg {
     PackLine(String),
     /// A modpack step ended: the pack as it now is.
     PackDone(Result<Box<crate::modpacks::Imported>, String>),
-    /// The nightly being installed, done this far (`nightly`).
-    NightlyProgress(f32),
-    /// A nightly check ended: the version installed (None: already up to date), or why not.
-    Nightly(Result<Option<String>, String>),
 }
 
 /// A running process; its output arrives as `Msg::Line`, its end as `Msg::Exit`.
@@ -2602,10 +2598,6 @@ pub struct Settings {
     /// The window's language. Unset follows the system's (`i18n::Language::system`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub language: Option<crate::i18n::Language>,
-    /// The player turned Nightly on (`nightly`): the nightly build installs and updates in its own
-    /// instance. Off by default.
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    pub nightly: bool,
 }
 
 impl Settings {
