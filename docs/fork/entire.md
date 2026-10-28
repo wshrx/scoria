@@ -77,6 +77,23 @@ entire repo mirror add        # зеркало GitHub
 entire trail ...              # Trails и eval'ы
 ```
 
+## Совместимость: OpenCode 2.2.0 пока не работает
+
+Проверено на `entire 0.12.2` + `opencode 2.2.0` (Linux, 2026-10-28):
+
+- `entire session attach <ses_…>` падает: Entire вызывает `opencode export <id>`, а в OpenCode 2
+  этой команды нет (теперь `opencode session export <id>`).
+- Обход через shim (`export` → `session export`) создаёт чекпоинт и пушит ref, но OpenCode 2
+  отдаёт другой JSON: `entire checkpoint explain` пишет `failed to parse transcript`,
+  `no prompt recorded`, `checkpoint list` показывает 0.
+- Живой захват через плагин `.opencode/plugins/entire.ts` тоже не подтверждён: после рестарта
+  `entire session list` пуст. Вероятно, плагин рассчитан на API OpenCode 1.x.
+- Тестовый чекпоинт `01M60WWCV09TC103XSDNVXXAJD` удалён (локально и на origin).
+
+Итог: хостинг, remote и ветки работают; **чекпоинты с OpenCode 2.2 — нет**. Варианты:
+дождаться поддержки в Entire, вести чекпоинтуемые сессии в Claude Code/Codex (их форматы
+Entire понимает), или завести issue с версиями (`entire 0.12.2`, `opencode 2.2.0`).
+
 ## Безопасность и приватность
 
 - Локальный захват работает и без аккаунта; аккаунт нужен для хостинга, зеркал и
@@ -93,8 +110,8 @@ entire trail ...              # Trails и eval'ы
 
 - `origin` = Entire (`/et/redmoon/basalt`), `upstream` = Horizon. Push идёт в Entire,
   GitHub-зеркало можно добавить позже через `entire repo mirror add`.
-- Entire включён (`--agent opencode`): каждый коммит получает чекпоинт, а push в `origin`
-  отправляет и код, и сессии. Репозиторий на Entire **Private**, поэтому транскрипты не публичны.
+- Entire включён (`--agent opencode`), но чекпоинты с OpenCode 2.2 пока не работают (см. выше);
+  хостинг и push в `origin` работают. Репозиторий на Entire **Private**.
 - `.githooks/pre-commit` (наш `check_public_tree.py`) сохранён и по-прежнему запускается;
   Entire добавил `prepare-commit-msg`, `commit-msg`, `post-commit`, `post-rewrite` и обернул
   `pre-push` (`pre-push.pre-entire`). После `git config core.hooksPath .githooks` всё это живёт
