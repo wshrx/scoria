@@ -23,6 +23,7 @@ export interface Instance {
   version: string
   kind: "release" | "modpack" | "port"
   prepared: boolean
+  selected: boolean
 }
 
 export interface Snapshot {
@@ -31,6 +32,9 @@ export interface Snapshot {
   branch: string
   prepared: boolean
   offlineName: string
+  selectedInstance: string
+  appearance: "dark" | "light" | "system"
+  whilePlaying: "stay" | "minimize" | "hide"
   worlds: World[]
   instances: Instance[]
 }
@@ -41,14 +45,17 @@ const preview: Snapshot = {
   branch: "dev",
   prepared: true,
   offlineName: "Builder_1",
+  selectedInstance: "release",
+  appearance: "dark",
+  whilePlaying: "stay",
   worlds: [
     { name: "Survival", mode: "Survival", lastPlayed: "2 hours ago", size: "184 MB" },
     { name: "Creative flat", mode: "Creative", lastPlayed: "yesterday", size: "12 MB" },
   ],
   instances: [
-    { id: "release", name: "Scoria", version: "26.3", kind: "release", prepared: true },
-    { id: "atm10", name: "All the Mods 10", version: "26.3", kind: "modpack", prepared: false },
-    { id: "ports", name: "YUNG's dungeons", version: "26.3", kind: "port", prepared: true },
+    { id: "release", name: "Scoria", version: "26.3", kind: "release", prepared: true, selected: true },
+    { id: "atm10", name: "All the Mods 10", version: "26.3", kind: "modpack", prepared: false, selected: false },
+    { id: "ports", name: "YUNG's dungeons", version: "26.3", kind: "port", prepared: true, selected: false },
   ],
 }
 
@@ -170,9 +177,13 @@ export async function snapshot(): Promise<Snapshot> {
 }
 
 /** Starts the game. Returns the line the UI shows under the Play button. */
-export async function play(): Promise<string> {
+export async function play(world?: string): Promise<string> {
   try {
-    const started = await call<{ pid: number; version: string; instance: string }>("play", {}, 30_000)
+    const started = await call<{ pid: number; version: string; instance: string }>(
+      "play",
+      world ? { world } : {},
+      30_000,
+    )
     return `Started ${started.version} as ${started.instance} (pid ${started.pid}).`
   } catch (error) {
     return `The game did not start: ${(error as Error).message}`
@@ -180,9 +191,13 @@ export async function play(): Promise<string> {
 }
 
 /** Prepares the selected version from the player's own Minecraft installation. */
-export async function prepare(): Promise<string> {
+export async function prepare(instance?: string): Promise<string> {
   try {
-    const result = await call<{ prepared: boolean; log: string[] }>("prepare", {}, 30 * 60_000)
+    const result = await call<{ prepared: boolean; log: string[] }>(
+      "prepare",
+      instance ? { instance } : {},
+      30 * 60_000,
+    )
     const last = result.log.at(-1)
     return result.prepared
       ? `Prepared.${last ? ` ${last}` : ""}`
@@ -195,5 +210,25 @@ export async function prepare(): Promise<string> {
 /** Renames the offline profile through the engine (the same accounts.json the CLI uses). */
 export async function setOfflineName(name: string): Promise<Snapshot> {
   const state = await call<Omit<Snapshot, "live">>("set_offline_name", { name }, 5000)
+  return { ...state, live: true }
+}
+
+export async function selectInstance(id: string): Promise<Snapshot> {
+  const state = await call<Omit<Snapshot, "live">>("select_instance", { id }, 5000)
+  return { ...state, live: true }
+}
+
+export async function createInstance(name: string): Promise<Snapshot> {
+  const state = await call<Omit<Snapshot, "live">>("create_instance", { name }, 10_000)
+  return { ...state, live: true }
+}
+
+export async function setAppearance(value: "dark" | "light" | "system"): Promise<Snapshot> {
+  const state = await call<Omit<Snapshot, "live">>("set_appearance", { value }, 5000)
+  return { ...state, live: true }
+}
+
+export async function setWhilePlaying(value: "stay" | "minimize" | "hide"): Promise<Snapshot> {
+  const state = await call<Omit<Snapshot, "live">>("set_while_playing", { value }, 5000)
   return { ...state, live: true }
 }

@@ -56,9 +56,14 @@ pub fn serve() -> Result<(), String> {
 fn dispatch(method: &str, params: &Value) -> Result<Value, String> {
     match method {
         "state" => state(),
-        "prepare" => prepare(),
-        "play" => play(),
+        "prepare" => prepare(params),
+        "play" => play(params),
+        "select_instance" => select_instance(params),
+        "create_instance" => create_instance(params),
         "set_offline_name" => set_offline_name(params),
+        "set_appearance" => set_appearance(params),
+        "set_while_playing" => set_while_playing(params),
+        "backup_world" => backup_world(params),
         other => Err(format!("unknown method {other}")),
     }
 }
@@ -75,7 +80,13 @@ fn state() -> Result<Value, String> {
     let tag = selected_tag()?;
     let accounts = Accounts::load();
     let instance = crate::instances::selected();
+    let settings = backend::Settings::load();
     let prepared = backend::is_prepared(&tag);
+    let appearance = match settings.appearance {
+        backend::Appearance::Dark => "dark",
+        backend::Appearance::Light => "light",
+        backend::Appearance::System => "system",
+    };
     let offline = accounts
         .name_arg()
         .map(str::to_string)
@@ -108,6 +119,7 @@ fn state() -> Result<Value, String> {
                 "version": short_version(&version),
                 "kind": kind,
                 "prepared": backend::is_prepared(&version),
+                "selected": i.id == instance.id,
             })
         })
         .collect();
@@ -117,13 +129,16 @@ fn state() -> Result<Value, String> {
         "branch": std::env::var("SCORIA_BRANCH").unwrap_or_else(|_| "dev".into()),
         "prepared": prepared,
         "offlineName": offline,
+        "selectedInstance": instance.id,
+        "appearance": appearance,
+        "whilePlaying": settings.while_playing.name(),
         "worlds": worlds,
         "instances": instances,
     }))
 }
 
-fn prepare() -> Result<Value, String> {
-    let tag = selected_tag()?;
+fn prepare(params: &Value) -> Result<Value, String> {
+    let tag = requested_tag(params)?;
     let settings = backend::Settings::load();
     let minecraft = backend::minecraft_dir(settings.minecraft_dir.clone())?;
     let log: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
@@ -157,12 +172,15 @@ fn prepare() -> Result<Value, String> {
     }))
 }
 
-fn play() -> Result<Value, String> {
-    let tag = selected_tag()?;
-    let instance = crate::instances::selected();
+fn play(params: &Value) -> Result<Value, String> {
+    let instance = requested_instance(params)?;
+    let tag = instance.resolve_version(None)?;
     let accounts = Accounts::load();
     let mut cmd = backend::client(&tag)?;
     crate::instances::apply(&mut cmd, &instance)?;
+    if let Some(world) = params.get("world").and_then(Value::as_str) {
+        cmd.arg("--world").arg(world);
+    }
     if let Some(name) = accounts.name_arg() {
         cmd.arg("--name").arg(name);
     }
@@ -171,7 +189,82 @@ fn play() -> Result<Value, String> {
     let child = cmd
         .spawn()
         .map_err(|e| format!("The game did not start: {e}"))?;
+    crate::instances::select(&instance.id)?;
     Ok(json!({ "pid": child.id(), "version": tag, "instance": instance.name }))
+}
+
+fn requested_instance(params: &Value) -> Result<crate::instances::Instance, String> {
+    match params.get("instance").and_then(Value::as_str) {
+        Some(id) => crate::instances::find(id),
+        None => Ok(crate::instances::selected()),
+    }
+}
+
+fn requested_tag(params: &Value) -> Result<String, String> {
+    match params.get("instance").and_then(Value::as_str) {
+        Some(id) => crate::instances::find(id)?.resolve_version(None),
+        None => selected_tag(),
+    }
+}
+
+fn select_instance(params: &Value) -> Result<Value, String> {
+    let id = params
+        .get("id")
+        .and_then(Value::as_str)
+        .ok_or("select_instance needs {\"id\": \"…\"}")?;
+    crate::instances::select(id)?;
+    state()
+}
+
+fn create_instance(params: &Value) -> Result<Value, String> {
+    let name = params
+        .get("name")
+        .and_then(Value::as_str)
+        .ok_or("create_instance needs {\"name\": \"…\"}")?;
+    let created = crate::instances::create(name, None)?;
+    crate::instances::select(&created.id)?;
+    state()
+}
+
+fn set_appearance(params: &Value) -> Result<Value, String> {
+    let value = params
+        .get("value")
+        .and_then(Value::as_str)
+        .ok_or("set_appearance needs {\"value\": \"dark|light|system\"}")?;
+    let appearance = match value {
+        "dark" => backend::Appearance::Dark,
+        "light" => backend::Appearance::Light,
+        "system" => backend::Appearance::System,
+        other => return Err(format!("{other}: say dark, light or system")),
+    };
+    let mut settings = backend::Settings::load();
+    settings.appearance = appearance;
+    settings.save();
+    state()
+}
+
+fn set_while_playing(params: &Value) -> Result<Value, String> {
+    let value = params
+        .get("value")
+        .and_then(Value::as_str)
+        .ok_or("set_while_playing needs {\"value\": \"stay|minimize|hide\"}")?;
+    let mode = backend::WhilePlaying::parse(value)
+        .ok_or_else(|| format!("{value}: say stay, minimize or hide"))?;
+    let mut settings = backend::Settings::load();
+    settings.while_playing = mode;
+    settings.save();
+    state()
+}
+
+fn backup_world(params: &Value) -> Result<Value, String> {
+    let instance = requested_instance(params)?;
+    let world = params
+        .get("world")
+        .and_then(Value::as_str)
+        .ok_or("backup_world needs {\"world\": \"…\"}")?;
+    let found = crate::worlds::find(&instance.home, world)?;
+    let path = crate::worlds::backup(&instance.home, &found)?;
+    Ok(json!({ "path": path }))
 }
 
 fn set_offline_name(params: &Value) -> Result<Value, String> {

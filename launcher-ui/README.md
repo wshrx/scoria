@@ -34,10 +34,15 @@ SCORIA_UI_HEADLESS=1 bun app.tsx
 
 | Method | Params | Result |
 |---|---|---|
-| `state` | — | version, branch, prepared, offlineName, worlds, instances |
-| `prepare` | — | prepared, log (last 200 lines) |
-| `play` | — | pid, version, instance |
+| `state` | — | version, branch, prepared, offlineName, selectedInstance, appearance, whilePlaying, worlds, instances |
+| `prepare` | `{ "instance": "horizon" }` (optional) | prepared, log (last 200 lines) |
+| `play` | `{ "instance": "horizon", "world": "Survival" }` (both optional) | pid, version, instance |
+| `select_instance` | `{ "id": "horizon" }` | the new state |
+| `create_instance` | `{ "name": "Survival testing" }` | the new state |
 | `set_offline_name` | `{ "name": "Builder_1" }` | the new state |
+| `set_appearance` | `{ "value": "dark"\|"light"\|"system" }` | the new state |
+| `set_while_playing` | `{ "value": "stay"\|"minimize"\|"hide" }` | the new state |
+| `backup_world` | `{ "world": "Survival" }` | path of the backup |
 
 The engine is stateless between calls; it reads the same `accounts.json`, `settings.json` and
 instances the CLI does.

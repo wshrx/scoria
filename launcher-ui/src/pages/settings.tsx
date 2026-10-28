@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react"
+import { useState } from "react"
 import { Text, useTheme } from "@/lib/flint"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -6,7 +6,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import type { Snapshot } from "../api"
-import { setOfflineName } from "../api"
+import { setOfflineName, setWhilePlaying } from "../api"
+
+const MODES: { value: "stay" | "minimize" | "hide"; label: string }[] = [
+  { value: "stay", label: "Stay" },
+  { value: "minimize", label: "Minimize" },
+  { value: "hide", label: "Hide" },
+]
 
 export function SettingsPage({
   data,
@@ -22,8 +28,6 @@ export function SettingsPage({
   const theme = useTheme()
   const [name, setName] = useState(data.offlineName)
   const [note, setNote] = useState<string | null>(null)
-  const [keepOpen, setKeepOpen] = useState(true)
-  const [followNightly, setFollowNightly] = useState(data.branch === "nightly")
 
   const panel = {
     display: "flex",
@@ -36,16 +40,6 @@ export function SettingsPage({
     padding: 18,
     gap: 12,
   }
-
-  const row = (title: string, detail: string, control: ReactNode) => (
-    <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 14 }}>
-      <div style={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
-        <Text>{title}</Text>
-        <Text size="xs" tone="muted">{detail}</Text>
-      </div>
-      {control}
-    </div>
-  )
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 720 }}>
@@ -63,7 +57,7 @@ export function SettingsPage({
           <Button
             variant="secondary"
             onClick={() => {
-              void setOfflineName(name)
+              void setOfflineName(name.trim())
                 .then(() => {
                   setNote("Saved. The next Play uses this name.")
                   onRefresh()
@@ -82,24 +76,54 @@ export function SettingsPage({
       </div>
 
       <div style={panel}>
+        <Text mono size="xs" tone="muted">WHILE PLAYING</Text>
+        <Text size="xs" tone="muted">What this window does when the game starts.</Text>
+        <div style={{ display: "flex", flexDirection: "row", gap: 6 }}>
+          {MODES.map((mode) => (
+            <Button
+              key={mode.value}
+              size="sm"
+              variant={data.whilePlaying === mode.value ? "secondary" : "ghost"}
+              onClick={() => {
+                void setWhilePlaying(mode.value)
+                  .then(() => onRefresh())
+                  .catch((error: Error) => setNote(error.message))
+              }}
+            >
+              {mode.label}
+            </Button>
+          ))}
+        </div>
+
+        <div style={{ height: 1, backgroundColor: theme.colors.border, marginTop: 4 }} />
+
+        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
+            <Text>Dark appearance</Text>
+            <Text size="xs" tone="muted">Basalt and ember; the light theme is warm paper.</Text>
+          </div>
+          <Switch checked={dark} onCheckedChange={() => onToggleTheme()} />
+        </div>
+      </div>
+
+      <div style={panel}>
         <Text mono size="xs" tone="muted">LAUNCHER</Text>
-        {row(
-          "Keep the launcher open while playing",
-          "Close it automatically when the game starts instead.",
-          <Switch checked={keepOpen} onCheckedChange={setKeepOpen} />,
-        )}
-        <div style={{ height: 1, backgroundColor: theme.colors.border }} />
-        {row(
-          "Follow the nightly branch",
-          "Tested dev builds of the launcher; main stays stable.",
-          <Switch checked={followNightly} onCheckedChange={setFollowNightly} />,
-        )}
-        <div style={{ height: 1, backgroundColor: theme.colors.border }} />
-        {row(
-          "Dark appearance",
-          "Basalt and ember; the light theme is warm paper.",
-          <Switch checked={dark} onCheckedChange={() => onToggleTheme()} />,
-        )}
+        <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+          <Text size="xs" tone="muted">version</Text>
+          <Text mono size="xs">{data.version}</Text>
+        </div>
+        <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+          <Text size="xs" tone="muted">branch</Text>
+          <Text mono size="xs">{data.branch}</Text>
+        </div>
+        <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+          <Text size="xs" tone="muted">instance</Text>
+          <Text mono size="xs">{data.selectedInstance}</Text>
+        </div>
+        <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+          <Text size="xs" tone="muted">mode</Text>
+          <Text mono size="xs">{data.live ? "engine" : "preview"}</Text>
+        </div>
       </div>
 
       <div style={panel}>

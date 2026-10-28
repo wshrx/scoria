@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useGpuixRequired } from "@gpuix/react"
 import { Text, ThemeProvider, registerFlintFonts } from "@/lib/flint"
-import { snapshot, type Snapshot } from "./api"
+import { setAppearance, snapshot, type Snapshot } from "./api"
 import { Shell, type Page } from "./shell"
 import { HomePage } from "./pages/home"
 import { InstancesPage } from "./pages/instances"
@@ -22,13 +22,23 @@ export function App() {
   const [page, setPage] = useState<Page>("home")
   const [data, setData] = useState<Snapshot | null>(null)
 
+  const apply = (state: Snapshot) => {
+    setData(state)
+    setDark(state.appearance !== "light")
+  }
+
   useEffect(() => {
-    void snapshot().then(setData)
+    void snapshot().then(apply)
   }, [])
 
   const theme = dark ? scoriaDark : scoriaLight
   const refresh = () => {
-    void snapshot().then(setData)
+    void snapshot().then(apply)
+  }
+  const toggleTheme = () => {
+    void setAppearance(dark ? "light" : "dark")
+      .then(apply)
+      .catch(() => setDark((value) => !value))
   }
 
   if (!data) {
@@ -48,16 +58,16 @@ export function App() {
         page={page}
         onPage={setPage}
         dark={dark}
-        onToggleTheme={() => setDark((value) => !value)}
+        onToggleTheme={toggleTheme}
         data={data}
       >
         {page === "home" ? <HomePage data={data} onRefresh={refresh} /> : null}
-        {page === "instances" ? <InstancesPage data={data} /> : null}
+        {page === "instances" ? <InstancesPage data={data} onRefresh={refresh} /> : null}
         {page === "settings" ? (
           <SettingsPage
             data={data}
             dark={dark}
-            onToggleTheme={() => setDark((value) => !value)}
+            onToggleTheme={toggleTheme}
             onRefresh={refresh}
           />
         ) : null}

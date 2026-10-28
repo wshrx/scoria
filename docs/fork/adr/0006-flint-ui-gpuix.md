@@ -31,10 +31,13 @@ offline names are the primary identity since P1.
 
 - `launcher-ui/` uses flint's theme, Text, Button, Card, Badge, Switch, Input, Label and Icons;
   Home, Instances and Settings render real engine state.
-- **The bridge exists**: `horizon-launcher api` serves `state`, `prepare`, `play` and
-  `set_offline_name` as JSON lines; `src/api.ts` spawns it and falls back to a preview snapshot
-  when the binary is absent. The header says `engine` or `preview`.
-- Play starts the game with the offline `--name`; Prepare reads Freesm/Prism/official installs.
+- **The bridge exists**: `horizon-launcher api` serves `state`, `prepare`, `play`,
+  `select_instance`, `create_instance`, `set_offline_name`, `set_appearance`,
+  `set_while_playing` and `backup_world` as JSON lines; `src/api.ts` spawns it and falls back to
+  a preview snapshot when the binary is absent. The header says `engine` or `preview`.
+- The screens act: Play and world rows start the game, instance rows select, New instance works,
+  Settings persists appearance and the while-playing mode, Prepare reads Freesm/Prism/official
+  installs.
 - `bun run typecheck`, `bun run build` (106 MB) and the headless smoke pass.
 - Not yet: install/update of versions from the UI, packaging the UI beside the engine in releases,
   and screens beyond Home/Instances/Settings.

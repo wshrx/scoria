@@ -133,6 +133,10 @@ export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () =>
                   cursor: "pointer",
                   hover: { backgroundColor: theme.colors.muted },
                 }}
+                onClick={() => {
+                  setNote(null)
+                  void play(world.name).then(setNote)
+                }}
               >
                 <div
                   style={{
@@ -152,7 +156,7 @@ export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () =>
                   <Text mono size="xs" tone="muted">{world.mode} · {world.size}</Text>
                 </div>
                 <Text mono size="xs" tone="muted">{world.lastPlayed}</Text>
-                <Icon name="chevronRight" size={14} color={theme.colors.mutedForeground} />
+                <Icon name="play" size={13} color={theme.colors.primary} />
               </div>
             ))
           )}
