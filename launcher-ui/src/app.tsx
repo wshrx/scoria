@@ -89,14 +89,7 @@ export function App() {
     <ThemeProvider theme={theme}>
       <LangProvider lang={data.language === "ru" ? "ru" : "en"}>
         <Fonts />
-        <Shell
-          page={page}
-          onPage={setPage}
-          dark={dark}
-          onToggleTheme={toggleTheme}
-          data={data}
-          frameless={frameless}
-        >
+        <Shell page={page} onPage={setPage} data={data} frameless={frameless}>
           {page === "home" ? <HomePage data={data} onRefresh={refresh} onPage={setPage} /> : null}
           {page === "instances" ? <InstancesPage data={data} onRefresh={refresh} /> : null}
           {page === "servers" ? <ServersPage /> : null}

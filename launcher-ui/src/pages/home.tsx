@@ -162,26 +162,6 @@ export function HomePage({
               </Text>
             </Button>
 
-            <Button
-              variant="secondary"
-              onClick={() => onPage("settings")}
-              style={{
-                height: 52,
-                paddingLeft: 22,
-                paddingRight: 22,
-                borderRadius: 999,
-                borderWidth: 1,
-                borderStyle: "solid",
-                borderColor: "#FFFFFF1F",
-                backgroundColor: "#FFFFFF10",
-                color: BONE,
-                hover: { backgroundColor: "#FFFFFF1E" },
-              }}
-            >
-              <Icon name="sliders" size={15} color={BONE} />
-              <Text style={{ color: BONE }}>{t("Configure")}</Text>
-            </Button>
-
             {ready && recent ? (
               <div
                 role="button"

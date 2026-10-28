@@ -17,8 +17,6 @@ const NAV: { id: Page; label: string; icon: IconName }[] = [
 export interface ShellProps {
   page: Page
   onPage: (page: Page) => void
-  dark: boolean
-  onToggleTheme: () => void
   data: Snapshot
   frameless: boolean
   children?: ReactNode
@@ -62,17 +60,7 @@ function WindowButton({
   )
 }
 
-function Rail({
-  page,
-  onPage,
-  dark,
-  onToggleTheme,
-}: {
-  page: Page
-  onPage: (page: Page) => void
-  dark: boolean
-  onToggleTheme: () => void
-}) {
+function Rail({ page, onPage }: { page: Page; onPage: (page: Page) => void }) {
   const theme = useTheme()
   const t = useT()
 
@@ -140,29 +128,6 @@ function Rail({
       <div style={{ flexGrow: 1 }} />
 
       {item("settings", "sliders", "Settings")}
-
-      <div
-        role="button"
-        tabIndex={0}
-        aria-label={t("Toggle theme")}
-        onClick={onToggleTheme}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: 44,
-          height: 44,
-          borderRadius: 14,
-          cursor: "pointer",
-          hover: { backgroundColor: "#1A1428" },
-        }}
-      >
-        <Icon
-          name={dark ? "sun" : "moon"}
-          size={17}
-          color={CHROME_MUTED}
-        />
-      </div>
     </div>
   )
 }
@@ -197,15 +162,7 @@ function ResizeHandles() {
 }
 
 /** The rail, a floating top strip, and a wide stage for one page. */
-export function Shell({
-  page,
-  onPage,
-  dark,
-  onToggleTheme,
-  data,
-  frameless,
-  children,
-}: ShellProps) {
+export function Shell({ page, onPage, data, frameless, children }: ShellProps) {
   const theme = useTheme()
   const t = useT()
   const { width, height } = useWindowSize()
@@ -251,7 +208,7 @@ export function Shell({
           position: "relative",
         }}
       >
-        <Rail page={page} onPage={onPage} dark={dark} onToggleTheme={onToggleTheme} />
+        <Rail page={page} onPage={onPage} />
 
         <div
           style={{
@@ -321,10 +278,7 @@ export function Shell({
             />
 
             <div
-              role="button"
-              tabIndex={0}
-              aria-label={t("Settings")}
-              onClick={() => onPage("settings")}
+              aria-label={`${data.offlineName} · ${t("offline")}`}
               style={{
                 display: "flex",
                 flexDirection: "row",
@@ -333,9 +287,6 @@ export function Shell({
                 height: 34,
                 paddingLeft: 5,
                 paddingRight: 10,
-                borderRadius: 999,
-                cursor: "pointer",
-                hover: { backgroundColor: "#1A1428" },
               }}
             >
               <Avatar name={data.offlineName} size={26} />
