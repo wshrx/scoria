@@ -1,6 +1,6 @@
 # Entire: что это и как мы это используем
 
-Короткая справка по платформе, на которой теперь лежит `origin` Basalt. Проверено на
+Короткая справка по платформе, на которой теперь лежит `origin` Scoria. Проверено на
 установленном CLI (`entire 0.12.2`, Linux) и на нашем репозитории.
 
 ## Коротко
@@ -8,9 +8,9 @@
 - **Entire** — Git-форж и слой наблюдаемости для работы «человек + AI-агенты»:
   <https://entire.com>, CLI с открытым кодом (MIT, Go): <https://github.com/entireio/cli>.
 - Репозитории адресуются как `/et/<project>/<repo>` (Entire-native) или
-  `/gh/<owner>/<repo>` (зеркало GitHub). Наш путь — **`/et/redmoon/basalt`**.
+  `/gh/<owner>/<repo>` (зеркало GitHub). Наш путь — **`/et/redmoon/scoria`**.
 - `git remote` указывает не на HTTPS, а на схему Entire:
-  `entire://aws-eu-central-1.entire.io/et/redmoon/basalt`.
+  `entire://aws-eu-central-1.entire.io/et/redmoon/scoria`.
 - У нас включены и хостинг, и **checkpoints**: `entire enable --agent opencode` (2026-10-28).
   `entire status` → `Enabled · branch main`, агент OpenCode, чекпоинты синхронизируются в
   `origin` (Entire), backend — git refs (`refs/entire/checkpoints/…`).
@@ -33,7 +33,7 @@
 ## Как включить захват сессий (пока не включено)
 
 ```sh
-cd /home/shrx/dev/basalt
+cd /home/shrx/dev/scoria
 entire enable          # выбрать агентов; ставит их хуки и git-хуки Entire
 entire status          # сессии и куда уходят чекпоинты
 entire checkpoint list # чекпоинты текущей ветки
@@ -45,20 +45,20 @@ entire disable         # выключить; --uninstall убирает Entire �
 `entire enable` **сохраняет уже существующие хуки** (у нас `core.hooksPath = .githooks`,
 `check_public_tree.py`), но это надо перепроверить после включения: публичный репозиторий
 начнёт получать транскрипты сессий как ref'ы, а в них могут попасть секреты, пути и
-внутренние обсуждения. Для публичного Basalt включать осознанно.
+внутренние обсуждения. Для публичного Scoria включать осознанно.
 
 ## Команды, которые мы уже использовали
 
 ```sh
 entire repo list --project redmoon
-#   /et/redmoon/basalt   aws-eu-central-1.entire.io   Private   ready
+#   /et/redmoon/scoria   aws-eu-central-1.entire.io   Private   ready
 
-entire repo remote add origin --override /et/redmoon/basalt
+entire repo remote add origin --override /et/redmoon/scoria
 #   ✓ Repointed remote "origin" at the mirror
-#     entire://aws-eu-central-1.entire.io/et/redmoon/basalt
+#     entire://aws-eu-central-1.entire.io/et/redmoon/scoria
 
 git push -u origin main
-git push origin basalt-p0 basalt-p1 basalt-p2a upstream-baseline
+git push origin scoria-p0 scoria-p1 scoria-p2a upstream-baseline
 ```
 
 `repo remote add` меняет **только локальный git config**; на сервере ничего не создаёт.
@@ -70,9 +70,9 @@ git push origin basalt-p0 basalt-p1 basalt-p2a upstream-baseline
 
 ```sh
 entire auth contexts          # сохранённые логины (у нас eu.auth.entire.io)
-entire repo create basalt --project redmoon
-entire repo clone /et/redmoon/basalt
-entire repo view /et/redmoon/basalt
+entire repo create scoria --project redmoon
+entire repo clone /et/redmoon/scoria
+entire repo view /et/redmoon/scoria
 entire repo mirror add        # зеркало GitHub
 entire trail ...              # Trails и eval'ы
 ```
@@ -106,9 +106,9 @@ Entire понимает), или завести issue с версиями (`enti
 - `entire disable --uninstall` убирает хуки и интеграцию; история чекпоинтов остаётся в ref'ах,
   пока её не удалить.
 
-## Что это значит для Basalt
+## Что это значит для Scoria
 
-- `origin` = Entire (`/et/redmoon/basalt`), `upstream` = Horizon. Push идёт в Entire,
+- `origin` = Entire (`/et/redmoon/scoria`), `upstream` = Horizon. Push идёт в Entire,
   GitHub-зеркало можно добавить позже через `entire repo mirror add`.
 - Entire включён (`--agent opencode`), но чекпоинты с OpenCode 2.2 пока не работают (см. выше);
   хостинг и push в `origin` работают. Репозиторий на Entire **Private**.

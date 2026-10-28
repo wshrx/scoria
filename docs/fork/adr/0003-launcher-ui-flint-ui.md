@@ -15,7 +15,7 @@ against and no API to design for. Redmoon's own shell (`@redmoon`, ShojiWM) is b
 gpuix/GPUI and TypeScript, so flint-ui will most likely reuse that stack; this ADR does not pin
 it until flint-ui has code.
 
-The launcher currently works: it is the upstream GPUI launcher, rebranded, with Basalt's offline
+The launcher currently works: it is the upstream GPUI launcher, rebranded, with Scoria's offline
 and import changes (P0–P2). It does not block any other work.
 
 ## Decision

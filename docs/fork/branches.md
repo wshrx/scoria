@@ -1,11 +1,11 @@
 # Branches
 
-Basalt uses three long-lived branches. `main` is what players get; `dev` is where work is tried;
+Scoria uses three long-lived branches. `main` is what players get; `dev` is where work is tried;
 `nightly` is disposable.
 
 | Branch | Purpose | Rules |
 |---|---|---|
-| `main` | Stable Basalt. Releases are cut from here. | Only fast-forward/merge from `dev` after the full check below. No direct work. |
+| `main` | Stable Scoria. Releases are cut from here. | Only fast-forward/merge from `dev` after the full check below. No direct work. |
 | `dev` | Integration and testing. Everything lands here first. | Build, `cargo test`, clippy, fmt and the Python tests must pass before merging into `main`. |
 | `nightly` | Experimental builds and risky spikes. | May be rebased or reset at any time; never a base for `main`. |
 
@@ -37,7 +37,7 @@ Work on `dev` therefore stays explainable after it reaches `main` through the me
 
 ## Notes
 
-- `nightly` is a branch name only: Basalt has no Nightly build channel (P2 removed it). Do not
+- `nightly` is a branch name only: Scoria has no Nightly build channel (P2 removed it). Do not
   expect auto-published builds from it.
 - A tag named `nightly` exists from upstream, so push the branch with
   `git push origin refs/heads/nightly` (or delete the local tag).

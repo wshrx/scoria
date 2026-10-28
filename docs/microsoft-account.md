@@ -1,6 +1,6 @@
 # Microsoft account sign-in and online-mode play
 
-> **Basalt fork:** the owner gate below is removed. Play works without any account (see
+> **Scoria fork:** the owner gate below is removed. Play works without any account (see
 > [fork/offline-mode.md](fork/offline-mode.md)); Microsoft sign-in stays optional and is what
 > online-mode servers, cloud skins and the Mojang download path use. Everything else on this page
 > — the device-code flow, the Xbox/XSTS/Minecraft exchange, token storage and the session file —

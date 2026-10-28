@@ -1,11 +1,11 @@
 # Playing offline
 
-Basalt starts the game without a Microsoft account. This page is the player-facing side of
+Scoria starts the game without a Microsoft account. This page is the player-facing side of
 [ADR-0001](adr/0001-offline-first.md).
 
 ## First run
 
-1. Install Basalt and open the launcher. Pick a name (3–16 letters, digits or `_`); that is your
+1. Install Scoria and open the launcher. Pick a name (3–16 letters, digits or `_`); that is your
    offline profile. It is kept in `accounts.json` next to the launcher's data, with the skins you
    choose for it.
 2. Press **Play**. No sign-in, no keychain, no network.
@@ -14,7 +14,7 @@ Basalt starts the game without a Microsoft account. This page is the player-faci
 
 ## Where the game files come from
 
-Basalt never downloads the game itself (client jar, libraries, assets). Preparation reads a copy
+Scoria never downloads the game itself (client jar, libraries, assets). Preparation reads a copy
 you already installed, and
 `launcher/src/sources.rs` looks in:
 
@@ -41,7 +41,7 @@ Nothing, to play. Signing in (Settings → Account) adds:
 - joining **online-mode servers**, which check your session with Mojang;
 - your cloud skin and cape, and your real UUID on servers that use it.
 
-Basalt does not fake sessions and does not patch the online-mode handshake. An offline name cannot
+Scoria does not fake sessions and does not patch the online-mode handshake. An offline name cannot
 join an online-mode server, exactly as in vanilla and Prism.
 
 LAN worlds, `Open to LAN`, offline-mode servers and **Play with friends** (invite codes and the
@@ -52,7 +52,7 @@ relay) work without an account; `horizon-friends` never used one.
 | What | Where |
 |---|---|
 | Offline names, skins, selected profile | launcher data folder, `accounts.json` (public data only) |
-| Microsoft tokens, if you sign in | the OS keychain, service `dev.basalt.launcher` |
+| Microsoft tokens, if you sign in | the OS keychain, service `dev.scoria.launcher` |
 | Game session handed to the client | a short-lived `session-*.json` in the game home, deleted by the game on start |
 
 Signing out removes the tokens; offline names stay.

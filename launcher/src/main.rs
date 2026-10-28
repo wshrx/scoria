@@ -1,4 +1,4 @@
-//! Basalt launcher: installs Basalt builds, prepares them from the player's own Minecraft,
+//! Scoria launcher: installs Scoria builds, prepares them from the player's own Minecraft,
 //! and starts the client or a dedicated server.
 
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
@@ -155,7 +155,7 @@ struct Launcher {
     checked: Option<Instant>,
     update_error: Option<String>,
     self_update: SelfUpdate,
-    /// The Basalt version being installed as an update, and whether it becomes the selected one.
+    /// The Scoria version being installed as an update, and whether it becomes the selected one.
     update_install: Option<(String, bool)>,
     /// The install bar's previous and current fraction, so it moves rather than jumps.
     bar: (f32, f32),
@@ -233,7 +233,7 @@ struct Launcher {
     /// The Modpacks page: the imported packs (read when the page first opens), the one shown,
     /// the report's filter, and the pipeline step running now with its log.
     packs: Vec<horizon_launcher::modpacks::Imported>,
-    /// Modpacks installed from Basalt's registry, each its own profile.
+    /// Modpacks installed from Scoria's registry, each its own profile.
     registry_packs: Vec<horizon_launcher::browser::horizon::pack::Installed>,
     packs_loaded: Option<Instant>,
     pack_open: Option<String>,
@@ -508,7 +508,7 @@ impl Launcher {
         });
     }
 
-    /// Installs the Basalt version the last check found, keeping the player's choice of
+    /// Installs the Scoria version the last check found, keeping the player's choice of
     /// version unless they were on the newest one.
     fn install_update(&mut self) {
         let Some(release) = self.updates.horizon.clone() else {
@@ -774,7 +774,7 @@ impl Launcher {
                                 .and_then(|since| backend::crash_report_since(&home, since));
                             if error.is_some() && report.is_none() && self.switched_to_dx12() {
                                 self.client_error = Some(
-                                    "Basalt's Vulkan renderer crashed while starting on this \
+                                    "Scoria's Vulkan renderer crashed while starting on this \
                                      graphics card, so the game now uses DirectX 12. Press Play \
                                      to start it again. Video Settings > Graphics API switches \
                                      back."
@@ -848,7 +848,7 @@ impl Launcher {
         for home in homes {
             match backend::switch_to_dx12(&home) {
                 Ok(changed) => switched |= changed,
-                Err(e) => eprintln!("Basalt launcher: could not switch to DirectX 12: {e}"),
+                Err(e) => eprintln!("Scoria launcher: could not switch to DirectX 12: {e}"),
             }
         }
         switched
@@ -1122,7 +1122,7 @@ fn version_tag(tag: &str) -> Div {
         .child(tag.trim_start_matches('v').to_string())
 }
 
-/// Basalt's mark: two stems, their reflection below, and the horizon across in the accent.
+/// Scoria's mark: two stems, their reflection below, and the horizon across in the accent.
 fn mark(size: f32, t: &Theme) -> Div {
     let u = size / 16.;
     let stem = |x: f32, y: f32, color: Hsla| {
@@ -1690,7 +1690,7 @@ impl Launcher {
             )
     }
 
-    /// The sidebar: Basalt and the imported modpacks, the player's servers, then the
+    /// The sidebar: Scoria and the imported modpacks, the player's servers, then the
     /// launcher's own update, the community links and its version.
     fn sidebar(&mut self, window: &Window, cx: &mut Context<Self>) -> Stateful<Div> {
         let t = self.theme;
@@ -2124,7 +2124,7 @@ impl Launcher {
                     .child(play),
             );
 
-        // Basalt never downloads the game: preparation reads an installation the player already
+        // Scoria never downloads the game: preparation reads an installation the player already
         // has (the official launcher, Prism, Freesm, MultiMC...).
         let resources_value = backend::resources_summary(prepared, !silent, &version);
         let mut prepare = button(
@@ -2189,7 +2189,7 @@ impl Launcher {
         {
             rows = rows.child(self.join_friend_row(prepared && !running, cx));
             // The top bar shows who plays; a row only when there is something to do about it.
-            // Basalt plays offline without an account; signing in only adds online servers.
+            // Scoria plays offline without an account; signing in only adds online servers.
             if self.accounts.selected().is_none() && account::client_id().is_some() {
                 rows = rows.child(index_row(
                     5,
@@ -2212,7 +2212,7 @@ impl Launcher {
             }
         }
 
-        // The banner: Basalt's landscape (`art.rs`) under a veil of the page colour, the hero and
+        // The banner: Scoria's landscape (`art.rs`) under a veil of the page colour, the hero and
         // the Play row over it. It reaches the content's edges and the top bar.
         let (scene, scene_width) = self.art.scene(t.dark, self.scale, banner_width);
         let veil = |angle: f32, from: f32, to: f32, at: f32| {
@@ -2334,7 +2334,7 @@ impl Launcher {
         page
     }
 
-    /// "Basalt crashed": the report and the logs, and where to report it.
+    /// "Scoria crashed": the report and the logs, and where to report it.
     fn crash_notice(&self, crash: Crash, cx: &mut Context<Self>) -> Div {
         let t = self.theme;
         let mut actions = div().flex().flex_wrap().gap(px(8.)).mt(px(8.));
@@ -2410,7 +2410,7 @@ impl Launcher {
             .child(
                 text(theme::HEADING)
                     .text_color(t.ink)
-                    .child(tr("Basalt crashed")),
+                    .child(tr("Scoria crashed")),
             );
         if !crash.summary.is_empty() {
             body = body.child(div().text_color(t.ink_soft).child(crash.summary));
@@ -2457,7 +2457,7 @@ impl Launcher {
                 .and_then(|r| backend::notes_summary(&r.body)),
             _ => None,
         };
-        let title = "Basalt";
+        let title = "Scoria";
         // Never squeezed by the rows below: the ping notice can make it tall.
         let mut hero = div()
             .flex()
@@ -2727,7 +2727,7 @@ impl Launcher {
                     .child(group("AI", "terminal"))
                     .child(self.no_ai_row(n + 6, cx))
                     .child(group("About", "info-box"))
-                    .child(index_row(n + 7, "Basalt", Some(plain(&horizon)), horizon_action, &t))
+                    .child(index_row(n + 7, "Scoria", Some(plain(&horizon)), horizon_action, &t))
                     .child(index_row(
                         n + 8,
                         tr("Launcher"),
@@ -2766,7 +2766,7 @@ impl Launcher {
                             n + 11,
                             tr("Applications menu"),
                             Some(plain(if self.settings.desktop_entry() {
-                                "Basalt and its icon are in your desktop's menu."
+                                "Scoria and its icon are in your desktop's menu."
                             } else {
                                 "Not in your desktop's menu."
                             })),
@@ -3009,7 +3009,7 @@ impl Launcher {
             Some(SignInState::Done(Ok(a))) => div().child(format!("Signed in as {}.", a.name)),
             Some(SignInState::Done(Err(e))) => div().text_color(t.danger).child(e.clone()),
             None if self.accounts.accounts.is_empty() => div().child(tr(
-                "Basalt needs a Microsoft account that owns Minecraft: Java Edition, like other launchers. It also plays online servers with your name and skin.",
+                "Scoria needs a Microsoft account that owns Minecraft: Java Edition, like other launchers. It also plays online servers with your name and skin.",
             )),
             None => div().child(tr("Add another account.")),
         };
@@ -3177,7 +3177,7 @@ impl Launcher {
     }
 
     /// Plays the selected instance straight into a world (`--world`) or a server (`--server`):
-    /// flags every Basalt release takes.
+    /// flags every Scoria release takes.
     pub(crate) fn quick_play(&mut self, flag: &'static str, value: String) {
         self.quick_play = Some((flag, value));
         self.play();
@@ -3430,7 +3430,7 @@ impl Launcher {
                                     .child("Support the work below"),
                             )
                             .child(text(theme::UI).text_color(t.muted).child(
-                                "Basalt is built in the open. Sponsors fund the next release.",
+                                "Scoria is built in the open. Sponsors fund the next release.",
                             )),
                     )
                     .child(
@@ -3835,8 +3835,8 @@ fn key_bindings() -> Vec<KeyBinding> {
 fn menus() -> Vec<Menu> {
     vec![
         Menu {
-            name: "Basalt Launcher".into(),
-            items: vec![MenuItem::action("Quit Basalt Launcher", Quit)],
+            name: "Scoria Launcher".into(),
+            items: vec![MenuItem::action("Quit Scoria Launcher", Quit)],
         },
         Menu {
             name: "Window".into(),
@@ -3892,7 +3892,7 @@ fn main() {
                     titlebar: Some(titlebar::options()),
                     #[cfg(target_os = "linux")]
                     window_decorations: Some(gpui::WindowDecorations::Client),
-                    app_id: Some("horizon-launcher".into()),
+                    app_id: Some("scoria-launcher".into()),
                     ..Default::default()
                 },
                 |window, cx| cx.new(|cx| Launcher::new(window, cx)),
@@ -3935,10 +3935,10 @@ mod tests {
     #[test]
     fn the_app_menu_has_quit() {
         let menus = super::menus();
-        assert_eq!(menus[0].name, "Basalt Launcher");
+        assert_eq!(menus[0].name, "Scoria Launcher");
         assert!(matches!(
             &menus[0].items[0],
-            gpui::MenuItem::Action { name, .. } if name == "Quit Basalt Launcher"
+            gpui::MenuItem::Action { name, .. } if name == "Quit Scoria Launcher"
         ));
     }
 

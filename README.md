@@ -1,7 +1,7 @@
-> **Basalt** is a fork of [Horizon](https://github.com/horizon-rust/horizon) with offline play
+> **Scoria** is a fork of [Horizon](https://github.com/horizon-rust/horizon) with offline play
 > that does not require a Microsoft account. See [docs/fork/README.md](docs/fork/README.md) for
-> what the fork changes; the README below describes the engine, which Basalt inherits unchanged.
-> Basalt ships no Minecraft code, assets or data: preparation reads your own installation of
+> what the fork changes; the README below describes the engine, which Scoria inherits unchanged.
+> Scoria ships no Minecraft code, assets or data: preparation reads your own installation of
 > Minecraft: Java Edition 26.3 (the 26.3 server jar is fetched once unless you provide it).
 
 <p align="center">

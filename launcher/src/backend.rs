@@ -548,7 +548,7 @@ fn unpack(archive: &Path, url: &str, to: &Path) -> Result<(), String> {
 pub fn install(release: &Release, progress: impl Fn(f32)) -> Result<(), String> {
     let tag = release.tag.as_str();
     if !is_game_tag(tag) {
-        return Err(format!("{tag} is not a Basalt release."));
+        return Err(format!("{tag} is not a Scoria release."));
     }
     let sha256 = signed_digest(tag, ASSET.unwrap_or_default())?;
     install_as(release, tag, &sha256, progress)
@@ -665,7 +665,7 @@ pub fn resources_summary(prepared: bool, sounds: bool, version: &str) -> String 
     use crate::i18n::trf;
     match (prepared, sounds) {
         (false, _) => trf(
-            "Not prepared. Basalt needs the files of your own Minecraft {version}.",
+            "Not prepared. Scoria needs the files of your own Minecraft {version}.",
             &[("version", version)],
         ),
         (true, true) => trf("Prepared for Minecraft {version}", &[("version", version)]),
@@ -1257,7 +1257,7 @@ fn java(
     let runtime = data_dir().join("minecraft").join("runtime");
     let home = mojang::java_runtime(&component, &runtime, 8, &fetch, &mojang::CANCEL, log)
         .map_err(|e| {
-        format!("{missing}\n  • Basalt also tried to download Minecraft's own Java from Mojang, but: {e}")
+        format!("{missing}\n  • Scoria also tried to download Minecraft's own Java from Mojang, but: {e}")
     })?;
     find(major, &[home]).map(|jdk| jdk.home())
 }
@@ -1328,7 +1328,7 @@ pub fn preparer(
             .and_then(|lock| sources::Pins::read(&lock))
             .ok_or("The version's research-lock.json doesn't pin the Minecraft files")?;
         let own = data_dir().join("minecraft");
-        let mut known = vec![("Basalt's own folder", own.clone())];
+        let mut known = vec![("Scoria's own folder", own.clone())];
         known.extend(
             sources::Folders::current()
                 .map(|f| sources::known_folders(sources::Os::current(), &f))
@@ -1343,7 +1343,7 @@ pub fn preparer(
             Ok(body)
         };
         let linked = data_dir().join("linked-minecraft");
-        // Basalt never downloads the game: the files come from an install the player already
+        // Scoria never downloads the game: the files come from an install the player already
         // has, or preparation stops with the list of folders that were checked.
         let resolved = sources::resolve(minecraft, &pins, &known, &linked, &fetch, log);
         if reused {
@@ -1742,7 +1742,7 @@ pub fn client_command(tag: &str) -> Command {
     let _ = fs::create_dir_all(&home);
     let mut cmd = Command::new(client_program(tag));
     cmd.current_dir(home).arg("--resources").arg(resources(tag));
-    // Basalt ships no data collection: the game must not even try to send anything, whatever
+    // Scoria ships no data collection: the game must not even try to send anything, whatever
     // a consent file left by another build says.
     cmd.env("HORIZON_TELEMETRY_URL", "off");
     // PipeWire remembers volume and mute per application name. The game's own name is
@@ -1851,7 +1851,7 @@ pub fn need_prepared(tag: &str) -> Result<(), String> {
     }
 }
 
-/// The client's command, once its resources are prepared. Basalt has no owner gate: no account
+/// The client's command, once its resources are prepared. Scoria has no owner gate: no account
 /// (or a sign-in that can't be renewed) starts the game offline.
 pub fn client(tag: &str) -> Result<Command, String> {
     let (session, offline) = account::session_for_game(&game_home());
@@ -1898,7 +1898,7 @@ pub fn release_notes(tag: Option<&str>) -> Result<Release, String> {
         Some(tag) => releases
             .into_iter()
             .find(|r| r.tag == tag)
-            .ok_or_else(|| format!("No Basalt release is tagged {tag}.")),
+            .ok_or_else(|| format!("No Scoria release is tagged {tag}.")),
         None => releases
             .into_iter()
             .next()
@@ -2064,7 +2064,7 @@ pub fn install_tag(tag: &str, as_update: bool, progress: impl Fn(f32)) -> Result
         releases
             .iter()
             .find(|r| r.tag == tag)
-            .ok_or_else(|| format!("No Basalt release is tagged {tag}."))?
+            .ok_or_else(|| format!("No Scoria release is tagged {tag}."))?
     };
     if release.asset.is_none() {
         return Err(format!("{} has no build for this platform.", release.tag));
@@ -2087,8 +2087,8 @@ pub fn exe_path() -> &'static Path {
 
 /// Development builds and `HORIZON_LAUNCHER_NO_SELF_UPDATE` never replace themselves.
 pub fn self_update_allowed() -> bool {
-    // Basalt: the launcher may only replace itself with a Basalt release. Horizon's release feed
-    // is not ours, so self-update stays off until Basalt has its own signed pipeline (ADR-0001,
+    // Scoria: the launcher may only replace itself with a Scoria release. Horizon's release feed
+    // is not ours, so self-update stays off until Scoria has its own signed pipeline (ADR-0001,
     // P5). Development builds and HORIZON_LAUNCHER_NO_SELF_UPDATE keep the same result.
     false
 }
@@ -3307,7 +3307,7 @@ mod tests {
         assert!(defaults.discord.is_empty());
         assert!(defaults.sponsor.is_empty());
         assert!(defaults.website.is_empty());
-        // The file on main says the same thing as the defaults: Basalt has no community links yet.
+        // The file on main says the same thing as the defaults: Scoria has no community links yet.
         let file = Links::parse(r#"{"discord": "", "sponsor": "", "website": ""}"#);
         assert_eq!(file, defaults);
         // Unreadable or missing, offline included: the defaults.

@@ -1,27 +1,27 @@
-# Basalt
+# Scoria
 
-Basalt is a fork of [Horizon](https://github.com/horizon-rust/horizon): Minecraft: Java Edition 26.3
+Scoria is a fork of [Horizon](https://github.com/horizon-rust/horizon): Minecraft: Java Edition 26.3
 written in Rust, with a launcher that plays without a Microsoft account.
 
 - **Upstream:** `upstream` = `https://github.com/horizon-rust/horizon.git`. Never commit to it.
 - **This repository:** `origin` is added when the fork gets a home; until then it is local only.
-- **Licence:** MIT, as upstream (see `LICENSE` and `THIRD_PARTY_NOTICES.md`). Basalt's own changes
-  are MIT too. Minecraft is a trademark of Mojang Synergies AB; Basalt is unofficial and ships no
+- **Licence:** MIT, as upstream (see `LICENSE` and `THIRD_PARTY_NOTICES.md`). Scoria's own changes
+  are MIT too. Minecraft is a trademark of Mojang Synergies AB; Scoria is unofficial and ships no
   Mojang code, assets or data.
 
-## What Basalt changes
+## What Scoria changes
 
-| Area | Horizon | Basalt |
+| Area | Horizon | Scoria |
 |---|---|---|
 | Starting the game | requires a signed-in Microsoft account that owns Java Edition (the "owner gate") | any offline name, no account needed (P1) |
 | Microsoft sign-in | required before Play | optional: online-mode servers, cloud skins |
 | Game files | can be downloaded from Mojang for an owner | prepared from an installation you already have; only the 26.3 server jar is fetched once, for data generation |
 | Launcher UI | Rust + GPUI | stays on GPUI for now; moves to Redmoon's **flint-ui** when it exists (ADR-0003) |
 | Telemetry | opt-in, shipped | removed |
-| Mod registry, nightly channel | shipped | removed; Basalt's own registry later |
-| Self-update | from Horizon's GitHub releases | disabled until Basalt has its own releases |
+| Mod registry, nightly channel | shipped | removed; Scoria's own registry later |
+| Self-update | from Horizon's GitHub releases | disabled until Scoria has its own releases |
 
-The scene is unchanged: Basalt is Horizon's engine, parity harnesses and world format. Basalt does
+The scene is unchanged: Scoria is Horizon's engine, parity harnesses and world format. Scoria does
 not patch the game to accept unauthenticated sessions on online-mode servers. Offline play is
 local: single player, LAN and offline-mode servers, exactly as Horizon already supports without a
 session file (`docs/microsoft-account.md`, "Handing the session to the game").
@@ -34,7 +34,8 @@ session file (`docs/microsoft-account.md`, "Handing the session to the game").
 - [adr/0002-gpui-x-hybrid.md](adr/0002-gpui-x-hybrid.md): GPUIX analysis (timing superseded).
 - [adr/0003-launcher-ui-flint-ui.md](adr/0003-launcher-ui-flint-ui.md): the launcher UI waits for
   flint-ui.
-- [entire.md](entire.md): where `origin` lives (Entire `/et/redmoon/basalt`) and what its
+- [adr/0004-rename-to-scoria.md](adr/0004-rename-to-scoria.md): Basalt becomes Scoria.
+- [entire.md](entire.md): where `origin` lives (Entire `/et/redmoon/scoria`) and what its
   agent checkpoints are.
 - [branches.md](branches.md): `main`, `dev`, `nightly` and the merge/test rules.
 - Upstream docs stay authoritative for the engine: [`docs/README.md`](../README.md),
@@ -49,7 +50,7 @@ cargo run --release -p horizon-client
 cd launcher && cargo run
 ```
 
-The launcher is its own workspace. Basalt's copy is at `/home/shrx/dev/basalt/launcher`.
+The launcher is its own workspace. Scoria's copy is at `/home/shrx/dev/scoria/launcher`.
 
 ## Status
 
@@ -63,4 +64,4 @@ The launcher is its own workspace. Basalt's copy is at `/home/shrx/dev/basalt/la
   `nightly.rs`, no setting, no Nightly instance. Still to do: the remaining registry code, then
   CI.
 - P3 (paused): the launcher UI moves to Redmoon's **flint-ui** once it has code; the GPUIX plan
-  is deferred (ADR-0003). P4: full RU/EN documentation. P5: Basalt's own signed releases.
+  is deferred (ADR-0003). P4: full RU/EN documentation. P5: Scoria's own signed releases.

@@ -1273,7 +1273,7 @@ fn account_command(action: AccountCmd, as_json: bool) -> Result<(), String> {
                 }));
             } else if accounts.accounts.is_empty() && accounts.offline.is_empty() {
                 println!(
-                    "No Microsoft account signed in. Basalt plays offline; sign in for online \
+                    "No Microsoft account signed in. Scoria plays offline; sign in for online \
                      servers and cloud skins: horizon-launcher account sign-in"
                 );
             } else {

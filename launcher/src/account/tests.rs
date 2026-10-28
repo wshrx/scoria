@@ -333,7 +333,7 @@ fn an_owner_plays_with_a_session() {
 
 #[test]
 fn a_no_from_the_services_plays_offline() {
-    // Basalt: "doesn't own" no longer refuses Play. The account keeps its answer, Play goes on
+    // Scoria: "doesn't own" no longer refuses Play. The account keeps its answer, Play goes on
     // without a session, and the reason is reported to the player.
     let (_, ep) = mock(|m| m.owns_game = false);
     let store = MemoryStore::default();
@@ -370,7 +370,7 @@ fn no_network_never_blocks_a_past_owner() {
     assert!(launch(&offline(), None, &store, &mut accounts)
         .session
         .is_none());
-    // An account that never passed plays offline too; Basalt does not refuse it.
+    // An account that never passed plays offline too; Scoria does not refuse it.
     let mut accounts = signed_in(&store, &secrets("mc-token", false));
     assert!(
         launch(&offline(), Some("test-client"), &store, &mut accounts)
@@ -418,7 +418,7 @@ fn any_owner_opens_the_gate_and_the_one_who_plays_brings_the_session() {
 
 #[test]
 fn offline_names_play_without_an_owner() {
-    // Basalt: no account, no keychain, no problem.
+    // Scoria: no account, no keychain, no problem.
     let store = MemoryStore::default();
     let mut accounts = Accounts::default();
     accounts

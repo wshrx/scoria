@@ -1,10 +1,10 @@
 [Desktop Entry]
 Type=Application
-Name=Basalt
+Name=Scoria
 GenericName=Game launcher
-Comment=Install, prepare and play Basalt, Minecraft: Java Edition 26.3 rewritten in Rust
+Comment=Install, prepare and play Scoria, Minecraft: Java Edition 26.3 rewritten in Rust
 Exec=horizon-launcher
 Icon=horizon
 Terminal=false
 Categories=Game;
-StartupWMClass=horizon-launcher
+StartupWMClass=scoria-launcher

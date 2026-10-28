@@ -1,6 +1,6 @@
 # Third-party notices
 
-Basalt is a fork of Horizon (https://github.com/horizon-rust/horizon, MIT). Horizon's original work
+Scoria is a fork of Horizon (https://github.com/horizon-rust/horizon, MIT). Horizon's original work
 and its third-party notices are reproduced below unchanged.
 
 

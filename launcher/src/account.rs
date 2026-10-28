@@ -18,7 +18,7 @@ use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 /// The keychain service name every secret is stored under.
-pub const SERVICE: &str = "dev.basalt.launcher";
+pub const SERVICE: &str = "dev.scoria.launcher";
 const SCOPE: &str = "XboxLive.signin offline_access";
 pub const NOT_CONFIGURED: &str =
     "This build of the launcher has no Microsoft sign-in (HORIZON_MSA_CLIENT_ID), so it can't start the game.";
@@ -601,7 +601,7 @@ impl SecretStore for SystemStore {
             let attributes = vec![("service", SERVICE), ("account", key)];
             keyring
                 .create_item(
-                    "Basalt launcher: Minecraft account",
+                    "Scoria launcher: Minecraft account",
                     &attributes,
                     secret.as_bytes(),
                     true,
@@ -861,7 +861,7 @@ impl Accounts {
     }
 
     /// Plays as `who`: an account, an offline name (kept, no account needed), or the game's own
-    /// name. `_store` stays in the signature so older callers (and the CLI) keep working; Basalt
+    /// name. `_store` stays in the signature so older callers (and the CLI) keep working; Scoria
     /// no longer asks it whether anyone owns the game.
     pub fn play_as(&mut self, _store: &dyn SecretStore, who: Player) -> Result<(), String> {
         match who {
@@ -872,7 +872,7 @@ impl Accounts {
                 self.selected = Some(uuid);
             }
             Player::Offline(name) => {
-                // Basalt: an offline name needs no account. Signing one in only adds online
+                // Scoria: an offline name needs no account. Signing one in only adds online
                 // play, cloud skins and the (removed) Mojang download path.
                 let name = self.add_offline(&name)?;
                 self.selected = None;
@@ -977,7 +977,7 @@ pub struct Launch {
 
 /// Renews the selected account's session, if any, and records which accounts own the game.
 ///
-/// Basalt removed the owner gate: this never refuses a launch. An account that cannot be
+/// Scoria removed the owner gate: this never refuses a launch. An account that cannot be
 /// renewed plays offline (`Launch::offline` says why) and an offline name needs no account at
 /// all. `Launch::owner` is informational (and still used by the Mojang download path until P2).
 /// The caller saves `accounts` (renewed names and skins).
@@ -1127,7 +1127,7 @@ impl SignIn {
 }
 
 /// The selected account's session in a file for the game about to start: the file (none:
-/// offline) and why the account plays offline this time, if it does. Never refuses: Basalt plays
+/// offline) and why the account plays offline this time, if it does. Never refuses: Scoria plays
 /// without an account.
 pub fn session_for_game(game_home: &Path) -> (Option<PathBuf>, Option<String>) {
     let mut accounts = Accounts::load();

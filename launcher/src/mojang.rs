@@ -1,4 +1,4 @@
-//! Mojang's Java runtime, the only thing Basalt downloads from Mojang. The game itself (the
+//! Mojang's Java runtime, the only thing Scoria downloads from Mojang. The game itself (the
 //! client jar, libraries, assets) never comes from here: preparation reads an installation the
 //! player already has (sources.rs). Each runtime file is checked against the size and sha1
 //! Mojang lists, and written whole. A download stopped half way (cancelled, no network) keeps

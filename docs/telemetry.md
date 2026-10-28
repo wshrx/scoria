@@ -1,6 +1,6 @@
 # Opt-in data collection
 
-> **Basalt fork:** data collection is removed. There is no consent screen, no `data` CLI
+> **Scoria fork:** data collection is removed. There is no consent screen, no `data` CLI
 > command and no outbox in the launcher; the game is started with
 > `HORIZON_TELEMETRY_URL=off`, so it sends nothing even if a consent file from another build is
 > present. This page describes upstream Horizon and is kept for reference.

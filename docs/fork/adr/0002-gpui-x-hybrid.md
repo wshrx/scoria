@@ -34,7 +34,7 @@ launcher-ui (TS/React, Bun)  ──JSON-RPC──▶  launcher --ipc (Rust)
 - The GPUIX side owns layout, navigation, theming, localization and accessibility. No business
   logic in TypeScript beyond view state and RPC calls.
 - Packaging: `bun build --compile` for the UI, `cargo-packager` for the bundle, the Rust engine as
-  a sidecar binary. The updater points at Basalt's own releases (P5), never Horizon's.
+  a sidecar binary. The updater points at Scoria's own releases (P5), never Horizon's.
 
 ## Why not the alternatives
 

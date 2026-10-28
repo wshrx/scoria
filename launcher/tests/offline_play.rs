@@ -1,4 +1,4 @@
-//! Basalt plays without a Microsoft account: from the outside, `horizon-launcher play` and the
+//! Scoria plays without a Microsoft account: from the outside, `horizon-launcher play` and the
 //! MCP server's `play` no longer stop at the owner gate. (The fixture has an installed but not
 //! prepared version, so they stop one step later, at preparation.)
 use std::io::Write;
