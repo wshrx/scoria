@@ -10,8 +10,10 @@ ADR-0002 proposed rewriting the launcher UI on GPUIX (React/Solid over GPUI) as 
 Rust engine over JSON-RPC, the screens in TypeScript. The P3 spike had not started.
 
 Redmoon now has its own UI project, **flint-ui**, at `/et/redmoon/flint-ui` on Entire. At the
-time of this decision the repository is **empty** (no commits, no stack chosen yet), so there is
-nothing to integrate against and no API to design for.
+time of this decision the repository is **empty** (no commits), so there is nothing to integrate
+against and no API to design for. Redmoon's own shell (`@redmoon`, ShojiWM) is built with
+gpuix/GPUI and TypeScript, so flint-ui will most likely reuse that stack; this ADR does not pin
+it until flint-ui has code.
 
 The launcher currently works: it is the upstream GPUI launcher, rebranded, with Basalt's offline
 and import changes (P0–P2). It does not block any other work.
