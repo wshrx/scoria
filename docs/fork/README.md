@@ -32,6 +32,8 @@ session file (`docs/microsoft-account.md`, "Handing the session to the game").
 - [architecture.md](architecture.md): what is where, what P0/P1 touched, what the fork depends on.
 - [adr/0001-offline-first.md](adr/0001-offline-first.md): why the owner gate goes and what stays.
 - [adr/0002-gpui-x-hybrid.md](adr/0002-gpui-x-hybrid.md): the launcher rewrite on GPUIX.
+- [entire.md](entire.md): where `origin` lives (Entire `/et/redmoon/basalt`) and what its
+  agent checkpoints are.
 - Upstream docs stay authoritative for the engine: [`docs/README.md`](../README.md),
   [`AGENTS.md`](../../AGENTS.md), [`docs/parity-workflow.md`](../parity-workflow.md).
 - Russian translations land in `docs/fork/ru/` (P4 of the plan).
