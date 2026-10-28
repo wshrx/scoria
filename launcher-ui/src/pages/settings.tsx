@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Text, useTheme } from "@/lib/flint"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import type { Snapshot } from "../api"
-import { setOfflineName, setWhilePlaying } from "../api"
+import { installLatest, removeVersion, selectVersion, setOfflineName, setWhilePlaying, versions, type VersionInfo } from "../api"
 
 const MODES: { value: "stay" | "minimize" | "hide"; label: string }[] = [
   { value: "stay", label: "Stay" },
@@ -28,6 +28,16 @@ export function SettingsPage({
   const theme = useTheme()
   const [name, setName] = useState(data.offlineName)
   const [note, setNote] = useState<string | null>(null)
+  const [installed, setInstalled] = useState<VersionInfo[]>([])
+  const [confirming, setConfirming] = useState<string | null>(null)
+
+  const refreshVersions = () => {
+    void versions()
+      .then((state) => setInstalled(state.installed))
+      .catch((error: Error) => setNote(error.message))
+  }
+
+  useEffect(refreshVersions, [])
 
   const panel = {
     display: "flex",
@@ -124,6 +134,90 @@ export function SettingsPage({
           <Text size="xs" tone="muted">mode</Text>
           <Text mono size="xs">{data.live ? "engine" : "preview"}</Text>
         </div>
+      </div>
+
+      <div style={panel}>
+        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Text mono size="xs" tone="muted">VERSIONS</Text>
+          <div style={{ flexGrow: 1 }} />
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              void installLatest()
+                .then(() => {
+                  setNote("Installed the latest build.")
+                  refreshVersions()
+                  onRefresh()
+                })
+                .catch((error: Error) => setNote(error.message))
+            }}
+          >
+            Install latest
+          </Button>
+        </div>
+        {installed.length === 0 ? (
+          <Text size="xs" tone="muted">No versions installed.</Text>
+        ) : (
+          installed.map((version) => (
+            <div
+              key={version.tag}
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 10,
+                paddingTop: 6,
+                paddingBottom: 6,
+                borderTopWidth: 1,
+                borderStyle: "solid",
+                borderColor: theme.colors.border,
+              }}
+            >
+              <Text mono size="xs" style={{ flexGrow: 1 }}>{version.tag}</Text>
+              <Badge variant={version.prepared ? "success" : "secondary"} dot>
+                {version.prepared ? "prepared" : "prepare"}
+              </Badge>
+              {version.selected ? (
+                <Badge variant="outline">selected</Badge>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    void selectVersion(version.tag)
+                      .then(() => {
+                        refreshVersions()
+                        onRefresh()
+                      })
+                      .catch((error: Error) => setNote(error.message))
+                  }}
+                >
+                  Select
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant={confirming === version.tag ? "destructive" : "ghost"}
+                onClick={() => {
+                  if (confirming !== version.tag) {
+                    setConfirming(version.tag)
+                    return
+                  }
+                  setConfirming(null)
+                  void removeVersion(version.tag)
+                    .then(() => {
+                      refreshVersions()
+                      onRefresh()
+                    })
+                    .catch((error: Error) => setNote(error.message))
+                }}
+              >
+                {confirming === version.tag ? "Confirm" : "Remove"}
+              </Button>
+            </div>
+          ))
+        )}
       </div>
 
       <div style={panel}>

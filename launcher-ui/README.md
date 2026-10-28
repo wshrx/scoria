@@ -43,6 +43,10 @@ SCORIA_UI_HEADLESS=1 bun app.tsx
 | `set_appearance` | `{ "value": "dark"\|"light"\|"system" }` | the new state |
 | `set_while_playing` | `{ "value": "stay"\|"minimize"\|"hide" }` | the new state |
 | `backup_world` | `{ "world": "Survival" }` | path of the backup |
+| `versions` | — | installed tags, prepared, selected |
+| `select_version` | `{ "tag": "v0.2.93" }` | the version list |
+| `remove_version` | `{ "tag": "v0.2.93" }` | the version list |
+| `install_latest` | — | installs the newest release from `sources.json` |
 
 The engine is stateless between calls; it reads the same `accounts.json`, `settings.json` and
 instances the CLI does.

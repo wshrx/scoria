@@ -14,6 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: "launcher -> target"
@@ -23,12 +26,11 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             libxkbcommon-x11-dev libwayland-dev libx11-xcb-dev libfontconfig-dev \
             libvulkan-dev libasound2-dev libudev-dev
-      - name: Build the launcher
-        working-directory: launcher
-        run: cargo build --release --locked
+      - name: Package the launcher
+        run: sh tools/package_ui.sh
       - name: Upload the launcher
         uses: actions/upload-artifact@v4
         with:
           name: scoria-launcher-linux-x86_64
-          path: launcher/target/release/horizon-launcher
+          path: dist/scoria-linux-x86_64
           if-no-files-found: error

@@ -4,6 +4,7 @@ pub mod agents;
 pub mod api;
 pub mod backend;
 pub mod browser;
+pub mod build_sources;
 pub mod datapacks;
 pub mod desktop;
 pub mod desktop_seams;

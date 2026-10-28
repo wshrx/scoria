@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react"
+import { existsSync } from "node:fs"
+import { dirname, resolve } from "node:path"
 import { useGpuixRequired } from "@gpuix/react"
 import { Text, ThemeProvider, registerFlintFonts } from "@/lib/flint"
 import { setAppearance, snapshot, type Snapshot } from "./api"
@@ -12,7 +14,11 @@ import { scoriaDark, scoriaLight } from "./theme"
 function Fonts() {
   const renderer = useGpuixRequired()
   useEffect(() => {
-    void registerFlintFonts(renderer, { dir: "./src/lib/fonts" })
+    // In a checkout the fonts are in the tree; in a packaged build they sit beside the binary.
+    const dir = existsSync("./src/lib/fonts")
+      ? "./src/lib/fonts"
+      : resolve(dirname(process.execPath), "fonts")
+    void registerFlintFonts(renderer, { dir })
   }, [renderer])
   return null
 }

@@ -63,14 +63,18 @@ const here = dirname(fileURLToPath(import.meta.url))
 
 function engineBinary(): string {
   if (process.env.SCORIA_LAUNCHER_BIN) return process.env.SCORIA_LAUNCHER_BIN
+  // A packaged build: the Rust engine sits beside the compiled UI.
+  const beside = resolve(dirname(process.execPath), "horizon-launcher")
+  if (existsSync(beside)) return beside
   const dev = resolve(here, "../../launcher/target/debug/horizon-launcher")
-  return existsSync(dev) ? dev : resolve(here, "../horizon-launcher")
+  return existsSync(dev) ? dev : beside
 }
 
 type Pending = {
   resolve: (value: unknown) => void
   reject: (error: Error) => void
   timer: ReturnType<typeof setTimeout>
+  onEvent?: (event: Record<string, unknown>) => void
 }
 
 let engine: ChildProcessWithoutNullStreams | null = null
@@ -88,7 +92,7 @@ function failAll(error: Error) {
 }
 
 function onLine(line: string) {
-  let message: { id?: number; ok?: boolean; result?: unknown; error?: string }
+  let message: { id?: number; ok?: boolean; result?: unknown; error?: string; event?: string }
   try {
     message = JSON.parse(line)
   } catch {
@@ -97,6 +101,10 @@ function onLine(line: string) {
   if (typeof message.id !== "number") return
   const entry = pending.get(message.id)
   if (!entry) return
+  if (message.event) {
+    entry.onEvent?.(message as Record<string, unknown>)
+    return
+  }
   pending.delete(message.id)
   clearTimeout(entry.timer)
   if (message.ok) entry.resolve(message.result)
@@ -144,7 +152,12 @@ function start(): ChildProcessWithoutNullStreams | null {
   }
 }
 
-function call<T>(method: string, params: unknown = {}, timeoutMs = 10_000): Promise<T> {
+function call<T>(
+  method: string,
+  params: unknown = {},
+  timeoutMs = 10_000,
+  onEvent?: (event: Record<string, unknown>) => void,
+): Promise<T> {
   const child = start()
   if (!child) return Promise.reject(new Error(unavailable ?? "the engine is not available"))
   const id = nextId++
@@ -157,6 +170,7 @@ function call<T>(method: string, params: unknown = {}, timeoutMs = 10_000): Prom
       resolve: resolvePromise as (value: unknown) => void,
       reject: rejectPromise,
       timer,
+      onEvent,
     })
     child.stdin.write(`${JSON.stringify({ id, method, params })}\n`)
   })
@@ -191,12 +205,18 @@ export async function play(world?: string): Promise<string> {
 }
 
 /** Prepares the selected version from the player's own Minecraft installation. */
-export async function prepare(instance?: string): Promise<string> {
+export async function prepare(
+  instance?: string,
+  onLog?: (line: string) => void,
+): Promise<string> {
   try {
     const result = await call<{ prepared: boolean; log: string[] }>(
       "prepare",
       instance ? { instance } : {},
       30 * 60_000,
+      (event) => {
+        if (event.event === "log" && typeof event.line === "string") onLog?.(event.line)
+      },
     )
     const last = result.log.at(-1)
     return result.prepared
@@ -231,4 +251,26 @@ export async function setAppearance(value: "dark" | "light" | "system"): Promise
 export async function setWhilePlaying(value: "stay" | "minimize" | "hide"): Promise<Snapshot> {
   const state = await call<Omit<Snapshot, "live">>("set_while_playing", { value }, 5000)
   return { ...state, live: true }
+}
+
+export interface VersionInfo {
+  tag: string
+  prepared: boolean
+  selected: boolean
+}
+
+export async function versions(): Promise<{ installed: VersionInfo[]; selected: string | null }> {
+  return call("versions", {}, 5000)
+}
+
+export async function selectVersion(tag: string): Promise<void> {
+  await call("select_version", { tag }, 5000)
+}
+
+export async function removeVersion(tag: string): Promise<void> {
+  await call("remove_version", { tag }, 15_000)
+}
+
+export async function installLatest(): Promise<void> {
+  await call("install_latest", {}, 30 * 60_000)
 }

@@ -10,6 +10,7 @@ import { Terrain } from "../terrain"
 export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () => void }) {
   const theme = useTheme()
   const [note, setNote] = useState<string | null>(null)
+  const [log, setLog] = useState<string | null>(null)
   const [busy, setBusy] = useState<"play" | "prepare" | null>(null)
 
   const panel = {
@@ -61,7 +62,8 @@ export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () =>
                   loading={busy === "prepare"}
                   onClick={() => {
                     setBusy("prepare")
-                    void prepare().then((said) => {
+                    setLog(null)
+                    void prepare(undefined, (line) => setLog(line)).then((said) => {
                       setNote(said)
                       setBusy(null)
                       onRefresh()
@@ -75,6 +77,9 @@ export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () =>
                   {data.instances.length} INSTANCES
                 </Text>
               </div>
+              {busy === "prepare" && log ? (
+                <Text mono size="xs" tone="muted" style={{ marginTop: 12 }}>{log}</Text>
+              ) : null}
               {note ? (
                 <Text size="xs" tone="muted" style={{ marginTop: 12 }}>{note}</Text>
               ) : null}

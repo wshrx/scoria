@@ -119,3 +119,18 @@ jobs:
           cargo +stable fmt --check
           cargo +stable clippy --all-targets --locked -- -D warnings
           cargo +stable test --locked --lib
+
+  ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - name: Check the flint UI
+        working-directory: launcher-ui
+        run: |
+          bun install --frozen-lockfile
+          bun run typecheck
+          bun run build

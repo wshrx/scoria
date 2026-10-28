@@ -9,8 +9,7 @@ use std::process::{Child, ChildStdin, Command, Stdio};
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 
-pub const REPO: &str = "horizon-rust/horizon";
-pub const README_URL: &str = "https://github.com/horizon-rust/horizon/blob/main/launcher/README.md";
+pub const README_URL: &str = "https://github.com/wshrx/scoria/blob/main/docs/fork/README.md";
 /// The players' page on connecting an AI agent (the website's docs/agents.md).
 pub const AGENT_DOCS_URL: &str = "https://playhorizon.dev/docs/agents";
 /// This launcher's version: the release workflow sets `HORIZON_LAUNCHER_VERSION` from the
@@ -234,7 +233,7 @@ pub fn compare_versions(a: &str, b: &str) -> std::cmp::Ordering {
 
 /// Every published release of the repository, both kinds, as GitHub's JSON.
 fn release_list() -> Result<serde_json::Value, String> {
-    let url = format!("https://api.github.com/repos/{REPO}/releases?per_page=100");
+    let url = crate::build_sources::releases_url();
     get(&url)?.into_json().map_err(|e| e.to_string())
 }
 
@@ -304,7 +303,10 @@ fn launcher_releases_in_with(
     if found.iter().any(|r| r.asset.is_some()) {
         return found;
     }
-    let api = format!("https://api.github.com/repos/{REPO}");
+    let api = format!(
+        "https://api.github.com/repos/{}",
+        crate::build_sources::repo()
+    );
     let mut tags = Vec::new();
     for prefix in [LAUNCHER_TAG_PREFIX, OLD_LAUNCHER_TAG_PREFIX] {
         // Every `launcher@` tag is newer than every `launcher-v` one: those only when there is none.
@@ -399,7 +401,10 @@ impl Links {
 
 /// The links from main, or the built-in ones when offline.
 pub fn links() -> Links {
-    let url = format!("https://raw.githubusercontent.com/{REPO}/main/launcher/links.json");
+    let url = format!(
+        "https://raw.githubusercontent.com/{}/main/launcher/links.json",
+        crate::build_sources::repo()
+    );
     get(&url)
         .ok()
         .and_then(|r| r.into_string().ok())

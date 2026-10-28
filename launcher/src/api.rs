@@ -43,9 +43,15 @@ pub fn serve() -> Result<(), String> {
             .unwrap_or_default()
             .to_string();
         let params = request.get("params").cloned().unwrap_or(Value::Null);
-        let response = match dispatch(&method, &params) {
-            Ok(result) => json!({ "id": id, "ok": true, "result": result }),
-            Err(error) => json!({ "id": id, "ok": false, "error": error }),
+        let response = {
+            let mut emit = |value: Value| {
+                let _ = writeln!(stdout, "{value}");
+                let _ = stdout.flush();
+            };
+            match dispatch(&id, &method, &params, &mut emit) {
+                Ok(result) => json!({ "id": id, "ok": true, "result": result }),
+                Err(error) => json!({ "id": id, "ok": false, "error": error }),
+            }
         };
         writeln!(stdout, "{response}").map_err(|e| e.to_string())?;
         stdout.flush().map_err(|e| e.to_string())?;
@@ -53,10 +59,15 @@ pub fn serve() -> Result<(), String> {
     Ok(())
 }
 
-fn dispatch(method: &str, params: &Value) -> Result<Value, String> {
+fn dispatch(
+    id: &Value,
+    method: &str,
+    params: &Value,
+    emit: &mut dyn FnMut(Value),
+) -> Result<Value, String> {
     match method {
         "state" => state(),
-        "prepare" => prepare(params),
+        "prepare" => prepare(id, params, emit),
         "play" => play(params),
         "select_instance" => select_instance(params),
         "create_instance" => create_instance(params),
@@ -64,6 +75,10 @@ fn dispatch(method: &str, params: &Value) -> Result<Value, String> {
         "set_appearance" => set_appearance(params),
         "set_while_playing" => set_while_playing(params),
         "backup_world" => backup_world(params),
+        "versions" => versions(),
+        "select_version" => select_version(params),
+        "remove_version" => remove_version(params),
+        "install_latest" => install_latest(),
         other => Err(format!("unknown method {other}")),
     }
 }
@@ -137,18 +152,25 @@ fn state() -> Result<Value, String> {
     }))
 }
 
-fn prepare(params: &Value) -> Result<Value, String> {
+fn prepare(id: &Value, params: &Value, emit: &mut dyn FnMut(Value)) -> Result<Value, String> {
     let tag = requested_tag(params)?;
     let settings = backend::Settings::load();
     let minecraft = backend::minecraft_dir(settings.minecraft_dir.clone())?;
     let log: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
     let sink = {
         let log = log.clone();
+        let id = id.clone();
+        let emit = std::cell::RefCell::new(emit);
         move |line: String| {
-            let mut log = log.lock().unwrap();
-            log.push(line);
-            if log.len() > 200 {
-                log.remove(0);
+            {
+                let mut log = log.lock().unwrap();
+                log.push(line.clone());
+                if log.len() > 200 {
+                    log.remove(0);
+                }
+            }
+            if let Ok(mut emit) = emit.try_borrow_mut() {
+                emit(json!({ "id": id, "event": "log", "line": line }));
             }
         }
     };
@@ -265,6 +287,53 @@ fn backup_world(params: &Value) -> Result<Value, String> {
     let found = crate::worlds::find(&instance.home, world)?;
     let path = crate::worlds::backup(&instance.home, &found)?;
     Ok(json!({ "path": path }))
+}
+
+fn versions() -> Result<Value, String> {
+    let settings = backend::Settings::load();
+    let selected = settings.selected.clone();
+    let installed: Vec<Value> = backend::installed()
+        .into_iter()
+        .map(|tag| {
+            json!({
+                "tag": tag,
+                "prepared": backend::is_prepared(&tag),
+                "selected": selected.as_deref() == Some(tag.as_str()),
+            })
+        })
+        .collect();
+    Ok(json!({ "installed": installed, "selected": selected }))
+}
+
+fn select_version(params: &Value) -> Result<Value, String> {
+    let tag = params
+        .get("tag")
+        .and_then(Value::as_str)
+        .ok_or("select_version needs {\"tag\": \"v…\"}")?;
+    let tag = backend::resolve_version(Some(tag))?;
+    let mut settings = backend::Settings::load();
+    settings.selected = Some(tag);
+    settings.save();
+    versions()
+}
+
+fn remove_version(params: &Value) -> Result<Value, String> {
+    let tag = params
+        .get("tag")
+        .and_then(Value::as_str)
+        .ok_or("remove_version needs {\"tag\": \"v…\"}")?;
+    backend::remove_version(tag)?;
+    versions()
+}
+
+fn install_latest() -> Result<Value, String> {
+    let releases = backend::releases()?;
+    let release = releases
+        .iter()
+        .find(|r| r.asset.is_some())
+        .ok_or("No build for this platform in the release feed.")?;
+    backend::install_tag(&release.tag, false, |_| {})?;
+    versions()
 }
 
 fn set_offline_name(params: &Value) -> Result<Value, String> {

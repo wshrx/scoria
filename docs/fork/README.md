@@ -41,6 +41,7 @@ session file (`docs/microsoft-account.md`, "Handing the session to the game").
 - [adr/0005-two-remotes.md](adr/0005-two-remotes.md): Entire keeps everything, GitHub gets
   `main` and `nightly`.
 - [branches.md](branches.md): `main`, `dev`, `nightly` and the merge/test rules.
+- [sources.md](sources.md): `sources.json` for Scoria's own builds on your server.
 - Upstream docs stay authoritative for the engine: [`docs/README.md`](../README.md),
   [`AGENTS.md`](../../AGENTS.md), [`docs/parity-workflow.md`](../parity-workflow.md).
 - Russian translations land in `docs/fork/ru/` (P4 of the plan).
