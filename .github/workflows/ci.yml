@@ -6,7 +6,7 @@ name: checks
 # runners and Horizon's signing infrastructure, none of which belong to this repository.
 on:
   push:
-    branches: [main]
+    branches: [main, nightly]
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
@@ -109,6 +109,3 @@ jobs:
           cargo +stable fmt --check
           cargo +stable clippy --all-targets --locked -- -D warnings
           cargo +stable test --locked --lib
-  # Most pull requests leave the harnesses to parity-main, which runs them on main a batch of merges at a time
-  # (.github/workflows/parity-main.yml; releases wait for it). A pull request still runs them itself when it changes
-  # a harness, an oracle, a probe or the runner, or carries the run-parity label (run-parity.yml, when it is added).
