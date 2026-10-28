@@ -27,6 +27,9 @@ export function App() {
   }, [])
 
   const theme = dark ? scoriaDark : scoriaLight
+  const refresh = () => {
+    void snapshot().then(setData)
+  }
 
   if (!data) {
     return (
@@ -48,10 +51,15 @@ export function App() {
         onToggleTheme={() => setDark((value) => !value)}
         data={data}
       >
-        {page === "home" ? <HomePage data={data} /> : null}
+        {page === "home" ? <HomePage data={data} onRefresh={refresh} /> : null}
         {page === "instances" ? <InstancesPage data={data} /> : null}
         {page === "settings" ? (
-          <SettingsPage data={data} dark={dark} onToggleTheme={() => setDark((value) => !value)} />
+          <SettingsPage
+            data={data}
+            dark={dark}
+            onToggleTheme={() => setDark((value) => !value)}
+            onRefresh={refresh}
+          />
         ) : null}
       </Shell>
     </ThemeProvider>

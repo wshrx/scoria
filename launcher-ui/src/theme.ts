@@ -1,31 +1,81 @@
 import { flintDark, flintLight, type FlintTheme } from "@/lib/flint"
 
 /**
- * Scoria's palette: flint's structure with an ember accent instead of sky.
- * Every colour in the app comes from here — no literals in components.
+ * Scoria: basalt and ember. Warm black rock, ash text, one hot accent.
+ * Everything below reads these tokens; no component carries a colour literal.
  */
-const ember = {
-  primary: "#F97316",
-  primaryHover: "#FB923C",
-  ring: "#F97316",
+const basalt = {
+  background: "#0B0908",
+  foreground: "#F4EEE6",
+  card: "#131010",
+  cardForeground: "#F4EEE6",
+  popover: "#181413",
+  popoverForeground: "#F4EEE6",
+  primary: "#FF6B35",
+  primaryForeground: "#180A03",
+  primaryHover: "#FF8A5C",
+  secondary: "#1D1815",
+  secondaryForeground: "#F4EEE6",
+  secondaryHover: "#28211D",
+  muted: "#191513",
+  mutedForeground: "#A79C91",
+  accent: "#241D19",
+  accentForeground: "#FFF6EE",
+  destructive: "#E5484D",
+  destructiveForeground: "#FFF4F4",
+  destructiveHover: "#F2555A",
+  success: "#8FD3A8",
+  successForeground: "#0C1F14",
+  successBorder: "#2C5A3F",
+  border: "#2A2320",
+  input: "#6B5F55",
+  ring: "#FF6B35",
+  overlay: "#000000CC",
+  selection: "#FF6B3540",
+  caret: "#FF6B35",
+}
+
+const paper = {
+  background: "#F3EDE4",
+  foreground: "#1A1512",
+  card: "#FBF7F0",
+  cardForeground: "#1A1512",
+  popover: "#FFFDF8",
+  popoverForeground: "#1A1512",
+  primary: "#D24E1B",
+  primaryForeground: "#FFF8F2",
+  primaryHover: "#E2602C",
+  secondary: "#E9E0D3",
+  secondaryForeground: "#1A1512",
+  secondaryHover: "#DED3C4",
+  muted: "#EEE7DC",
+  mutedForeground: "#6D6257",
+  accent: "#E7DCCC",
+  accentForeground: "#1A1512",
+  destructive: "#C0323A",
+  destructiveForeground: "#FFF4F4",
+  destructiveHover: "#CC3A42",
+  success: "#3E7A57",
+  successForeground: "#F2FFF7",
+  successBorder: "#8FBFA2",
+  border: "#D8CCBD",
+  input: "#9A8B7B",
+  ring: "#D24E1B",
+  overlay: "#1A151266",
+  selection: "#D24E1B33",
+  caret: "#D24E1B",
 }
 
 export const scoriaDark: FlintTheme = {
   ...flintDark,
-  colors: {
-    ...flintDark.colors,
-    ...ember,
-    primaryForeground: "#170A02",
-    selection: "#F9731633",
-  },
+  colors: { ...flintDark.colors, ...basalt },
+  radius: { xs: 2, sm: 3, md: 4, lg: 6, xl: 8, full: 999 },
+  text: { xs: 11, sm: 12, base: 13, md: 14, lg: 16, xl: 20, "2xl": 24, "3xl": 34 },
 }
 
 export const scoriaLight: FlintTheme = {
   ...flintLight,
-  colors: {
-    ...flintLight.colors,
-    ...ember,
-    primaryForeground: "#FFFFFF",
-    selection: "#F9731622",
-  },
+  colors: { ...flintLight.colors, ...paper },
+  radius: { xs: 2, sm: 3, md: 4, lg: 6, xl: 8, full: 999 },
+  text: { xs: 11, sm: 12, base: 13, md: 14, lg: 16, xl: 20, "2xl": 24, "3xl": 34 },
 }

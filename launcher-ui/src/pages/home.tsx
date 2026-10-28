@@ -2,88 +2,211 @@ import { useState } from "react"
 import { Icon, Text, useTheme } from "@/lib/flint"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Snapshot } from "../api"
 import { play, prepare } from "../api"
+import { Terrain } from "../terrain"
 
-/** What a player sees first: the version, one Play, and their worlds. */
-export function HomePage({ data }: { data: Snapshot }) {
+/** Overview: one loud version, one Play, then the worlds as a list. */
+export function HomePage({ data, onRefresh }: { data: Snapshot; onRefresh: () => void }) {
   const theme = useTheme()
   const [note, setNote] = useState<string | null>(null)
+  const [busy, setBusy] = useState<"play" | "prepare" | null>(null)
+
+  const panel = {
+    display: "flex",
+    flexDirection: "column" as const,
+    backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderStyle: "solid" as const,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+  }
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <CardTitle>Play {data.version}</CardTitle>
-            <Badge variant={data.prepared ? "success" : "secondary"} dot>
-              {data.prepared ? "Ready" : "Needs preparing"}
-            </Badge>
-          </div>
-          <CardDescription>
-            Minecraft: Java Edition 26.3, natively. Your own installation, no account.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Button
-              onClick={() => {
-                void play().then(setNote)
-              }}
-            >
-              <Icon name="chevronRight" size={14} color={theme.colors.primaryForeground} />
-              Play
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                void prepare().then(setNote)
-              }}
-            >
-              Prepare
-            </Button>
-            <div style={{ flexGrow: 1 }} />
-            <Text size="sm" tone="muted">Playing as {data.offlineName}</Text>
-          </div>
-          {note ? (
-            <Text size="xs" tone="muted" style={{ paddingTop: 10 }}>{note}</Text>
-          ) : null}
-        </CardContent>
-      </Card>
-
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "baseline", gap: 8 }}>
-        <Text size="lg" weight="semibold">Worlds</Text>
-        <Text size="sm" tone="muted">{data.worlds.length} in this instance</Text>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-        {data.worlds.map((world) => (
-          <Card key={world.name} style={{ width: 300 }}>
-            <CardHeader>
-              <CardTitle>{world.name}</CardTitle>
-              <CardDescription>{world.mode} · {world.size}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <Text size="xs" tone="muted">Played {world.lastPlayed}</Text>
-                <div style={{ flexGrow: 1 }} />
-                <Button variant="ghost" size="sm">Play</Button>
+    <div style={{ display: "flex", flexDirection: "row", gap: 22, alignItems: "flex-start" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 22, flexGrow: 1, minWidth: 0 }}>
+        <div style={{ ...panel, overflow: "hidden" }}>
+          <div style={{ display: "flex", flexDirection: "row", gap: 24, padding: 28 }}>
+            <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, minWidth: 0 }}>
+              <Text mono size="xs" tone="muted">
+                MINECRAFT 26.3 · {data.branch.toUpperCase()}
+              </Text>
+              <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-end", gap: 12, marginTop: 6 }}>
+                <Text style={{ fontSize: 50, lineHeight: 52, fontWeight: "700" }}>{data.version}</Text>
+                <Badge variant={data.prepared ? "success" : "secondary"} dot>
+                  {data.prepared ? "ready" : "needs preparing"}
+                </Badge>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+              <Text size="sm" tone="muted" style={{ marginTop: 10, maxWidth: 520 }}>
+                Your own Minecraft files, prepared locally. No account, no session, no telemetry.
+              </Text>
+              <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, marginTop: 22 }}>
+                <Button
+                  size="lg"
+                  loading={busy === "play"}
+                  onClick={() => {
+                    setBusy("play")
+                    void play().then((said) => {
+                      setNote(said)
+                      setBusy(null)
+                    })
+                  }}
+                >
+                  <Icon name="play" size={14} color={theme.colors.primaryForeground} />
+                  <Text style={{ color: theme.colors.primaryForeground }}>Play</Text>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  loading={busy === "prepare"}
+                  onClick={() => {
+                    setBusy("prepare")
+                    void prepare().then((said) => {
+                      setNote(said)
+                      setBusy(null)
+                      onRefresh()
+                    })
+                  }}
+                >
+                  Prepare
+                </Button>
+                <div style={{ flexGrow: 1 }} />
+                <Text mono size="xs" tone="muted">
+                  {data.instances.length} INSTANCES
+                </Text>
+              </div>
+              {note ? (
+                <Text size="xs" tone="muted" style={{ marginTop: 12 }}>{note}</Text>
+              ) : null}
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-end",
+                gap: 8,
+                width: 200,
+                flexShrink: 0,
+              }}
+            >
+              <Text mono size="xs" tone="muted">PLAYING AS</Text>
+              <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <Badge variant="success" dot>offline</Badge>
+                <Text size="md" weight="semibold">{data.offlineName}</Text>
+              </div>
+              <Text mono size="xs" tone="muted" style={{ marginTop: 18 }}>PROFILE</Text>
+              <Text size="xs" tone="muted">Local name and skin, kept in accounts.json.</Text>
+              <Text mono size="xs" tone="muted" style={{ marginTop: 18 }}>FILES</Text>
+              <Text size="xs" tone="muted">Freesm / Prism / official install, detected automatically.</Text>
+            </div>
+          </div>
+          <Terrain height={88} />
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "row", alignItems: "baseline", gap: 10 }}>
+          <Text size="lg" weight="semibold">Worlds</Text>
+          <Text mono size="xs" tone="muted">{data.worlds.length} SAVES</Text>
+        </div>
+
+        <div style={panel}>
+          {data.worlds.length === 0 ? (
+            <div style={{ padding: 20 }}>
+              <Text size="sm" tone="muted">No worlds yet. Play and create one.</Text>
+            </div>
+          ) : (
+            data.worlds.map((world, index) => (
+              <div
+                key={world.name}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 14,
+                  paddingLeft: 16,
+                  paddingRight: 14,
+                  paddingTop: 13,
+                  paddingBottom: 13,
+                  borderTopWidth: index === 0 ? 0 : 1,
+                  borderStyle: "solid",
+                  borderColor: theme.colors.border,
+                  cursor: "pointer",
+                  hover: { backgroundColor: theme.colors.muted },
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 34,
+                    height: 34,
+                    flexShrink: 0,
+                    backgroundColor: theme.colors.accent,
+                  }}
+                >
+                  <Icon name="layers" size={15} color={theme.colors.mutedForeground} />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, minWidth: 0 }}>
+                  <Text weight="medium">{world.name}</Text>
+                  <Text mono size="xs" tone="muted">{world.mode} · {world.size}</Text>
+                </div>
+                <Text mono size="xs" tone="muted">{world.lastPlayed}</Text>
+                <Icon name="chevronRight" size={14} color={theme.colors.mutedForeground} />
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
-      <Card variant="inset">
-        <CardHeader>
-          <CardTitle>No Microsoft, by design</CardTitle>
-          <CardDescription>
-            Offline profiles, LAN and Play with friends work out of the box. Online-mode servers need a
-            real account and are not part of Scoria.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    </>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, width: 280, flexShrink: 0 }}>
+        <div style={{ ...panel, padding: 16, gap: 10 }}>
+          <Text mono size="xs" tone="muted">PROFILE</Text>
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 44,
+                height: 44,
+                backgroundColor: theme.colors.primary,
+              }}
+            >
+              <Text style={{ color: theme.colors.primaryForeground, fontSize: 18, fontWeight: "700" }}>
+                {data.offlineName.slice(0, 1).toUpperCase()}
+              </Text>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <Text weight="semibold">{data.offlineName}</Text>
+              <Text mono size="xs" tone="muted">OFFLINE</Text>
+            </div>
+          </div>
+          <Text size="xs" tone="muted">No Microsoft account. Online-mode servers are out of scope.</Text>
+        </div>
+
+        <div style={{ ...panel, padding: 16, gap: 8 }}>
+          <Text mono size="xs" tone="muted">ENGINE</Text>
+          {[
+            ["version", data.version],
+            ["branch", data.branch],
+            ["resources", data.prepared ? "prepared" : "missing"],
+            ["mode", data.live ? "live" : "preview"],
+          ].map(([key, value]) => (
+            <div key={key} style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
+              <Text size="xs" tone="muted">{key}</Text>
+              <Text mono size="xs">{value}</Text>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ ...panel, padding: 16, gap: 6 }}>
+          <Text mono size="xs" tone="muted">NO ACCOUNT</Text>
+          <Text size="xs" tone="muted">
+            LAN, offline-mode servers and Play with friends work. The game never receives a session.
+          </Text>
+        </div>
+      </div>
+    </div>
   )
 }

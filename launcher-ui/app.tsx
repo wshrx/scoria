@@ -7,8 +7,8 @@ const headless = process.env.SCORIA_UI_HEADLESS === "1"
 
 render(<App />, {
   title: "Scoria",
-  width: 1180,
-  height: 760,
+  width: 1160,
+  height: 700,
   focus: !headless,
   show: !headless,
 })
