@@ -192,8 +192,13 @@ fn fetch_file(fetch: Fetch, file: &File) -> Result<Vec<u8>, String> {
     }
 }
 
-/// Downloads the files not already there, `jobs` at a time, with a line every second; stops at
-/// the first error, or between files once `cancel` is set.
+/// How often one file is tried before it is counted as failed.
+const ATTEMPTS: usize = 3;
+/// How many files may fail before the run stops: a dead connection should not try thousands.
+const MAX_ERRORS: usize = 8;
+
+/// Downloads the files not already there, `jobs` at a time, with a line every second; retries a
+/// file, keeps the files that did land, and stops after a few failures or once `cancel` is set.
 fn fetch_all(
     files: &[File],
     jobs: usize,
@@ -216,6 +221,8 @@ pub(crate) fn fetch_all_with(
     let next = AtomicUsize::new(0);
     let done = AtomicUsize::new(0);
     let failed = Mutex::new(None);
+    let errors = AtomicUsize::new(0);
+    let stopped = AtomicBool::new(false);
     DONE.store(0, Relaxed);
     TOTAL.store(files.len(), Relaxed);
     std::thread::scope(|scope| {
@@ -223,19 +230,34 @@ pub(crate) fn fetch_all_with(
             .map(|_| {
                 scope.spawn(|| {
                     while let Some(file) = files.get(next.fetch_add(1, Relaxed)) {
-                        if failed.lock().unwrap().is_some() {
+                        if stopped.load(Relaxed) {
                             break;
                         }
                         if cancel.load(Relaxed) {
                             failed.lock().unwrap().get_or_insert(CANCELLED.to_string());
+                            stopped.store(true, Relaxed);
                             break;
                         }
                         if sha1_file(&file.path).as_ref() != Some(&file.sha1) {
-                            let got = fetch_file(fetch, file)
-                                .map_err(|e| format!("{} {e}", file.url))
-                                .and_then(|body| write_file(&file.path, &body));
+                            let mut got = Err(String::new());
+                            for attempt in 0..ATTEMPTS {
+                                got = fetch_file(fetch, file)
+                                    .map_err(|e| format!("{} {e}", file.url))
+                                    .and_then(|body| write_file(&file.path, &body));
+                                if got.is_ok() {
+                                    break;
+                                }
+                                if attempt + 1 < ATTEMPTS {
+                                    std::thread::sleep(Duration::from_millis(
+                                        250 * (attempt as u64 + 1),
+                                    ));
+                                }
+                            }
                             if let Err(e) = got {
                                 failed.lock().unwrap().get_or_insert(e);
+                                if errors.fetch_add(1, Relaxed) + 1 >= MAX_ERRORS {
+                                    stopped.store(true, Relaxed);
+                                }
                             }
                         }
                         let finished = done.fetch_add(1, Relaxed) + 1;
@@ -261,7 +283,16 @@ pub(crate) fn fetch_all_with(
         progress(done.load(Relaxed), files.len());
     });
     TOTAL.store(0, Relaxed);
-    failed.into_inner().unwrap().map_or(Ok(()), Err)
+    match failed.into_inner().unwrap() {
+        None => Ok(()),
+        Some(error) if error == CANCELLED => Err(error),
+        Some(error) => {
+            let failed = errors.load(Relaxed);
+            Err(format!(
+                "{error}. {failed} file(s) could not be downloaded; the ones already here are kept.                  Try again to fetch only the rest."
+            ))
+        }
+    }
 }
 
 #[cfg(test)]

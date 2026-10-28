@@ -8,8 +8,8 @@ const headless = process.env.SCORIA_UI_HEADLESS === "1"
 // The launcher draws its own titlebar on Linux (chrome.ts), which needs the
 // XWayland backend. scripts/run.ts and the packaged wrapper set that before
 // this module loads; SCORIA_UI_WAYLAND=1 keeps the native Wayland window.
-const width = Number(process.env.SCORIA_UI_WIDTH ?? 1600)
-const height = Number(process.env.SCORIA_UI_HEIGHT ?? 920)
+const width = Number(process.env.SCORIA_UI_WIDTH ?? 1280)
+const height = Number(process.env.SCORIA_UI_HEIGHT ?? 720)
 
 render(<App />, {
   title: "Scoria",

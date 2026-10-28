@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { motion, type LinearGradientBackground } from "@gpuix/react"
 import { Text, useTheme } from "@/lib/flint"
 
@@ -112,25 +112,34 @@ export function Backdrop({ strong = true }: { strong?: boolean }) {
         {[
           44, 58, 52, 76, 64, 92, 80, 110, 96, 126, 112, 146, 132, 160, 142, 118, 136, 154, 170,
           148, 126, 108, 94, 116, 98, 82, 68, 56, 46, 36,
-        ].map((height, index) => (
-          <div
-            key={index}
-            style={{
-              flexGrow: 1,
-              height,
-              borderRadius: 18,
-              backgroundColor:
-                index % 7 === 0 ? "#33204A" : index % 3 === 0 ? "#1C3E37" : index % 2 === 0 ? "#1D2438" : "#251B36",
-              boxShadow: {
-                offsetX: 0,
-                offsetY: 0,
-                blurRadius: 34,
-                spreadRadius: 6,
-                color: index % 3 === 0 ? "#1C3E3766" : "#2A1A4566",
-              },
-            }}
-          />
-        ))}
+        ].map((height, index) => {
+          const body =
+            index % 7 === 0 ? "#33204A" : index % 3 === 0 ? "#1C3E37" : index % 2 === 0 ? "#1D2438" : "#251B36"
+          const top = index % 3 === 0 ? "#2D5D50" : index % 2 === 0 ? "#2E3A55" : "#3A2B52"
+          return (
+            <div
+              key={index}
+              style={{
+                flexGrow: 1,
+                height,
+                display: "flex",
+                flexDirection: "column",
+                borderRadius: 3,
+                overflow: "hidden",
+                boxShadow: {
+                  offsetX: 0,
+                  offsetY: 0,
+                  blurRadius: 30,
+                  spreadRadius: 4,
+                  color: index % 3 === 0 ? "#1C3E3766" : "#2A1A4566",
+                },
+              }}
+            >
+              <div style={{ height: 3, backgroundColor: top, opacity: 0.85 }} />
+              <div style={{ flexGrow: 1, backgroundColor: body }} />
+            </div>
+          )
+        })}
       </div>
 
       <div
@@ -157,6 +166,79 @@ export function Backdrop({ strong = true }: { strong?: boolean }) {
           }}
         />
       ) : null}
+    </div>
+  )
+}
+
+const DUST = Array.from({ length: 28 }, (_, index) => ({
+  x: ((index * 37 + 11) % 97) / 97,
+  y: ((index * 53 + 7) % 89) / 89,
+  size: 1.5 + ((index * 7) % 4) * 0.75,
+  speed: 0.0009 + ((index * 11) % 7) * 0.00025,
+  drift: 8 + ((index * 5) % 9),
+  phase: index * 1.7,
+  tone: index % 5 === 0 ? "#8FD8B4" : index % 3 === 0 ? "#FFFFFF" : "#B9A7FF",
+}))
+
+/** Slow dust over the scene: the one looping ambient animation, 20 frames a second. */
+export function ParticleField() {
+  const [size, setSize] = useState({ width: 1280, height: 720 })
+  const [tick, setTick] = useState(0)
+
+  useEffect(() => {
+    const timer = setInterval(() => setTick((value) => value + 1), 55)
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <div
+      onLayout={(event) =>
+        setSize({ width: event.width ?? 1280, height: event.height ?? 720 })
+      }
+      style={{
+        position: "absolute",
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        overflow: "hidden",
+        pointerEvents: "none",
+      }}
+    >
+      {DUST.map((dust, index) => {
+        const y = (((dust.y - tick * dust.speed) % 1) + 1) % 1
+        const x = dust.x * size.width + Math.sin((tick + dust.phase) / 42) * dust.drift
+        const twinkle = 0.12 + 0.58 * (0.5 + 0.5 * Math.sin((tick + dust.phase) / 19))
+        const s = dust.size
+        return (
+          <div
+            key={index}
+            style={{
+              position: "absolute",
+              left: x,
+              top: y * size.height,
+              width: s,
+              height: s,
+              borderRadius: s,
+              backgroundColor: dust.tone,
+              opacity: twinkle,
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                left: -s * 1.4,
+                top: -s * 1.4,
+                width: s * 3.8,
+                height: s * 3.8,
+                borderRadius: s * 2,
+                backgroundColor: dust.tone,
+                opacity: 0.14,
+              }}
+            />
+          </div>
+        )
+      })}
     </div>
   )
 }

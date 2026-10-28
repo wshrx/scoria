@@ -16,6 +16,7 @@ import {
   type VersionInfo,
 } from "../api"
 import { useT } from "../i18n"
+import { downloadStopped } from "../errors"
 import { Avatar, Meter, Sheet } from "../visual"
 
 type Tab = "general" | "game" | "builds" | "about"
@@ -123,7 +124,7 @@ export function SettingsPage({
       await downloadMinecraft(pushLog, setProgress)
       onRefresh()
     } catch (error) {
-      setNote(`The download stopped: ${(error as Error).message}`)
+      setNote(downloadStopped(error, t))
     } finally {
       setBusy(null)
       setProgress(null)
@@ -141,7 +142,7 @@ export function SettingsPage({
       if (said.startsWith("Preparation failed")) setNote(said)
       onRefresh()
     } catch (error) {
-      setNote(`The download stopped: ${(error as Error).message}`)
+      setNote(downloadStopped(error, t))
     } finally {
       setBusy(null)
       setProgress(null)
@@ -252,7 +253,7 @@ export function SettingsPage({
 
             <div style={{ height: 1, backgroundColor: theme.colors.border }} />
 
-            <Field label={t("Appearance")} detail={t("Two surfaces, the same violet light.")}>
+            <Field label={t("Appearance")} detail={t("Dark or light.")}>
               <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", gap: 10 }}>
                 {[
                   { key: "dark", label: t("Night"), detail: t("Indigo and iris"), colors: ["#151020", "#8B5CF6", "#F4EFFF"] },
@@ -364,7 +365,7 @@ export function SettingsPage({
                   {files.installed && data.prepared
                     ? t("Ready to play.")
                     : !files.installed
-                      ? t("Download the pinned version from Mojang.")
+                      ? t("Download Minecraft 26.3 once.")
                       : t("The files are here. Prepare the resources.")}
                 </Text>
               </div>
@@ -398,7 +399,7 @@ export function SettingsPage({
             <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
               <Text mono size="xs" tone="muted">
                 {progress
-                  ? `${progress.done} / ${progress.total}`
+                  ? t("Downloading…")
                   : files.installed
                     ? t("all files verified")
                     : files.manifest
@@ -427,16 +428,6 @@ export function SettingsPage({
                   ? t("Prepare resources")
                   : t("Download and prepare")}
             </Button>
-
-            {log.length > 0 ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 3, padding: 12, borderRadius: 14, backgroundColor: theme.colors.muted }}>
-                {log.map((line, index) => (
-                  <Text key={index} mono size="xs" tone="muted" truncate>
-                    {line}
-                  </Text>
-                ))}
-              </div>
-            ) : null}
 
             <div
               role="button"
@@ -471,6 +462,15 @@ export function SettingsPage({
                 <Text size="xs" tone="muted">
                   {t("Every file is checked against Mojang's sha1. A stopped download resumes where it stopped.")}
                 </Text>
+                {log.length > 0 ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 4 }}>
+                    {log.map((line, index) => (
+                      <Text key={index} mono size="xs" tone="muted" truncate>
+                        {line}
+                      </Text>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ) : null}
 
@@ -613,15 +613,14 @@ export function SettingsPage({
                 {t("About")}
               </Text>
               <Text size="sm" tone="muted">
-                {t("A local-first launcher: no account, no session, no telemetry.")}
+                {t("No account, no session, no telemetry.")}
               </Text>
             </div>
             <div style={{ display: "flex", flexDirection: "column", borderRadius: 16, overflow: "hidden", borderWidth: 1, borderStyle: "solid", borderColor: theme.colors.border }}>
               {[
-                [t("Launcher"), `${data.version} · ${data.branch}`],
+                [t("Launcher"), data.version],
                 [t("Minecraft"), data.minecraft.version],
                 [t("Instance"), data.instances.find((entry) => entry.selected)?.name ?? data.selectedInstance],
-                [t("Engine"), data.live ? t("connected") : t("preview snapshot")],
                 [t("Profile"), data.offlineName],
               ].map(([label, value], index) => (
                 <div
@@ -649,7 +648,7 @@ export function SettingsPage({
               ))}
             </div>
             <Text size="xs" tone="muted">
-              {t("No telemetry, no consent screen, no analytics. The launcher talks to Mojang and GitHub only when you ask for files or a build.")}
+              {t("Files come from Mojang only when you ask for them.")}
             </Text>
           </>
         ) : null}

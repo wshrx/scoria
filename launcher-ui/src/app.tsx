@@ -7,6 +7,7 @@ import { setAppearance, setLanguage, snapshot, type Snapshot } from "./api"
 import { Shell, type Page } from "./shell"
 import { HomePage } from "./pages/home"
 import { InstancesPage } from "./pages/instances"
+import { ModsPage } from "./pages/mods"
 import { ServersPage } from "./pages/servers"
 import { SettingsPage } from "./pages/settings"
 import { scoriaDark, scoriaLight } from "./theme"
@@ -31,7 +32,7 @@ export function App() {
   const [frameless, setFrameless] = useState(false)
   const [page, setPage] = useState<Page>(() => {
     const requested = process.env.SCORIA_UI_PAGE
-    return requested === "instances" || requested === "servers" || requested === "settings"
+    return requested === "instances" || requested === "mods" || requested === "servers" || requested === "settings"
       ? requested
       : "home"
   })
@@ -92,6 +93,7 @@ export function App() {
         <Shell page={page} onPage={setPage} data={data} frameless={frameless}>
           {page === "home" ? <HomePage data={data} onRefresh={refresh} /> : null}
           {page === "instances" ? <InstancesPage data={data} onRefresh={refresh} /> : null}
+          {page === "mods" ? <ModsPage data={data} /> : null}
           {page === "servers" ? <ServersPage /> : null}
           {page === "settings" ? (
             <SettingsPage

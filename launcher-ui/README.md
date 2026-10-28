@@ -10,7 +10,7 @@ or a soft rounded panel; the backdrop is a procedurally painted, blurred world, 
 bun install
 bun run dev            # hot reload, through scripts/run.ts
 bun run typecheck
-bun run build          # dist/scoria-launcher-ui, one Linux binary (~106 MB)
+bun run build          # dist/scoria-launcher-ui, one Linux binary (~106 MB); opens at 1280x720
 ```
 
 On Linux the window is frameless and draws its own titlebar (`src/chrome.ts`): a slim violet strip
@@ -39,7 +39,7 @@ SCORIA_UI_HEADLESS=1 bun app.tsx
 # [scoria] preview: engine not found at …
 ```
 
-`SCORIA_UI_PAGE=instances|servers|settings` opens one page; `SCORIA_UI_WIDTH` and
+`SCORIA_UI_PAGE=instances|mods|servers|settings` opens one page; `SCORIA_UI_WIDTH` and
 `SCORIA_UI_HEIGHT` override the window size. The engine path is `SCORIA_LAUNCHER_BIN`.
 
 ## Methods
@@ -59,6 +59,10 @@ SCORIA_UI_HEADLESS=1 bun app.tsx
 | `select_version` | `{ "tag": "v0.2.93" }` | the version list |
 | `remove_version` | `{ "tag": "v0.2.93" }` | the version list |
 | `install_latest` | — | installs the newest release from `sources.json` |
+| `mods` | — | installed Modrinth entries for the selected instance |
+| `search_mods` | `{ "query": "sodium", "kind": "mod"\|"resource-pack" }` | Modrinth results with a support label |
+| `install_mod` | `{ "id": "AANobbMI" }` | installs/ports the project; `progress` events with `label` and `value` |
+| `remove_mod` | `{ "name": "sodium" }` | the remaining installed entries |
 | `minecraft` | — | the pinned Minecraft version, its folder, source and per-file counts |
 | `download_minecraft` | — | downloads what 26.3 lacks from piston-meta and piston-data; `log` and `progress` events on the same id |
 | `servers` | — | the selected instance's servers.dat |
@@ -74,6 +78,8 @@ instances the CLI does.
 - **Play**: one instance, one Play button, a Continue link for the last world, and only the
   state a player needs (ready, needs files, needs preparing).
 - **Instances**: rounded cards for the game folders; create one, use one.
+- **Mods**: Modrinth mods and resource packs; Java mods are ported and labelled Works / Partly /
+  Doesn't run before install.
 - **Servers**: the instance's servers.dat; join, add, remove. Offline-mode only.
 - **Settings**: everything else — profile, appearance, language, launcher behaviour, Minecraft
   26.3 file status and download, installed Scoria builds, and build facts. Technical details

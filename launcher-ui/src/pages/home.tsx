@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import type { DownloadProgress, Snapshot } from "../api"
 import { downloadMinecraft, play, prepare } from "../api"
 import { useT } from "../i18n"
+import { downloadStopped } from "../errors"
 import { BONE, CHROME_MUTED, Meter } from "../visual"
 
 function megabytes(bytes: number): string {
@@ -59,7 +60,7 @@ export function HomePage({
       if (said.startsWith("Preparation failed")) fail(said)
       onRefresh()
     } catch (error) {
-      fail(`The download stopped: ${(error as Error).message}`)
+      fail(downloadStopped(error, t))
     } finally {
       setBusy(null)
       setProgress(null)
@@ -82,7 +83,7 @@ export function HomePage({
         flexDirection: "column",
         justifyContent: "space-between",
         flexGrow: 1,
-        minHeight: narrow ? 560 : 600,
+        minHeight: narrow ? 500 : 520,
         paddingTop: narrow ? 18 : 36,
         paddingBottom: 10,
       }}
@@ -189,7 +190,7 @@ export function HomePage({
               <Meter value={progress ? progress.done : 1} total={progress ? progress.total : 1} />
               <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
                 <Text mono size="xs" style={{ color: CHROME_MUTED }}>
-                  {progress ? `${progress.done} / ${progress.total}` : t("Working…")}
+                  {progress ? t("Downloading…") : t("Working…")}
                 </Text>
                 <Text mono size="xs" style={{ color: CHROME_MUTED }}>
                   {progress ? `${percent}%` : ""}

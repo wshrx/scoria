@@ -3,14 +3,15 @@ import { motion, useGpuixRequired, useWindowSize } from "@gpuix/react"
 import { Icon, Text, useTheme, type IconName } from "@/lib/flint"
 import type { Snapshot } from "./api"
 import { useT } from "./i18n"
-import { Avatar, Backdrop, BONE, CHROME_MUTED, Mark, gradient } from "./visual"
+import { Avatar, Backdrop, BONE, CHROME_MUTED, Mark, ParticleField, gradient } from "./visual"
 import { shapeWindow, startWindowMove, startWindowResize } from "./chrome"
 
-export type Page = "home" | "instances" | "servers" | "settings"
+export type Page = "home" | "instances" | "mods" | "servers" | "settings"
 
 const NAV: { id: Page; label: string; icon: IconName }[] = [
   { id: "home", label: "Play", icon: "play" },
   { id: "instances", label: "Instances", icon: "layers" },
+  { id: "mods", label: "Mods", icon: "box" },
   { id: "servers", label: "Servers", icon: "server" },
 ]
 
@@ -220,6 +221,7 @@ export function Shell({ page, onPage, data, frameless, children }: ShellProps) {
           }}
         >
           <Backdrop strong={page === "home"} />
+          <ParticleField />
 
           <div
             style={{

@@ -1,7 +1,7 @@
 //! The launcher's machine interface: JSON lines on stdin/stdout, one request per line.
 //!
 //! `horizon-launcher api` serves the launcher UI (`launcher-ui/`, flint-ui on gpuix) and any
-//! script. It is deliberately small: state, prepare, play, and changing the offline name. The
+//! script. It is deliberately small: state, prepare, play, mods, and changing the offline name. The
 //! UI never touches the file system or starts processes itself.
 //!
 //! Request:  {"id": 1, "method": "state", "params": {}}
@@ -10,6 +10,7 @@
 
 use crate::account::{Accounts, Player};
 use crate::backend;
+use crate::browser::{self, Kind, Query, SourceId};
 use serde_json::{json, Value};
 use std::io::{BufRead, Write};
 use std::sync::{Arc, Mutex};
@@ -81,6 +82,10 @@ fn dispatch(
         "install_latest" => install_latest(),
         "minecraft" => minecraft(),
         "download_minecraft" => download_minecraft(id, params, emit),
+        "mods" => mods(),
+        "search_mods" => search_mods(params),
+        "install_mod" => install_mod(id, params, emit),
+        "remove_mod" => remove_mod(params),
         "servers" => servers(),
         "add_server" => add_server(params),
         "remove_server" => remove_server(params),
@@ -443,6 +448,82 @@ fn ensure_minecraft(tag: &str, id: &Value, emit: &mut dyn FnMut(Value)) -> Resul
         &progress,
     )?;
     Ok(minecraft_json(tag))
+}
+
+fn project_json(project: &browser::Project) -> Value {
+    let support = project.support();
+    json!({
+        "id": project.id,
+        "slug": project.slug,
+        "title": project.title,
+        "summary": project.summary,
+        "author": project.author,
+        "page": project.page,
+        "kind": project.kind,
+        "support": support.label(),
+        "reason": support.reason(),
+        "installable": support.installable(),
+    })
+}
+
+fn mods() -> Result<Value, String> {
+    let instance = crate::instances::selected();
+    let installed = browser::installed::Installed::load(&instance.home);
+    Ok(json!({ "instance": instance.name, "entries": installed.entries }))
+}
+
+fn mod_kind(name: &str) -> Result<Kind, String> {
+    match name {
+        "mod" | "mods" => Ok(Kind::Mod),
+        "resource-pack" | "resourcepack" | "resource" => Ok(Kind::ResourcePack),
+        other => Err(format!("{other}: say mod or resource-pack")),
+    }
+}
+
+fn mod_source() -> Result<Box<dyn browser::Source>, String> {
+    browser::source(SourceId::Modrinth).ok_or_else(|| "Modrinth is not available.".to_string())
+}
+
+fn search_mods(params: &Value) -> Result<Value, String> {
+    let text = params.get("query").and_then(Value::as_str).unwrap_or("");
+    let kind = mod_kind(params.get("kind").and_then(Value::as_str).unwrap_or("mod"))?;
+    let source = mod_source()?;
+    let mut query = Query::new(text, kind);
+    // Show what exists and mark how it runs; only installable results get a button.
+    query.everything = true;
+    query.limit = 24;
+    let found = source.search(&query)?;
+    Ok(json!({ "results": found.iter().map(project_json).collect::<Vec<_>>() }))
+}
+
+fn install_mod(id: &Value, params: &Value, emit: &mut dyn FnMut(Value)) -> Result<Value, String> {
+    let project_id = params
+        .get("id")
+        .and_then(Value::as_str)
+        .ok_or("install_mod needs {\"id\": \"…\"}")?;
+    let source = mod_source()?;
+    let project = source.project(project_id)?;
+    let instance = crate::instances::selected();
+    let events = std::cell::RefCell::new(emit);
+    let progress = |label: &str, value: f32| {
+        if let Ok(mut emit) = events.try_borrow_mut() {
+            emit(json!({ "id": id, "event": "progress", "label": label, "value": value }));
+        }
+    };
+    let entries =
+        browser::installed::install(source.as_ref(), &project, true, &instance.home, &progress)?;
+    Ok(json!({ "instance": instance.name, "entries": entries }))
+}
+
+fn remove_mod(params: &Value) -> Result<Value, String> {
+    let name = params
+        .get("name")
+        .and_then(Value::as_str)
+        .ok_or("remove_mod needs {\"name\": \"…\"}")?;
+    let instance = crate::instances::selected();
+    browser::installed::remove(&instance.home, name)?;
+    let installed = browser::installed::Installed::load(&instance.home);
+    Ok(json!({ "instance": instance.name, "entries": installed.entries }))
 }
 
 fn servers() -> Result<Value, String> {

@@ -83,7 +83,16 @@ const CLIENT: &str = if cfg!(windows) {
 /// one is set (`proxy`).
 fn agent(url: &str) -> ureq::Agent {
     crate::proxy::agent(
-        ureq::AgentBuilder::new().user_agent(&format!("horizon-launcher/{VERSION}")),
+        ureq::AgentBuilder::new()
+            .user_agent(&format!("horizon-launcher/{VERSION}"))
+            // Try IPv4 first: on a machine with a broken IPv6 route, DNS may list AAAA
+            // addresses that make every asset host look unreachable.
+            .resolver(|netloc: &str| {
+                use std::net::ToSocketAddrs;
+                let mut addrs: Vec<std::net::SocketAddr> = netloc.to_socket_addrs()?.collect();
+                addrs.sort_by_key(|addr| if addr.is_ipv4() { 0 } else { 1 });
+                Ok(addrs)
+            }),
         url,
     )
     .build()
