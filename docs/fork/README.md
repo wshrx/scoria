@@ -17,7 +17,7 @@ written in Rust, with a launcher that plays without a Microsoft account.
 | Starting the game | requires a signed-in Microsoft account that owns Java Edition (the "owner gate") | any offline name, no account needed (P1) |
 | Microsoft sign-in | required before Play | optional: online-mode servers, cloud skins |
 | Game files | can be downloaded from Mojang for an owner | prepared from an installation you already have; only the 26.3 server jar is fetched once, for data generation |
-| Launcher UI | Rust + GPUI | stays on GPUI for now; moves to Redmoon's **flint-ui** when it exists (ADR-0003) |
+| Launcher UI | Rust + GPUI | **flint-ui 0.1.0 on gpuix 0.11.0** (`launcher-ui/`, ADR-0006); the old GPUI screens still ship |
 | Telemetry | opt-in, shipped | removed |
 | Mod registry, nightly channel | shipped | removed; Scoria's own registry later |
 | Self-update | from Horizon's GitHub releases | disabled until Scoria has its own releases |
@@ -33,8 +33,9 @@ session file (`docs/microsoft-account.md`, "Handing the session to the game").
 - [architecture.md](architecture.md): what is where, what P0/P1 touched, what the fork depends on.
 - [adr/0001-offline-first.md](adr/0001-offline-first.md): why the owner gate goes and what stays.
 - [adr/0002-gpui-x-hybrid.md](adr/0002-gpui-x-hybrid.md): GPUIX analysis (timing superseded).
-- [adr/0003-launcher-ui-flint-ui.md](adr/0003-launcher-ui-flint-ui.md): the launcher UI waits for
-  flint-ui.
+- [adr/0003-launcher-ui-flint-ui.md](adr/0003-launcher-ui-flint-ui.md): the wait for flint-ui
+  (superseded).
+- [adr/0006-flint-ui-gpuix.md](adr/0006-flint-ui-gpuix.md): the launcher UI is flint-ui on gpuix.
 - [adr/0004-rename-to-scoria.md](adr/0004-rename-to-scoria.md): Basalt becomes Scoria.
 - [adr/0005-two-remotes.md](adr/0005-two-remotes.md): Entire keeps everything, GitHub gets
   `main` and `nightly`.
@@ -64,5 +65,6 @@ The launcher is its own workspace. Scoria's copy is at `/home/shrx/dev/scoria/la
   is launched with `HORIZON_TELEMETRY_URL=off`. The Nightly channel is gone too: no
   `nightly.rs`, no setting, no Nightly instance. Still to do: the remaining registry code, then
   CI.
-- P3 (paused): the launcher UI moves to Redmoon's **flint-ui** once it has code; the GPUIX plan
-  is deferred (ADR-0003). P4: full RU/EN documentation. P5: Scoria's own signed releases.
+- P3 (started): `launcher-ui/` runs on **gpuix 0.11.0 + flint-ui 0.1.0** (ADR-0006); Home,
+  Instances and Settings render on a preview snapshot. Next: the engine bridge and removing
+  Microsoft from the Rust launcher. P4: full RU/EN documentation. P5: Scoria's own signed releases.
