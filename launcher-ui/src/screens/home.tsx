@@ -6,7 +6,7 @@ import type { DownloadProgress, Snapshot } from "../api"
 import { downloadMinecraft, play, prepare } from "../api"
 import { useT } from "../i18n"
 import { downloadStopped } from "../errors"
-import { BONE, CHROME_MUTED, Meter } from "../visual"
+import { Meter } from "../visual"
 
 function megabytes(bytes: number): string {
   if (bytes >= 1_000_000_000) return `${(bytes / 1e9).toFixed(1)} GB`
@@ -99,7 +99,7 @@ export function HomePage({
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 720, flexGrow: 1 }}>
           <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <Text mono size="xs" style={{ color: CHROME_MUTED }}>
+            <Text mono size="xs" style={{ color: theme.colors.mutedForeground }}>
               {t("Minecraft Java Edition")}
             </Text>
             <div
@@ -112,11 +112,11 @@ export function HomePage({
                 borderRadius: 999,
                 borderWidth: 1,
                 borderStyle: "solid",
-                borderColor: "#FFFFFF1C",
-                backgroundColor: "#FFFFFF0D",
+                borderColor: theme.colors.border,
+                backgroundColor: theme.colors.card,
               }}
             >
-              <Text mono size="xs" style={{ color: BONE }}>
+              <Text mono size="xs" style={{ color: theme.colors.foreground }}>
                 {files.version}
               </Text>
             </div>
@@ -128,7 +128,7 @@ export function HomePage({
               fontSize: narrow ? 44 : 68,
               lineHeight: narrow ? 46 : 70,
               fontWeight: "700",
-              color: BONE,
+              color: theme.colors.foreground,
               maxWidth: 760,
               lineClamp: 2,
             }}
@@ -136,7 +136,7 @@ export function HomePage({
             {instance}
           </Text>
 
-          <Text size="sm" style={{ maxWidth: 480, color: "#BDB5CC", lineHeight: 22 }}>
+          <Text size="sm" style={{ maxWidth: 480, color: theme.colors.mutedForeground, lineHeight: 22 }}>
             {summary}
           </Text>
 
@@ -174,11 +174,11 @@ export function HomePage({
                   paddingRight: 14,
                   borderRadius: 999,
                   cursor: "pointer",
-                  hover: { backgroundColor: "#FFFFFF14" },
+                  hover: { backgroundColor: theme.colors.accent },
                 }}
               >
-                <Icon name="chevronRight" size={13} color={CHROME_MUTED} />
-                <Text size="xs" style={{ color: CHROME_MUTED }}>
+                <Icon name="chevronRight" size={13} color={theme.colors.mutedForeground} />
+                <Text size="xs" style={{ color: theme.colors.mutedForeground }}>
                   {`${t("Continue")}: ${recent.name}`}
                 </Text>
               </div>
@@ -189,16 +189,16 @@ export function HomePage({
             <div style={{ display: "flex", flexDirection: "column", gap: 8, width: narrow ? "100%" : 340 }}>
               <Meter value={progress ? progress.done : 1} total={progress ? progress.total : 1} />
               <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
-                <Text mono size="xs" style={{ color: CHROME_MUTED }}>
+                <Text mono size="xs" style={{ color: theme.colors.mutedForeground }}>
                   {progress ? t("Downloading…") : t("Working…")}
                 </Text>
-                <Text mono size="xs" style={{ color: CHROME_MUTED }}>
+                <Text mono size="xs" style={{ color: theme.colors.mutedForeground }}>
                   {progress ? `${percent}%` : ""}
                 </Text>
               </div>
             </div>
           ) : !files.installed && files.missingBytes > 0 ? (
-            <Text mono size="xs" style={{ color: CHROME_MUTED }}>
+            <Text mono size="xs" style={{ color: theme.colors.mutedForeground }}>
               {`${megabytes(files.missingBytes)} ${t("to download")}`}
             </Text>
           ) : null}
@@ -240,10 +240,10 @@ export function HomePage({
           borderColor: "#FFFFFF0F",
         }}
       >
-        <Text mono size="xs" style={{ color: CHROME_MUTED }}>
+        <Text mono size="xs" style={{ color: theme.colors.mutedForeground }}>
           {`${t("Worlds")} · ${data.worlds.length}`}
         </Text>
-        <Text mono size="xs" style={{ color: CHROME_MUTED }}>
+        <Text mono size="xs" style={{ color: theme.colors.mutedForeground }}>
           {`${t("Instances")} · ${data.instances.length}`}
         </Text>
         <div style={{ flexGrow: 1 }} />

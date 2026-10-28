@@ -19,14 +19,15 @@ backend, so `bun run dev` and the packaged wrapper start it with `WINIT_UNIX_BAC
 empty `WAYLAND_DISPLAY`. Set `SCORIA_UI_WAYLAND=1` to keep the native Wayland window and its native
 titlebar instead.
 
-The UI talks to the Rust engine over JSON lines. The engine downloads Minecraft 26.3 from
-Mojang's piston-meta when it is not already prepared:
+The UI talks to the Rust engine over JSON lines through `src/api/` (`client`, `launcher` and
+`mods`). The engine downloads Minecraft 26.3 from Mojang's piston-meta when it is not already
+prepared:
 
 ```
 horizon-launcher api   # stdin: {"id":1,"method":"state"}  stdout: {"id":1,"ok":true,...}
 ```
 
-`src/api.ts` finds the engine at `../launcher/target/debug/horizon-launcher` (from this folder) or
+`src/api/` finds the engine at `../launcher/target/debug/horizon-launcher` (from this folder) or
 `SCORIA_LAUNCHER_BIN`. If it is absent, the screens render the `preview` snapshot and the header
 says **preview** instead of **engine**.
 
@@ -76,7 +77,8 @@ instances the CLI does.
 ## Screens
 
 - **Play**: one instance, one Play button, a Continue link for the last world, and only the
-  state a player needs (ready, needs files, needs preparing).
+  state a player needs (ready, needs files, needs preparing). Screens are listed in
+  `src/screens/registry.tsx`; the rail is generated from that list.
 - **Instances**: rounded cards for the game folders; create one, use one.
 - **Mods**: Modrinth mods and resource packs; Java mods are ported and labelled Works / Partly /
   Doesn't run before install.

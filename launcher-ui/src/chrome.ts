@@ -19,6 +19,8 @@ let root = 0
 let window = 0
 let moveAtom = 0
 let shapeExt: any = null
+let logicalWidth = 0
+let logicalHeight = 0
 let ready = false
 
 function connect(): Promise<any> {
@@ -82,13 +84,22 @@ export async function enableFrameless(): Promise<boolean> {
     // MWM_HINTS_DECORATIONS, decorations = 0: the window manager draws no frame.
     client.ChangeProperty(0, window, motif, motif, 32, [2, 0, 0, 0, 0])
     ready = true
-    const shaped = await shapeWindow(undefined, undefined, 10, 24)
+    const shaped = await shapeWindow(logicalWidth || undefined, logicalHeight || undefined, 10, 24)
     if (!shaped) {
       // No SHAPE: give the decorations back rather than leave a black inset.
       client.ChangeProperty(0, window, motif, motif, 32, [2, 0, 1, 0, 0])
       ready = false
     }
     await new Promise<void>((resolve) => client.flush(resolve))
+    if (shaped) {
+      // A resize by the window manager (drag, maximize) can outrun React's size
+      // subscription; keep the cut in step with the real window as a safety net.
+      setInterval(() => {
+        if (ready) {
+          void shapeWindow(logicalWidth || undefined, logicalHeight || undefined, 10, 24)
+        }
+      }, 250)
+    }
     return shaped
   } catch {
     return false
@@ -137,6 +148,10 @@ export async function shapeWindow(
   radius = 24,
 ): Promise<boolean> {
   if (!ready || !client || !window) return false
+  if (width && height) {
+    logicalWidth = width
+    logicalHeight = height
+  }
   try {
     if (!shapeExt) {
       shapeExt = await new Promise((resolve, reject) => {

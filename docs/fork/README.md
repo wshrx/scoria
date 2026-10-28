@@ -16,8 +16,8 @@ written in Rust, with a launcher that plays without a Microsoft account.
 |---|---|---|
 | Starting the game | requires a signed-in Microsoft account that owns Java Edition (the "owner gate") | any offline name, no account needed |
 | Microsoft sign-in | required before Play | **removed**: no sign-in, no tokens, no online-mode |
-| Game files | can be downloaded from Mojang for an owner | prepared from an installation you already have; only the 26.3 server jar is fetched once, for data generation |
-| Launcher UI | Rust + GPUI | **flint-ui 0.1.1 on gpuix 0.11.0** (`launcher-ui/`, ADR-0006); the old GPUI screens still ship |
+| Game files | can be downloaded from Mojang for an owner | prepared from an installation you already have, or downloaded from piston-meta when none has 26.3 |
+| Launcher UI | Rust + GPUI | **flint-ui 0.1.1 on gpuix 0.11.0** (`launcher-ui/`, ADR-0006); modular screens, Modrinth mods, custom frameless chrome |
 | Telemetry | opt-in, shipped | removed |
 | Mod registry, nightly channel | shipped | removed; Scoria's own registry later |
 | Self-update | from Horizon's GitHub releases | disabled until Scoria has its own releases |

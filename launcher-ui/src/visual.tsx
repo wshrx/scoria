@@ -15,8 +15,44 @@ const NIGHT = "#0A0712"
 const VIOLET = "#8B5CF6"
 const BONE = "#F4EFFF"
 
-/** A blurred world, painted from soft shapes: no game art, no screenshot. */
-export function Backdrop({ strong = true }: { strong?: boolean }) {
+/** A painted world: sky, aurora, a square moon, blocky ridges, trees and a lake. */
+export function Backdrop({ strong = true, dark = true }: { strong?: boolean; dark?: boolean }) {
+  const p = dark
+    ? {
+        skyTop: "#121A33",
+        skyBottom: "#07050D",
+        blobA: "#1D4038",
+        blobB: "#2A1A4D",
+        blobC: "#4A2E7A",
+        moon: "#F0E8D8",
+        halo: "#6D4AA0AA",
+        waterTop: "#16263A",
+        waterBottom: "#070A12",
+        auroraA: "#8B5CF633",
+        auroraB: "#2CD3A933",
+        body: ["#33204A", "#1C3E37", "#1D2438", "#251B36"],
+        top: ["#2D5D50", "#2E3A55", "#3A2B52"],
+        scrim: "#08060F",
+        glint: "#F0E8D8",
+      }
+    : {
+        skyTop: "#F0E7F7",
+        skyBottom: "#D5E7EA",
+        blobA: "#BCDCCB",
+        blobB: "#D5C3EB",
+        blobC: "#E8D9F7",
+        moon: "#FFF2C9",
+        halo: "#F2C94C55",
+        waterTop: "#D3E6EC",
+        waterBottom: "#A8C7D2",
+        auroraA: "#8B5CF628",
+        auroraB: "#2CD3A928",
+        body: ["#C9B8E4", "#A9CDBD", "#B8C4DE", "#CBB9D8"],
+        top: ["#E2D6F0", "#C7E4D6", "#D8E0EE"],
+        scrim: "#F3ECF8",
+        glint: "#FFFFFF",
+      }
+
   return (
     <div
       style={{
@@ -26,9 +62,34 @@ export function Backdrop({ strong = true }: { strong?: boolean }) {
         top: 0,
         bottom: 0,
         overflow: "hidden",
-        background: gradient("#171024", "#06040B", 155),
+        background: gradient(p.skyTop, p.skyBottom, 155),
       }}
     >
+      <div
+        style={{
+          position: "absolute",
+          left: -80,
+          top: 54,
+          width: 760,
+          height: 210,
+          borderRadius: 220,
+          background: gradient(p.auroraA, "#00000000", 100),
+          opacity: 0.85,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          right: 90,
+          top: 140,
+          width: 640,
+          height: 180,
+          borderRadius: 220,
+          background: gradient(p.auroraB, "#00000000", 80),
+          opacity: 0.75,
+        }}
+      />
+
       <div
         style={{
           position: "absolute",
@@ -37,9 +98,9 @@ export function Backdrop({ strong = true }: { strong?: boolean }) {
           width: 900,
           height: 700,
           borderRadius: 450,
-          backgroundColor: "#1D4038",
-          opacity: 0.55,
-          boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 180, spreadRadius: 40, color: "#1D403899" },
+          backgroundColor: p.blobA,
+          opacity: dark ? 0.55 : 0.7,
+          boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 180, spreadRadius: 40, color: p.blobA },
         }}
       />
       <div
@@ -50,48 +111,36 @@ export function Backdrop({ strong = true }: { strong?: boolean }) {
           width: 820,
           height: 620,
           borderRadius: 410,
-          backgroundColor: "#2A1A4D",
-          opacity: 0.65,
-          boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 170, spreadRadius: 30, color: "#2A1A4DCC" },
+          backgroundColor: p.blobB,
+          opacity: dark ? 0.65 : 0.7,
+          boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 170, spreadRadius: 30, color: p.blobB },
         }}
       />
       <div
         style={{
           position: "absolute",
-          right: 130,
-          top: 40,
-          width: 300,
-          height: 300,
-          borderRadius: 150,
-          backgroundColor: "#4A2E7A",
-          opacity: 0.45,
-          boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 160, spreadRadius: 30, color: "#6D4AA0AA" },
-        }}
-      />
-
-      <div
-        style={{
-          position: "absolute",
-          right: 190,
-          top: 62,
-          width: 118,
-          height: 118,
-          borderRadius: 59,
-          backgroundColor: "#F0E8D8",
-          opacity: 0.9,
-          boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 80, spreadRadius: 12, color: "#F0E8D855" },
+          right: 120,
+          top: 30,
+          width: 320,
+          height: 320,
+          borderRadius: 160,
+          backgroundColor: p.blobC,
+          opacity: 0.5,
+          boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 160, spreadRadius: 30, color: p.blobC },
         }}
       />
 
       <div
         style={{
           position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: "46%",
-          background: gradient("#0C0816", "#07040D", 0),
-          opacity: 0.92,
+          right: 196,
+          top: 58,
+          width: 116,
+          height: 116,
+          borderRadius: 18,
+          backgroundColor: p.moon,
+          opacity: 0.95,
+          boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 80, spreadRadius: 12, color: p.halo },
         }}
       />
 
@@ -101,27 +150,58 @@ export function Backdrop({ strong = true }: { strong?: boolean }) {
           left: 0,
           right: 0,
           bottom: 0,
-          height: "44%",
+          height: "24%",
+          background: gradient(p.waterTop, p.waterBottom, 0),
+          opacity: 0.95,
+        }}
+      />
+      {[
+        [780, 28, 110, 0.16],
+        [940, 54, 70, 0.12],
+        [700, 82, 150, 0.1],
+        [1010, 104, 50, 0.14],
+      ].map(([left, bottom, width, opacity], index) => (
+        <div
+          key={index}
+          style={{
+            position: "absolute",
+            left,
+            bottom,
+            width,
+            height: 2,
+            borderRadius: 1,
+            backgroundColor: p.glint,
+            opacity,
+          }}
+        />
+      ))}
+
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: "42%",
           display: "flex",
           flexDirection: "row",
           alignItems: "flex-end",
           gap: 2,
-          opacity: 0.8,
+          opacity: 0.92,
         }}
       >
         {[
           44, 58, 52, 76, 64, 92, 80, 110, 96, 126, 112, 146, 132, 160, 142, 118, 136, 154, 170,
           148, 126, 108, 94, 116, 98, 82, 68, 56, 46, 36,
         ].map((height, index) => {
-          const body =
-            index % 7 === 0 ? "#33204A" : index % 3 === 0 ? "#1C3E37" : index % 2 === 0 ? "#1D2438" : "#251B36"
-          const top = index % 3 === 0 ? "#2D5D50" : index % 2 === 0 ? "#2E3A55" : "#3A2B52"
+          const body = p.body[index % p.body.length]
+          const top = p.top[index % p.top.length]
           return (
             <div
               key={index}
               style={{
-                flexGrow: 1,
-                height,
+                flexGrow: 1 + (index % 4),
+                height: height * 0.86,
                 display: "flex",
                 flexDirection: "column",
                 borderRadius: 3,
@@ -129,9 +209,9 @@ export function Backdrop({ strong = true }: { strong?: boolean }) {
                 boxShadow: {
                   offsetX: 0,
                   offsetY: 0,
-                  blurRadius: 30,
-                  spreadRadius: 4,
-                  color: index % 3 === 0 ? "#1C3E3766" : "#2A1A4566",
+                  blurRadius: 26,
+                  spreadRadius: 3,
+                  color: body,
                 },
               }}
             >
@@ -147,9 +227,21 @@ export function Backdrop({ strong = true }: { strong?: boolean }) {
           position: "absolute",
           left: 0,
           right: 0,
-          bottom: 190,
-          height: 90,
-          background: gradient("#8B5CF600", "#8B5CF624", 180),
+          bottom: 0,
+          height: 150,
+          background: gradient(`${p.scrim}00`, `${p.scrim}CC`, 0),
+          opacity: 0.55,
+        }}
+      />
+
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 150,
+          height: 80,
+          background: gradient("#8B5CF600", dark ? "#8B5CF624" : "#8B5CF612", 180),
           opacity: 0.8,
         }}
       />
@@ -162,7 +254,7 @@ export function Backdrop({ strong = true }: { strong?: boolean }) {
             top: 0,
             bottom: 0,
             width: "62%",
-            background: gradient("#0A0712F2", "#0A071200", 90),
+            background: gradient(`${p.scrim}F2`, `${p.scrim}00`, 90),
           }}
         />
       ) : null}
@@ -181,7 +273,7 @@ const DUST = Array.from({ length: 28 }, (_, index) => ({
 }))
 
 /** Slow dust over the scene: the one looping ambient animation, 20 frames a second. */
-export function ParticleField() {
+export function ParticleField({ dark = true }: { dark?: boolean }) {
   const [size, setSize] = useState({ width: 1280, height: 720 })
   const [tick, setTick] = useState(0)
 
@@ -208,8 +300,9 @@ export function ParticleField() {
       {DUST.map((dust, index) => {
         const y = (((dust.y - tick * dust.speed) % 1) + 1) % 1
         const x = dust.x * size.width + Math.sin((tick + dust.phase) / 42) * dust.drift
-        const twinkle = 0.12 + 0.58 * (0.5 + 0.5 * Math.sin((tick + dust.phase) / 19))
+        const twinkle = (dark ? 0.12 : 0.08) + (dark ? 0.58 : 0.32) * (0.5 + 0.5 * Math.sin((tick + dust.phase) / 19))
         const s = dust.size
+        const tone = dark ? dust.tone : dust.tone === "#FFFFFF" ? "#6D647D" : dust.tone === "#8FD8B4" ? "#2C6E4F" : "#5B3E9A"
         return (
           <div
             key={index}
@@ -220,7 +313,7 @@ export function ParticleField() {
               width: s,
               height: s,
               borderRadius: s,
-              backgroundColor: dust.tone,
+              backgroundColor: tone,
               opacity: twinkle,
             }}
           >
@@ -232,8 +325,8 @@ export function ParticleField() {
                 width: s * 3.8,
                 height: s * 3.8,
                 borderRadius: s * 2,
-                backgroundColor: dust.tone,
-                opacity: 0.14,
+                backgroundColor: tone,
+                opacity: 0.1,
               }}
             />
           </div>

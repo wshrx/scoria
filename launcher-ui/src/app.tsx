@@ -4,12 +4,8 @@ import { dirname, resolve } from "node:path"
 import { useGpuixRequired } from "@gpuix/react"
 import { Text, ThemeProvider, registerFlintFonts } from "@/lib/flint"
 import { setAppearance, setLanguage, snapshot, type Snapshot } from "./api"
-import { Shell, type Page } from "./shell"
-import { HomePage } from "./pages/home"
-import { InstancesPage } from "./pages/instances"
-import { ModsPage } from "./pages/mods"
-import { ServersPage } from "./pages/servers"
-import { SettingsPage } from "./pages/settings"
+import { Shell } from "./components/layout/shell"
+import { SCREENS, screenFor, type ScreenId } from "./screens/registry"
 import { scoriaDark, scoriaLight } from "./theme"
 import { LangProvider } from "./i18n"
 import { enableFrameless } from "./chrome"
@@ -30,11 +26,9 @@ function Fonts() {
 export function App() {
   const [dark, setDark] = useState(true)
   const [frameless, setFrameless] = useState(false)
-  const [page, setPage] = useState<Page>(() => {
+  const [page, setPage] = useState<ScreenId>(() => {
     const requested = process.env.SCORIA_UI_PAGE
-    return requested === "instances" || requested === "mods" || requested === "servers" || requested === "settings"
-      ? requested
-      : "home"
+    return SCREENS.some((screen) => screen.id === requested) ? (requested as ScreenId) : "home"
   })
   const [data, setData] = useState<Snapshot | null>(null)
 
@@ -86,26 +80,22 @@ export function App() {
     )
   }
 
+  const Active = screenFor(page).component
+
   return (
     <ThemeProvider theme={theme}>
       <LangProvider lang={data.language === "ru" ? "ru" : "en"}>
         <Fonts />
         <Shell page={page} onPage={setPage} data={data} frameless={frameless}>
-          {page === "home" ? <HomePage data={data} onRefresh={refresh} /> : null}
-          {page === "instances" ? <InstancesPage data={data} onRefresh={refresh} /> : null}
-          {page === "mods" ? <ModsPage data={data} /> : null}
-          {page === "servers" ? <ServersPage /> : null}
-          {page === "settings" ? (
-            <SettingsPage
-              data={data}
-              dark={dark}
-              onToggleTheme={toggleTheme}
-              onRefresh={refresh}
-              onLanguage={(value) => {
-                void setLanguage(value).then(apply)
-              }}
-            />
-          ) : null}
+          <Active
+            data={data}
+            onRefresh={refresh}
+            dark={dark}
+            onToggleTheme={toggleTheme}
+            onLanguage={(value) => {
+              void setLanguage(value).then(apply)
+            }}
+          />
         </Shell>
       </LangProvider>
     </ThemeProvider>

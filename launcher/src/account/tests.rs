@@ -8,7 +8,18 @@ fn a_name_is_three_to_sixteen_letters_digits_or_underscore() {
     assert!(!valid_offline_name("ab"));
     assert!(!valid_offline_name("a".repeat(17).as_str()));
     assert!(!valid_offline_name("two words"));
-    assert!(!valid_offline_name("éclair"));
+    assert!(valid_offline_name("éclair"));
+    assert!(valid_offline_name("Игрок"));
+    assert!(!valid_offline_name("Иг рок"));
+}
+
+#[test]
+fn a_russian_name_is_kept_once_in_any_case() {
+    let mut accounts = Accounts::default();
+    accounts.play_as(Player::Offline("Игрок".into())).unwrap();
+    accounts.play_as(Player::Offline("игрок".into())).unwrap();
+    assert_eq!(accounts.offline, ["Игрок"]);
+    assert_eq!(accounts.player(), Player::Offline("Игрок".into()));
 }
 
 #[test]

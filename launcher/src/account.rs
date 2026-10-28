@@ -252,10 +252,16 @@ pub enum Player {
     GameName,
 }
 
-/// Whether `name` can be an offline name: 3 to 16 letters, digits or `_`, as account names are.
+/// Whether `name` can be an offline name: 3 to 16 letters, digits or `_`. Letters are any
+/// script, so a player can play as `Игрок`: there is no Mojang account or protocol name to fit.
 pub fn valid_offline_name(name: &str) -> bool {
     (3..=16).contains(&name.chars().count())
-        && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+        && name.chars().all(|c| c.is_alphanumeric() || c == '_')
+}
+
+/// Two offline names are the same regardless of case, in any script.
+fn same_name(a: &str, b: &str) -> bool {
+    a.to_lowercase() == b.to_lowercase()
 }
 
 impl Accounts {
@@ -302,7 +308,7 @@ impl Accounts {
                 "{name}: an offline name is 3 to 16 letters, digits or _"
             ));
         }
-        if let Some(kept) = self.offline.iter().find(|n| n.eq_ignore_ascii_case(name)) {
+        if let Some(kept) = self.offline.iter().find(|n| same_name(n, name)) {
             return Ok(kept.clone());
         }
         self.offline.push(name.to_string());
@@ -311,15 +317,15 @@ impl Accounts {
     /// Forgets an offline name; if it was playing, the game's own name plays.
     pub fn remove_offline(&mut self, name: &str) -> Result<(), String> {
         let before = self.offline.len();
-        self.offline.retain(|n| !n.eq_ignore_ascii_case(name));
-        self.looks.remove(&name.to_ascii_lowercase());
+        self.offline.retain(|n| !same_name(n, name));
+        self.looks.remove(&name.to_lowercase());
         if self.offline.len() == before {
             return Err(format!("No offline name {name}."));
         }
         if self
             .offline_selected
             .as_ref()
-            .is_some_and(|n| n.eq_ignore_ascii_case(name))
+            .is_some_and(|n| same_name(n, name))
         {
             self.offline_selected = None;
         }
@@ -328,7 +334,7 @@ impl Accounts {
     /// An offline name's look (the default: no skin of its own).
     pub fn look(&self, name: &str) -> crate::skins::Look {
         self.looks
-            .get(&name.to_ascii_lowercase())
+            .get(&name.to_lowercase())
             .cloned()
             .unwrap_or_default()
     }
