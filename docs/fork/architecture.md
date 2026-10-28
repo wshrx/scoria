@@ -7,7 +7,7 @@ describe the engine itself (1773 Rust files, ~800k lines, `horizon-client` being
 ## Layers
 
 ```
-launcher-ui/            React + TypeScript on GPUIX (planned)      ← new, P3
+launcher-ui/            flint-ui (planned; stack not chosen yet)   ← new, P3 paused
         │  JSON-RPC over a local socket
 launcher/               Rust: installs, preparation, processes, MCP  ← upstream, rebranded
         │
@@ -19,8 +19,8 @@ horizon-client          the game (800k-line workspace)               ← upstrea
 ```
 
 The launcher is a **separate Cargo workspace** on purpose (`launcher/Cargo.toml`), so the game's
-build never waits for GPUI. Basalt keeps that split: the GPUIX UI is a third workspace
-(`launcher-ui/`, Bun + TypeScript) that never enters either Rust build.
+build never waits for GPUI. Basalt keeps that split: the future flint-ui workspace will never enter either Rust build
+(ADR-0003). Until it exists, the launcher is the upstream GPUI UI, rebranded.
 
 ## Where the Microsoft account decides things (upstream)
 
@@ -98,6 +98,6 @@ P1 removes the gate itself:
 ## Known gaps after P1
 
 - The Mojang game-download code is still compiled (unreachable from the UI); P2 deletes it.
-- The GPUIX UI does not exist yet; the Rust GPUI UI is unchanged (P3).
+- The UI is still upstream's Rust GPUI (P3 paused until flint-ui has code; ADR-0003).
 - No CI in the fork yet; upstream workflows are left in place but they target Horizon's runners,
   secrets and self-hosted machines and must be trimmed before the fork is pushed (P2).

@@ -1,6 +1,6 @@
 # ADR-0002: Launcher on GPUIX, hybrid with the Rust core
 
-- Status: accepted (P0), spike in P3
+- Status: superseded in timing by [ADR-0003](0003-launcher-ui-flint-ui.md): the launcher waits for flint-ui; the hybrid analysis stands
 - Date: 2026-10-28
 
 ## Context

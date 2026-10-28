@@ -16,7 +16,7 @@ written in Rust, with a launcher that plays without a Microsoft account.
 | Starting the game | requires a signed-in Microsoft account that owns Java Edition (the "owner gate") | any offline name, no account needed (P1) |
 | Microsoft sign-in | required before Play | optional: online-mode servers, cloud skins |
 | Game files | can be downloaded from Mojang for an owner | prepared from an installation you already have; only the 26.3 server jar is fetched once, for data generation |
-| Launcher UI | Rust + GPUI | React/TypeScript on GPUIX (planned, see ADR-0002) |
+| Launcher UI | Rust + GPUI | stays on GPUI for now; moves to Redmoon's **flint-ui** when it exists (ADR-0003) |
 | Telemetry | opt-in, shipped | removed |
 | Mod registry, nightly channel | shipped | removed; Basalt's own registry later |
 | Self-update | from Horizon's GitHub releases | disabled until Basalt has its own releases |
@@ -31,7 +31,9 @@ session file (`docs/microsoft-account.md`, "Handing the session to the game").
 - [offline-mode.md](offline-mode.md): how to play without an account, and what still needs one.
 - [architecture.md](architecture.md): what is where, what P0/P1 touched, what the fork depends on.
 - [adr/0001-offline-first.md](adr/0001-offline-first.md): why the owner gate goes and what stays.
-- [adr/0002-gpui-x-hybrid.md](adr/0002-gpui-x-hybrid.md): the launcher rewrite on GPUIX.
+- [adr/0002-gpui-x-hybrid.md](adr/0002-gpui-x-hybrid.md): GPUIX analysis (timing superseded).
+- [adr/0003-launcher-ui-flint-ui.md](adr/0003-launcher-ui-flint-ui.md): the launcher UI waits for
+  flint-ui.
 - [entire.md](entire.md): where `origin` lives (Entire `/et/redmoon/basalt`) and what its
   agent checkpoints are.
 - Upstream docs stay authoritative for the engine: [`docs/README.md`](../README.md),
@@ -58,4 +60,5 @@ The launcher is its own workspace. Basalt's copy is at `/home/shrx/dev/basalt/la
   removed from the launcher (consent screen, `data` command, ping, benchmark upload) and the game
   is launched with `HORIZON_TELEMETRY_URL=off`. Still to do: the remaining registry and nightly
   code, then CI.
-- P3: the GPUIX launcher UI. P4: full RU/EN documentation. P5: Basalt's own signed releases.
+- P3 (paused): the launcher UI moves to Redmoon's **flint-ui** once it has code; the GPUIX plan
+  is deferred (ADR-0003). P4: full RU/EN documentation. P5: Basalt's own signed releases.
