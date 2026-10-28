@@ -80,6 +80,11 @@ P1 removes the gate itself:
 - The 26.3 **server jar** is still fetched from Mojang once for data generation unless it is
   already in `<data>/server-jars/26.3.jar`. That is the only remaining Mojang game file (the
   client jar, libraries and assets never are).
+- P2 removes telemetry from the launcher: `launcher/src/telemetry.rs` and
+  `launcher/src/collection.rs` are deleted, so are the consent screen, the `data` CLI command,
+  the "I'm playing" ping and benchmark uploads. `backend::client_command` sets
+  `HORIZON_TELEMETRY_URL=off` for every launched game, which is the hard switch in
+  `crates/horizon-telemetry`; the engine's telemetry code stays but never reaches the network.
 
 ## Invariants the fork keeps
 

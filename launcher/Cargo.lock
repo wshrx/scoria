@@ -2749,7 +2749,6 @@ dependencies = [
  "horizon-port-pack",
  "horizon-prepare",
  "horizon-release-sign",
- "horizon-telemetry",
  "horizon-theme",
  "horizon-world",
  "image",
@@ -2841,7 +2840,6 @@ dependencies = [
  "ruzstd",
  "serde",
  "serde_json",
- "ureq",
 ]
 
 [[package]]

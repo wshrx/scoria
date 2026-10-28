@@ -1,5 +1,9 @@
 # Opt-in data collection
 
+> **Basalt fork:** data collection is removed. There is no consent screen, no `data` CLI
+> command and no outbox in the launcher; the game is started with
+> `HORIZON_TELEMETRY_URL=off`, so it sends nothing even if a consent file from another build is
+> present. This page describes upstream Horizon and is kept for reference.
 Horizon collects nothing unless the player says yes. The launcher asks once, with four separate switches that are all off until the player turns one on, and the same switches stay in Settings. The game and the launcher obey the same answer. The code is in `crates/horizon-telemetry`.
 
 The one exception is the anonymous ["I'm playing" ping](#the-im-playing-ping) behind the launcher's "N playing now": it holds nothing about the player, and the launcher says so next to the switches.

@@ -54,6 +54,8 @@ The launcher is its own workspace. Basalt's copy is at `/home/shrx/dev/basalt/la
 - **P1 (done):** the owner gate is gone. `account::launch` never refuses, offline names need no
   account, the owner screen is deleted, and `horizon-launcher play` / MCP `play` start without one.
 - **P2 (in progress):** the Mojang game download is gone (`--download`, `download_for_owner`,
-  `mojang::download`); Freesm/Prism are auto-detected and their Java 25 is reused. Still to do:
-  telemetry, the remaining registry code and the nightly UI, then CI.
+  `mojang::download`); Freesm/Prism are auto-detected and their Java 25 is reused. Telemetry is
+  removed from the launcher (consent screen, `data` command, ping, benchmark upload) and the game
+  is launched with `HORIZON_TELEMETRY_URL=off`. Still to do: the remaining registry and nightly
+  code, then CI.
 - P3: the GPUIX launcher UI. P4: full RU/EN documentation. P5: Basalt's own signed releases.

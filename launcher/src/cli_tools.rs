@@ -25,7 +25,6 @@ pub const DESTRUCTIVE: &[&str] = &[
     "mods remove",
     "servers forget",
     "account sign-out",
-    "data delete",
     "worlds delete",
     "multiplayer remove",
     "screenshots delete",
@@ -37,14 +36,7 @@ pub const DESTRUCTIVE: &[&str] = &[
 ];
 
 /// Commands that send something or reach other people: only when the player asks.
-pub const OPEN_WORLD: &[&str] = &[
-    "data allow",
-    "data send",
-    "data bug",
-    "data benchmark",
-    "servers create",
-    "share-log",
-];
+pub const OPEN_WORLD: &[&str] = &["servers create", "share-log"];
 
 /// A generated tool: its name, the CLI words it runs and the clap command behind them.
 pub struct Tool {
@@ -383,8 +375,6 @@ mod tests {
             "modpack_import",
             "servers_create",
             "servers_run",
-            "data_status",
-            "data_bug",
             "account_select",
             "benchmark",
         ] {

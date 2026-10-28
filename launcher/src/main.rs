@@ -8,7 +8,6 @@ mod art;
 mod blocks;
 mod cli;
 mod cli_tools;
-mod collection;
 mod console;
 mod console_page;
 mod cull;
@@ -53,7 +52,6 @@ use horizon_launcher::backend::{self, Job, Msg, Release, Running, Settings, Upda
 use horizon_launcher::i18n::{self, tr, trf};
 use horizon_launcher::instances;
 use horizon_launcher::nightly;
-use horizon_launcher::telemetry;
 use scrollbar::Scrollbar;
 use std::borrow::Cow;
 use std::collections::VecDeque;
@@ -227,12 +225,8 @@ struct Launcher {
     proxy_input: String,
     proxy_focused: bool,
     proxy_focus: FocusHandle,
-    /// Opt-in data collection: the player's answer and Settings' section (`collection`).
-    collection: collection::Collection,
     /// Settings' "Connect an AI agent" (`agents_page`).
     agents: agents_page::AgentsUi,
-    /// How many play Basalt now, while the server answers ("N playing now" on the Play page).
-    playing: Option<u64>,
     tx: Sender<Msg>,
     rx: Receiver<Msg>,
     _appearance: Subscription,
@@ -418,9 +412,7 @@ impl Launcher {
             joining: None,
             quick_play: None,
             client_run: None,
-            collection: collection::Collection::load(),
             agents: agents_page::AgentsUi::default(),
-            playing: None,
             tx,
             rx,
             _appearance: appearance,
@@ -475,9 +467,6 @@ impl Launcher {
         });
         this.fetch_startup_releases();
         this.fetch_links();
-        // What the game and the launcher kept, if the player allows it and there is a server.
-        telemetry::send_in_background();
-        telemetry::watch_playing(this.tx.clone());
         this
     }
 
@@ -633,7 +622,6 @@ impl Launcher {
                 // The page reads is_prepared when drawn; `changed` redraws it.
                 Msg::Reused(_) => self.installed = backend::installed(),
                 Msg::Keychain(persistent) => self.keychain = persistent,
-                Msg::Playing(playing) => self.playing = playing,
                 Msg::Session(session) => {
                     if let Some(tag) = self.starting_client.take() {
                         let mut cmd = backend::client_command(&tag);
@@ -2546,41 +2534,29 @@ impl Launcher {
             .flex_col()
             .gap(px(12.))
             .child(
-                div()
-                    .flex()
-                    .child(
-                        div()
-                            .flex()
-                            .flex_none()
-                            .items_center()
-                            .gap(px(10.))
-                            .px(px(10.))
-                            .py(px(5.))
-                            .bg(t.side.opacity(0.85))
-                            .border_2()
-                            .border_color(t.outline)
-                            .child(
-                                div()
-                                    .size(px(8.))
-                                    .bg(if prepared { t.success } else { t.warn }),
-                            )
-                            .child(caps(format!("Minecraft {version}")).text_color(t.ink_soft))
-                            .child(div().size(px(4.)).bg(t.muted))
-                            .child(
-                                caps(tr(if prepared { "Ready" } else { "Needs preparing" }))
-                                    .text_color(if prepared { t.success } else { t.warn }),
-                            ),
-                    )
-                    .children(self.playing.map(|n| {
-                        div()
-                            .flex()
-                            .items_center()
-                            .gap(px(10.))
-                            .child(div().size(px(4.)).rounded_full().bg(t.rule))
-                            .child(
-                                caps(format!("{} playing now", thousands(n))).text_color(t.muted),
-                            )
-                    })),
+                div().flex().child(
+                    div()
+                        .flex()
+                        .flex_none()
+                        .items_center()
+                        .gap(px(10.))
+                        .px(px(10.))
+                        .py(px(5.))
+                        .bg(t.side.opacity(0.85))
+                        .border_2()
+                        .border_color(t.outline)
+                        .child(
+                            div()
+                                .size(px(8.))
+                                .bg(if prepared { t.success } else { t.warn }),
+                        )
+                        .child(caps(format!("Minecraft {version}")).text_color(t.ink_soft))
+                        .child(div().size(px(4.)).bg(t.muted))
+                        .child(
+                            caps(tr(if prepared { "Ready" } else { "Needs preparing" }))
+                                .text_color(if prepared { t.success } else { t.warn }),
+                        ),
+                ),
             )
             .child(
                 blocks::pixel(60., FontWeight::BOLD)
@@ -2628,45 +2604,6 @@ impl Launcher {
                         })),
                 ),
             });
-        }
-        // Players who answered the first-run question before the ping existed read about it
-        // once here.
-        if !self.settings.ping_notice_seen && !self.collection.consent.needs_asking() {
-            hero = hero.child(
-                plate(&t)
-                    .flex()
-                    .flex_none()
-                    .flex_col()
-                    .gap(px(8.))
-                    .p(px(16.))
-                    .w_full()
-                    .max_w(px(640.))
-                    .child(
-                        text(theme::UI)
-                            .text_color(t.ink)
-                            .child(telemetry::PING_NAME),
-                    )
-                    .child(
-                        text(theme::CAPTION)
-                            .text_color(t.muted)
-                            .child(telemetry::PING),
-                    )
-                    .child(
-                        div()
-                            .id("ping-notice-ok")
-                            .text_size(px(theme::UI.px))
-                            .text_color(t.accent)
-                            .font_weight(FontWeight::MEDIUM)
-                            .cursor_pointer()
-                            .hover(|s| s.opacity(0.8))
-                            .child("Got it")
-                            .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
-                                this.settings.ping_notice_seen = true;
-                                this.settings.save();
-                                cx.notify();
-                            })),
-                    ),
-            );
         }
         hero
     }
@@ -2908,7 +2845,6 @@ impl Launcher {
                         ))
                     }),
             )
-            .child(self.collection_section(cx))
             .children(self.agents_section(cx))
     }
 
@@ -3887,9 +3823,6 @@ impl Render for Launcher {
                 root = root.child(viewer);
             }
         }
-        if self.asking_consent() {
-            root = root.child(self.consent_screen(cx));
-        }
         if let Some(opening) = &self.opening {
             // The wordmark arrives letter by letter, then gives way to the launcher; a click or
             // a key skips ahead.
@@ -4000,11 +3933,10 @@ impl Launcher {
 
 actions!(horizon_launcher, [Quit, CloseWindow]);
 
-/// What closing the last window does: stop the servers this launcher started, send the telemetry,
-/// exit. A game that is running keeps running. Cmd+Q goes through here too.
+/// What closing the last window does: stop the servers this launcher started, exit. A game that
+/// is running keeps running. Cmd+Q goes through here too.
 fn shut_down(cx: &mut App) {
     servers_page::stop_on_quit();
-    telemetry::send_before_exit();
     cx.quit()
 }
 
