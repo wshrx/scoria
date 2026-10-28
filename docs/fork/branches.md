@@ -7,7 +7,8 @@ Scoria uses three long-lived branches. `main` is what players get; `dev` is wher
 |---|---|---|
 | `main` | Stable Scoria. Releases are cut from here. | Only fast-forward/merge from `dev` after the full check below. No direct work. |
 | `dev` | Integration and testing. Everything lands here first. | Build, `cargo test`, clippy, fmt and the Python tests must pass before merging into `main`. |
-| `nightly` | Experimental builds and risky spikes. | May be rebased or reset at any time; never a base for `main`. |
+| `nightly` | Tested `dev`, built into a nightly launcher artifact. | Only fast-forwarded from `dev` after the checks pass. Never a base for feature work. |
+| `lab` | Shared sandbox on Entire for "try whatever". | May be broken; nothing is promoted from it directly — move useful parts into `feat/*`. |
 
 ## Working
 
@@ -38,11 +39,19 @@ A change that cannot fast-forward (because `main` moved) goes back to `dev` with
 | `github` | `git@github.com:wshrx/scoria.git` (public) | only `main` and `nightly` |
 | `upstream` | Horizon | the engine, for merges |
 
+- `lab` and `feat/*`/`fix/*`/`exp/*` live only on Entire.
 - `git push` goes to **Entire** (`remote.pushDefault = origin`).
 - `git push github` sends exactly `main` and `nightly` (the configured `remote.github.push`
   refspecs), from any branch; it never publishes `dev`.
 - Tags stay on Entire; push one to GitHub only when a release needs it.
 - `flint-ui` is a different repository (the UI), on GitHub and Entire; it is not the launcher.
+
+## Nightly build
+
+`.github/workflows/nightly.yml` runs on every push to `nightly` and builds **the launcher only**
+(`launcher/` workspace, Linux x86-64) into the `scoria-launcher-linux-x86_64` artifact. The game
+is not built there: it needs a copy of Minecraft 26.3 and takes far longer. Nightly is promoted
+from `dev` after `checks` passed.
 
 ## Notes
 

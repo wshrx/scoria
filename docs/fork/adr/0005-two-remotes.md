@@ -20,8 +20,9 @@ time or silently picks one.
 2. **`github` = GitHub** (`git@github.com:wshrx/scoria.git`). It carries only:
    - `main` — stable;
    - `nightly` — preview builds.
-   `dev`, feature branches and release tags stay on Entire (tags may be pushed to GitHub for a
-   release later, deliberately).
+   `dev`, `lab`, feature branches and release tags stay on Entire (tags may be pushed to GitHub
+   for a release later, deliberately). `nightly` is tested `dev`; GitHub runs the launcher build
+   on every push to it.
 3. **The push refspecs encode that.** `remote.github.push` is set to `main` and `nightly` only, so
    `git push github` from any branch sends exactly those two. `remote.github.tagOpt` is
    `--no-tags`, so a fetch never drags upstream tags in.
