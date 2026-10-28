@@ -1,12 +1,31 @@
-import { useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { useWindowSize } from "@gpuix/react"
 import { Icon, Text, useTheme } from "@/lib/flint"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import type { Snapshot } from "../api"
-import { setOfflineName, setWhilePlaying } from "../api"
+import type { DownloadProgress, Snapshot } from "../api"
+import {
+  downloadMinecraft,
+  installLatest,
+  prepare,
+  removeVersion,
+  selectVersion,
+  setOfflineName,
+  setWhilePlaying,
+  versions,
+  type VersionInfo,
+} from "../api"
 import { useT } from "../i18n"
-import { Panel } from "../visual"
+import { Avatar, Meter, Sheet } from "../visual"
+
+type Tab = "general" | "game" | "builds" | "about"
+
+const TABS: { id: Tab; label: string; icon: "sliders" | "hardDrive" | "box" | "info" }[] = [
+  { id: "general", label: "General", icon: "sliders" },
+  { id: "game", label: "Game files", icon: "hardDrive" },
+  { id: "builds", label: "Builds", icon: "box" },
+  { id: "about", label: "About", icon: "info" },
+]
 
 const MODES: { value: "stay" | "minimize" | "hide"; label: string }[] = [
   { value: "stay", label: "Stay" },
@@ -14,42 +33,32 @@ const MODES: { value: "stay" | "minimize" | "hide"; label: string }[] = [
   { value: "hide", label: "Hide" },
 ]
 
-function Section({
-  title,
+function megabytes(bytes: number): string {
+  if (bytes >= 1_000_000_000) return `${(bytes / 1e9).toFixed(1)} GB`
+  if (bytes <= 0) return "0 MB"
+  return `${Math.round(bytes / 1e6)} MB`
+}
+
+function Field({
+  label,
   detail,
   children,
 }: {
-  title: string
-  detail: string
+  label: string
+  detail?: string
   children?: ReactNode
 }) {
-  const theme = useTheme()
-  const { width } = useWindowSize()
-  const narrow = width < 900
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: narrow ? "column" : "row",
-        gap: narrow ? 12 : 28,
-        paddingTop: 22,
-        paddingBottom: 22,
-        borderTopWidth: 1,
-        borderStyle: "solid",
-        borderColor: theme.colors.border,
-      }}
-    >
-      <div style={{ width: narrow ? "100%" : 220, flexShrink: 0, display: "flex", flexDirection: "column", gap: 5 }}>
-        <Text size="base" weight="semibold">
-          {title}
-        </Text>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <Text size="sm" weight="medium">
+        {label}
+      </Text>
+      {detail ? (
         <Text size="xs" tone="muted">
           {detail}
         </Text>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, flexGrow: 1, minWidth: 0 }}>
-        {children}
-      </div>
+      ) : null}
+      {children}
     </div>
   )
 }
@@ -70,210 +79,580 @@ export function SettingsPage({
   const theme = useTheme()
   const t = useT()
   const { width } = useWindowSize()
-  const narrow = width < 900
+  const narrow = width < 1000
+  const files = data.minecraft
+
+  const [tab, setTab] = useState<Tab>("general")
   const [name, setName] = useState(data.offlineName)
   const [note, setNote] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
+  const [busy, setBusy] = useState<"save" | "download" | "prepare" | null>(null)
+  const [progress, setProgress] = useState<DownloadProgress | null>(null)
+  const [log, setLog] = useState<string[]>([])
+  const [details, setDetails] = useState(false)
+
+  const [installed, setInstalled] = useState<VersionInfo[]>([])
+  const [selected, setSelected] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState<string | null>(null)
+  const [versionBusy, setVersionBusy] = useState<string | null>(null)
+
+  const refreshVersions = () => {
+    void versions()
+      .then((state) => {
+        setInstalled(state.installed)
+        setSelected(state.selected)
+      })
+      .catch((error: Error) => {
+        if (data.live) setNote(error.message)
+      })
+  }
+
+  useEffect(refreshVersions, [])
+  useEffect(() => setName(data.offlineName), [data.offlineName])
+
+  const pushLog = (line: string) => setLog((lines) => [...lines.slice(-5), line])
+  const done = (files.client ? 1 : 0) + files.libraries.done + files.assets.done
+  const total = 1 + files.libraries.total + files.assets.total
+  const percent = total > 0 ? Math.round((done / total) * 100) : 0
+
+  const download = async () => {
+    setBusy("download")
+    setNote(null)
+    setProgress(null)
+    setLog([])
+    try {
+      await downloadMinecraft(pushLog, setProgress)
+      onRefresh()
+    } catch (error) {
+      setNote(`The download stopped: ${(error as Error).message}`)
+    } finally {
+      setBusy(null)
+      setProgress(null)
+    }
+  }
+
+  const prepareNow = async () => {
+    setBusy("prepare")
+    setNote(null)
+    setLog([])
+    try {
+      const said = await prepare(undefined, pushLog, true)
+      if (said.startsWith("Preparation failed")) setNote(said)
+      onRefresh()
+    } catch (error) {
+      setNote(`The download stopped: ${(error as Error).message}`)
+    } finally {
+      setBusy(null)
+    }
+  }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <Text style={{ fontSize: 38, lineHeight: 42, fontWeight: "700" }}>{t("Settings")}</Text>
-        <Text size="sm" tone="muted" style={{ maxWidth: 620 }}>
-          {t("The launcher keeps everything on this machine. These are the only switches there are.")}
+    <Sheet
+      style={{
+        flexDirection: narrow ? "column" : "row",
+        padding: 0,
+        gap: 0,
+        minHeight: 600,
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: narrow ? "row" : "column",
+          gap: 6,
+          width: narrow ? "100%" : 210,
+          flexShrink: 0,
+          padding: 20,
+          borderRightWidth: narrow ? 0 : 1,
+          borderBottomWidth: narrow ? 1 : 0,
+          borderStyle: "solid",
+          borderColor: theme.colors.border,
+          backgroundColor: theme.appearance === "dark" ? "#FFFFFF05" : theme.colors.muted,
+        }}
+      >
+        <Text size="lg" weight="semibold" style={{ marginBottom: 8 }}>
+          {t("Settings")}
         </Text>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column" }}>
-        <Section title={t("Profile")} detail={t("The name the game shows in single player and on LAN.")}>
-          <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", gap: 8, alignItems: narrow ? "stretch" : "flex-end" }}>
-            <div style={{ width: narrow ? "100%" : 280 }}>
-              <Input value={name} placeholder="Builder_1" onChange={(event) => setName(event.value ?? "")} />
-            </div>
-            <Button
-              variant="secondary"
-              loading={busy}
-              onClick={() => {
-                setBusy(true)
-                void setOfflineName(name.trim())
-                  .then(() => {
-                    setNote(t("Saved. The next game starts with this name."))
-                    onRefresh()
-                  })
-                  .catch((error: Error) => setNote(error.message))
-                  .finally(() => setBusy(false))
+        {TABS.map((entry) => {
+          const active = tab === entry.id
+          return (
+            <div
+              key={entry.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => setTab(entry.id)}
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 9,
+                height: 36,
+                paddingLeft: 12,
+                paddingRight: 12,
+                borderRadius: 12,
+                cursor: "pointer",
+                backgroundColor: active ? "#8B5CF624" : "transparent",
+                hover: { backgroundColor: active ? "#8B5CF62E" : theme.colors.accent },
               }}
             >
-              {t("Save")}
-            </Button>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, paddingBottom: 7 }}>
-              <div
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor: theme.colors.success,
-                }}
+              <Icon
+                name={entry.icon}
+                size={15}
+                color={active ? theme.colors.primary : theme.colors.mutedForeground}
               />
-              <Text mono size="xs" tone="muted">
-                {t("offline profile")}
+              <Text size="xs" weight={active ? "semibold" : "regular"}>
+                {t(entry.label)}
               </Text>
             </div>
-          </div>
-          <Text size="xs" tone="muted">
-            {t("3 to 16 letters, digits or _. Kept in accounts.json; no token leaves the machine.")}
-          </Text>
-          {note ? (
-            <Text size="xs" tone="muted">
-              {note}
-            </Text>
-          ) : null}
-        </Section>
+          )
+        })}
+      </div>
 
-        <Section title={t("Appearance")} detail={t("Two surfaces, the same blue fire.")}>
-          <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", gap: 10 }}>
-            {[
-              { key: "dark", label: t("Basalt"), detail: t("Cold rock, bone text"), colors: ["#1A2130", "#6C9EFF", "#EEE9DD"] },
-              { key: "light", label: t("Paper"), detail: t("Warm paper, ink"), colors: ["#F0ECE3", "#1F4FD8", "#191C22"] },
-            ].map((option) => {
-              const active = (option.key === "dark") === dark
-              return (
-                <div
-                  key={option.key}
+      <div style={{ display: "flex", flexDirection: "column", gap: 22, flexGrow: 1, padding: narrow ? 20 : 30 }}>
+        {tab === "general" ? (
+          <>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <Text size="xl" weight="semibold">
+                {t("Profile")}
+              </Text>
+              <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", alignItems: narrow ? "stretch" : "flex-end", gap: 10 }}>
+                <Avatar name={name || data.offlineName} size={42} />
+                <div style={{ width: narrow ? "100%" : 280 }}>
+                  <Input
+                    value={name}
+                    placeholder="Builder_1"
+                    onChange={(event) => setName(event.value ?? "")}
+                  />
+                </div>
+                <Button
+                  variant="primary"
+                  loading={busy === "save"}
                   onClick={() => {
-                    if (!active) onToggleTheme()
+                    setBusy("save")
+                    void setOfflineName(name.trim())
+                      .then(() => {
+                        setNote(t("Saved."))
+                        onRefresh()
+                      })
+                      .catch((error: Error) => setNote(error.message))
+                      .finally(() => setBusy(null))
                   }}
+                  style={{ borderRadius: 999, height: 38, paddingLeft: 18, paddingRight: 18 }}
+                >
+                  {t("Save")}
+                </Button>
+              </div>
+              <Text size="xs" tone="muted">
+                {t("The name the game shows in single player and on LAN.")}
+              </Text>
+            </div>
+
+            <div style={{ height: 1, backgroundColor: theme.colors.border }} />
+
+            <Field label={t("Appearance")} detail={t("Two surfaces, the same violet light.")}>
+              <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", gap: 10 }}>
+                {[
+                  { key: "dark", label: t("Night"), detail: t("Indigo and iris"), colors: ["#151020", "#8B5CF6", "#F4EFFF"] },
+                  { key: "light", label: t("Lilac"), detail: t("Warm paper, ink"), colors: ["#EEEAF6", "#6D28D9", "#171020"] },
+                ].map((option) => {
+                  const active = (option.key === "dark") === dark
+                  return (
+                    <div
+                      key={option.key}
+                      onClick={() => {
+                        if (!active) onToggleTheme()
+                      }}
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 12,
+                        width: narrow ? "100%" : 240,
+                        padding: 12,
+                        borderRadius: 16,
+                        borderWidth: 1,
+                        borderStyle: "solid",
+                        borderColor: active ? theme.colors.primary : theme.colors.border,
+                        backgroundColor: active ? "#8B5CF614" : "transparent",
+                        cursor: active ? "default" : "pointer",
+                        hover: active ? {} : { borderColor: theme.colors.input },
+                      }}
+                    >
+                      <div style={{ display: "flex", flexDirection: "row", width: 46, height: 34, borderRadius: 10, overflow: "hidden" }}>
+                        {option.colors.map((color) => (
+                          <div key={color} style={{ flexGrow: 1, backgroundColor: color }} />
+                        ))}
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1 }}>
+                        <Text size="xs" weight="medium">
+                          {option.label}
+                        </Text>
+                        <Text mono size="xs" tone="muted">
+                          {option.detail}
+                        </Text>
+                      </div>
+                      <Icon
+                        name={active ? "check" : "circle"}
+                        size={13}
+                        color={active ? theme.colors.primary : theme.colors.mutedForeground}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            </Field>
+
+            <Field label={t("Language")}>
+              <div style={{ display: "flex", flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
+                {[
+                  ["en", "English"],
+                  ["ru", "Русский"],
+                  ["system", t("System")],
+                ].map(([value, label]) => (
+                  <Button
+                    key={value}
+                    size="sm"
+                    variant={data.language === value ? "secondary" : "ghost"}
+                    onClick={() => onLanguage(value as "en" | "ru" | "system")}
+                    style={{ borderRadius: 999, height: 32, paddingLeft: 14, paddingRight: 14 }}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+            </Field>
+
+            <Field label={t("While playing")} detail={t("What this window does when the game starts.")}>
+              <div style={{ display: "flex", flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
+                {MODES.map((mode) => (
+                  <Button
+                    key={mode.value}
+                    size="sm"
+                    variant={data.whilePlaying === mode.value ? "secondary" : "ghost"}
+                    onClick={() => {
+                      void setWhilePlaying(mode.value)
+                        .then(() => onRefresh())
+                        .catch((error: Error) => setNote(error.message))
+                    }}
+                    style={{ borderRadius: 999, height: 32, paddingLeft: 14, paddingRight: 14 }}
+                  >
+                    {t(mode.label)}
+                  </Button>
+                ))}
+              </div>
+            </Field>
+
+            {note ? (
+              <Text size="xs" tone="muted">
+                {note}
+              </Text>
+            ) : null}
+          </>
+        ) : null}
+
+        {tab === "game" ? (
+          <>
+            <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, flexGrow: 1 }}>
+                <Text size="xl" weight="semibold">
+                  {`Minecraft ${files.version}`}
+                </Text>
+                <Text size="sm" tone="muted">
+                  {files.installed && data.prepared
+                    ? t("Ready to play.")
+                    : !files.installed
+                      ? t("Download the pinned version from Mojang.")
+                      : t("The files are here. Prepare the resources.")}
+                </Text>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  height: 28,
+                  paddingLeft: 10,
+                  paddingRight: 10,
+                  borderRadius: 999,
+                  backgroundColor: files.installed && data.prepared ? "#7FD8A41A" : "#FFFFFF0D",
+                }}
+              >
+                <div
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor: files.installed && data.prepared ? theme.colors.success : "#D8B26A",
+                  }}
+                />
+                <Text mono size="xs" tone="muted">
+                  {files.installed && data.prepared ? t("ready") : t("needs attention")}
+                </Text>
+              </div>
+            </div>
+
+            <Meter value={progress ? progress.done : done} total={progress ? progress.total : total} />
+            <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+              <Text mono size="xs" tone="muted">
+                {progress
+                  ? `${progress.done} / ${progress.total}`
+                  : files.installed
+                    ? t("all files verified")
+                    : files.manifest
+                      ? `${megabytes(files.missingBytes)} ${t("to download")}`
+                      : t("not downloaded yet")}
+              </Text>
+              <Text mono size="xs" tone="muted">
+                {`${progress ? (progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0) : percent}%`}
+              </Text>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", gap: 8 }}>
+              <Button
+                variant="primary"
+                loading={busy === "download"}
+                onClick={() => void download()}
+                style={{ borderRadius: 999, height: 38, paddingLeft: 18, paddingRight: 18, flexGrow: 1 }}
+              >
+                <Icon name="download" size={14} color={theme.colors.primaryForeground} />
+                {files.installed ? t("Verify and repair") : t("Download game files")}
+              </Button>
+              <Button
+                variant="secondary"
+                loading={busy === "prepare"}
+                onClick={() => void prepareNow()}
+                style={{ borderRadius: 999, height: 38, paddingLeft: 18, paddingRight: 18, flexGrow: 1 }}
+              >
+                {t("Prepare resources")}
+              </Button>
+            </div>
+
+            {log.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 3, padding: 12, borderRadius: 14, backgroundColor: theme.colors.muted }}>
+                {log.map((line, index) => (
+                  <Text key={index} mono size="xs" tone="muted" truncate>
+                    {line}
+                  </Text>
+                ))}
+              </div>
+            ) : null}
+
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setDetails((value) => !value)}
+              style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6, cursor: "pointer", alignSelf: "flex-start" }}
+            >
+              <Icon name={details ? "chevronUp" : "chevronDown"} size={13} color={theme.colors.mutedForeground} />
+              <Text size="xs" tone="muted">
+                {details ? t("Hide details") : t("Show details")}
+              </Text>
+            </div>
+
+            {details ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: 14, borderRadius: 14, backgroundColor: theme.colors.muted }}>
+                {[
+                  [t("Folder"), files.path],
+                  [t("Version manifest"), files.manifestSha1 ?? t("unknown")],
+                  [t("Client"), files.client ? t("ready") : t("missing")],
+                  [t("Libraries"), `${files.libraries.done} / ${files.libraries.total}`],
+                  [t("Assets"), `${files.assets.done} / ${files.assets.total}`],
+                ].map(([label, value]) => (
+                  <div key={label} style={{ display: "flex", flexDirection: "row", gap: 12 }}>
+                    <Text mono size="xs" tone="muted" style={{ width: 130, flexShrink: 0 }}>
+                      {label}
+                    </Text>
+                    <Text mono size="xs" style={{ flexGrow: 1 }}>
+                      {value}
+                    </Text>
+                  </div>
+                ))}
+                <Text size="xs" tone="muted">
+                  {t("Every file is checked against Mojang's sha1. A stopped download resumes where it stopped.")}
+                </Text>
+              </div>
+            ) : null}
+
+            {note ? (
+              <Text size="xs" tone="muted">
+                {note}
+              </Text>
+            ) : null}
+          </>
+        ) : null}
+
+        {tab === "builds" ? (
+          <>
+            <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-end", gap: 12 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, flexGrow: 1 }}>
+                <Text size="xl" weight="semibold">
+                  {t("Launcher builds")}
+                </Text>
+                <Text size="sm" tone="muted">
+                  {t("Versions of Scoria installed on this machine.")}
+                </Text>
+              </div>
+              <Button
+                variant="secondary"
+                loading={versionBusy === "latest"}
+                onClick={() => {
+                  setVersionBusy("latest")
+                  void installLatest()
+                    .then(() => {
+                      setNote(t("Installed the latest build."))
+                      refreshVersions()
+                      onRefresh()
+                    })
+                    .catch((error: Error) => setNote(error.message))
+                    .finally(() => setVersionBusy(null))
+                }}
+                style={{ borderRadius: 999, height: 34, paddingLeft: 14, paddingRight: 14 }}
+              >
+                <Icon name="download" size={13} color={theme.colors.foreground} />
+                {t("Install latest")}
+              </Button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {installed.length === 0 ? (
+                <Text size="sm" tone="muted">
+                  {t("No versions installed.")}
+                </Text>
+              ) : (
+                installed.map((version) => (
+                  <div
+                    key={version.tag}
+                    style={{
+                      display: "flex",
+                      flexDirection: narrow ? "column" : "row",
+                      alignItems: narrow ? "stretch" : "center",
+                      gap: 12,
+                      padding: 12,
+                      borderRadius: 14,
+                      backgroundColor: theme.colors.muted,
+                    }}
+                  >
+                    <Text mono size="sm" style={{ flexGrow: 1 }}>
+                      {version.tag}
+                    </Text>
+                    <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <div
+                        style={{
+                          width: 5,
+                          height: 5,
+                          borderRadius: 3,
+                          backgroundColor: version.prepared ? theme.colors.success : theme.colors.mutedForeground,
+                        }}
+                      />
+                      <Text mono size="xs" tone="muted">
+                        {version.prepared ? t("prepared") : t("needs preparing")}
+                      </Text>
+                    </div>
+                    {selected === version.tag ? (
+                      <Text mono size="xs" style={{ color: theme.colors.primary }}>
+                        {t("selected")}
+                      </Text>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        loading={versionBusy === version.tag}
+                        onClick={() => {
+                          setVersionBusy(version.tag)
+                          void selectVersion(version.tag)
+                            .then(() => {
+                              refreshVersions()
+                              onRefresh()
+                            })
+                            .catch((error: Error) => setNote(error.message))
+                            .finally(() => setVersionBusy(null))
+                        }}
+                        style={{ borderRadius: 999, height: 28, paddingLeft: 12, paddingRight: 12 }}
+                      >
+                        {t("Use")}
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant={confirming === version.tag ? "destructive" : "ghost"}
+                      onClick={() => {
+                        if (confirming !== version.tag) {
+                          setConfirming(version.tag)
+                          return
+                        }
+                        setConfirming(null)
+                        void removeVersion(version.tag)
+                          .then(() => {
+                            refreshVersions()
+                            onRefresh()
+                          })
+                          .catch((error: Error) => setNote(error.message))
+                      }}
+                      style={{ borderRadius: 999, height: 28, paddingLeft: 12, paddingRight: 12 }}
+                    >
+                      {confirming === version.tag ? t("Confirm") : t("Remove")}
+                    </Button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {note ? (
+              <Text size="xs" tone="muted">
+                {note}
+              </Text>
+            ) : null}
+          </>
+        ) : null}
+
+        {tab === "about" ? (
+          <>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <Text size="xl" weight="semibold">
+                {t("About")}
+              </Text>
+              <Text size="sm" tone="muted">
+                {t("A local-first launcher: no account, no session, no telemetry.")}
+              </Text>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", borderRadius: 16, overflow: "hidden", borderWidth: 1, borderStyle: "solid", borderColor: theme.colors.border }}>
+              {[
+                [t("Launcher"), `${data.version} · ${data.branch}`],
+                [t("Minecraft"), data.minecraft.version],
+                [t("Instance"), data.instances.find((entry) => entry.selected)?.name ?? data.selectedInstance],
+                [t("Engine"), data.live ? t("connected") : t("preview snapshot")],
+                [t("Profile"), data.offlineName],
+              ].map(([label, value], index) => (
+                <div
+                  key={label}
                   style={{
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",
-                    gap: 12,
-                    width: narrow ? "100%" : 240,
-                    padding: 12,
-                    borderRadius: theme.radius.sm,
-                    borderWidth: 1,
+                    paddingLeft: 14,
+                    paddingRight: 14,
+                    paddingTop: 11,
+                    paddingBottom: 11,
+                    borderTopWidth: index === 0 ? 0 : 1,
                     borderStyle: "solid",
-                    borderColor: active ? theme.colors.primary : theme.colors.border,
-                    backgroundColor: active ? theme.colors.accent : "transparent",
-                    cursor: active ? "default" : "pointer",
-                    hover: active ? {} : { borderColor: theme.colors.input },
+                    borderColor: theme.colors.border,
                   }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "row",
-                      width: 44,
-                      height: 32,
-                      borderRadius: theme.radius.xs,
-                      overflow: "hidden",
-                      borderWidth: 1,
-                      borderStyle: "solid",
-                      borderColor: "#00000033",
-                    }}
-                  >
-                    {option.colors.map((color) => (
-                      <div key={color} style={{ flexGrow: 1, backgroundColor: color }} />
-                    ))}
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1 }}>
-                    <Text size="xs" weight="medium">
-                      {option.label}
-                    </Text>
-                    <Text mono size="xs" tone="muted">
-                      {option.detail}
-                    </Text>
-                  </div>
-                  <Icon
-                    name={active ? "check" : "circle"}
-                    size={13}
-                    color={active ? theme.colors.primary : theme.colors.mutedForeground}
-                  />
+                  <Text size="xs" tone="muted" style={{ flexGrow: 1 }}>
+                    {label}
+                  </Text>
+                  <Text mono size="xs">
+                    {value}
+                  </Text>
                 </div>
-              )
-            })}
-          </div>
-        </Section>
-
-        <Section title={t("While playing")} detail={t("What this window does when the game starts.")}>
-          <div style={{ display: "flex", flexDirection: "row", gap: 6 }}>
-            {MODES.map((mode) => (
-              <Button
-                key={mode.value}
-                size="sm"
-                variant={data.whilePlaying === mode.value ? "secondary" : "ghost"}
-                onClick={() => {
-                  void setWhilePlaying(mode.value)
-                    .then(() => onRefresh())
-                    .catch((error: Error) => setNote(error.message))
-                }}
-              >
-                {t(mode.label)}
-              </Button>
-            ))}
-          </div>
-        </Section>
-
-        <Section title={t("Language")} detail={t("The launcher's own words. Game text comes from your packs.")}>
-          <div style={{ display: "flex", flexDirection: "row", gap: 6 }}>
-            {[
-              ["en", "English"],
-              ["ru", "Русский"],
-              ["system", t("System")],
-            ].map(([value, label]) => (
-              <Button
-                key={value}
-                size="sm"
-                variant={data.language === value ? "secondary" : "ghost"}
-                onClick={() => onLanguage(value as "en" | "ru" | "system")}
-              >
-                {label}
-              </Button>
-            ))}
-          </div>
-        </Section>
-
-        <Section title={t("This machine")} detail={t("Read-only facts about the build that is running.")}>
-          <Panel style={{ padding: 0 }}>
-            {[
-              [t("Launcher"), `${data.version} · ${data.branch}`],
-              [t("Minecraft"), data.minecraft.version],
-              [t("Instance"), data.instances.find((i) => i.selected)?.name ?? data.selectedInstance],
-              [t("Engine"), data.live ? t("connected") : t("preview snapshot")],
-              [t("Appearance"), dark ? t("basalt") : t("paper")],
-            ].map(([label, value], index) => (
-              <div
-                key={label}
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingTop: 10,
-                  paddingBottom: 10,
-                  paddingLeft: 14,
-                  paddingRight: 14,
-                  borderTopWidth: index === 0 ? 0 : 1,
-                  borderStyle: "solid",
-                  borderColor: theme.colors.border,
-                }}
-              >
-                <Text size="xs" tone="muted" style={{ flexGrow: 1 }}>
-                  {label}
-                </Text>
-                <Text mono size="xs">
-                  {value}
-                </Text>
-              </div>
-            ))}
-          </Panel>
-        </Section>
+              ))}
+            </div>
+            <Text size="xs" tone="muted">
+              {t("No telemetry, no consent screen, no analytics. The launcher talks to Mojang and GitHub only when you ask for files or a build.")}
+            </Text>
+          </>
+        ) : null}
       </div>
-
-      <Text size="xs" tone="muted">
-        {t(
-          "No telemetry, no consent screen, no analytics. The launcher talks to Mojang and GitHub only when you ask for files or a build.",
-        )}
-      </Text>
-    </div>
+    </Sheet>
   )
 }

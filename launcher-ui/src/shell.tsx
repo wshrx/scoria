@@ -1,18 +1,17 @@
 import type { ReactNode } from "react"
-import { useWindowSize } from "@gpuix/react"
+import { useGpuixRequired, useWindowSize } from "@gpuix/react"
 import { Icon, Text, useTheme, type IconName } from "@/lib/flint"
 import type { Snapshot } from "./api"
 import { useT } from "./i18n"
-import { Mark } from "./visual"
+import { Avatar, Backdrop, BONE, CHROME_MUTED, Mark, gradient } from "./visual"
+import { startWindowMove, startWindowResize } from "./chrome"
 
-export type Page = "home" | "instances" | "files" | "servers" | "settings"
+export type Page = "home" | "instances" | "servers" | "settings"
 
 const NAV: { id: Page; label: string; icon: IconName }[] = [
-  { id: "home", label: "Play", icon: "home" },
+  { id: "home", label: "Play", icon: "play" },
   { id: "instances", label: "Instances", icon: "layers" },
-  { id: "files", label: "Game files", icon: "hardDrive" },
   { id: "servers", label: "Servers", icon: "server" },
-  { id: "settings", label: "Settings", icon: "sliders" },
 ]
 
 export interface ShellProps {
@@ -21,188 +20,378 @@ export interface ShellProps {
   dark: boolean
   onToggleTheme: () => void
   data: Snapshot
+  frameless: boolean
   children?: ReactNode
 }
 
-/** A masthead, a wide sheet of content, and a hairline that keeps the window honest. */
-export function Shell({ page, onPage, dark, onToggleTheme, data, children }: ShellProps) {
+function WindowButton({
+  icon,
+  label,
+  danger = false,
+  onClick,
+}: {
+  icon: IconName
+  label: string
+  danger?: boolean
+  onClick: () => void
+}) {
+  const theme = useTheme()
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={label}
+      onClick={onClick}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 30,
+        height: 30,
+        borderRadius: 10,
+        cursor: "pointer",
+        color: CHROME_MUTED,
+        hover: {
+          backgroundColor: danger ? theme.colors.destructive : "#FFFFFF14",
+          color: danger ? theme.colors.destructiveForeground : BONE,
+        },
+      }}
+    >
+      <Icon name={icon} size={14} color={CHROME_MUTED} />
+    </div>
+  )
+}
+
+function Rail({
+  page,
+  onPage,
+  dark,
+  onToggleTheme,
+}: {
+  page: Page
+  onPage: (page: Page) => void
+  dark: boolean
+  onToggleTheme: () => void
+}) {
   const theme = useTheme()
   const t = useT()
-  const { width } = useWindowSize()
-  const compact = width < 1080
+
+  const item = (id: Page, icon: IconName, label: string) => {
+    const active = page === id
+    return (
+      <div
+        key={id}
+        role="button"
+        tabIndex={0}
+        aria-label={t(label)}
+        onClick={() => onPage(id)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 44,
+          height: 44,
+          flexShrink: 0,
+          borderRadius: 14,
+          background: active ? gradient("#A78BFA", "#6D28D9", 150) : undefined,
+          backgroundColor: active ? theme.colors.primary : "transparent",
+          boxShadow: active
+            ? { offsetX: 0, offsetY: 8, blurRadius: 22, spreadRadius: -6, color: "#8B5CF677" }
+            : undefined,
+          cursor: "pointer",
+          hover: active ? {} : { backgroundColor: "#FFFFFF14" },
+        }}
+      >
+        <Icon
+          name={icon}
+          size={18}
+          color={active ? "#FFFFFF" : CHROME_MUTED}
+        />
+      </div>
+    )
+  }
 
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
+        alignItems: "center",
+        width: 74,
+        flexShrink: 0,
+        gap: 8,
+        paddingTop: 16,
+        paddingBottom: 14,
+        backgroundColor: "#0B0713",
+        borderRightWidth: 1,
+        borderStyle: "solid",
+        borderColor: theme.colors.border,
+      }}
+    >
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={t("Play")}
+        onClick={() => onPage("home")}
+        style={{ cursor: "pointer", marginBottom: 14 }}
+      >
+        <Mark size={38} />
+      </div>
+
+      {NAV.map((entry) => item(entry.id, entry.icon, entry.label))}
+
+      <div style={{ flexGrow: 1 }} />
+
+      {item("settings", "sliders", "Settings")}
+
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={t("Toggle theme")}
+        onClick={onToggleTheme}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 44,
+          height: 44,
+          borderRadius: 14,
+          cursor: "pointer",
+          hover: { backgroundColor: "#FFFFFF14" },
+        }}
+      >
+        <Icon
+          name={dark ? "sun" : "moon"}
+          size={17}
+          color={CHROME_MUTED}
+        />
+      </div>
+    </div>
+  )
+}
+
+function ResizeHandles() {
+  const zones: { style: Record<string, unknown>; direction: number; cursor: string }[] = [
+    { style: { top: 0, left: 18, right: 18, height: 5 }, direction: 1, cursor: "ns-resize" },
+    { style: { bottom: 0, left: 18, right: 18, height: 5 }, direction: 5, cursor: "ns-resize" },
+    { style: { left: 0, top: 18, bottom: 18, width: 5 }, direction: 7, cursor: "ew-resize" },
+    { style: { right: 0, top: 18, bottom: 18, width: 5 }, direction: 3, cursor: "ew-resize" },
+    { style: { top: 0, left: 0, width: 16, height: 16 }, direction: 0, cursor: "nwse-resize" },
+    { style: { top: 0, right: 0, width: 16, height: 16 }, direction: 2, cursor: "nesw-resize" },
+    { style: { bottom: 0, right: 0, width: 16, height: 16 }, direction: 4, cursor: "nwse-resize" },
+    { style: { bottom: 0, left: 0, width: 16, height: 16 }, direction: 6, cursor: "nesw-resize" },
+  ]
+  return (
+    <>
+      {zones.map((zone) => (
+        <div
+          key={zone.direction}
+          onMouseDown={() => startWindowResize(zone.direction)}
+          style={{
+            position: "absolute",
+            pointerEvents: "auto",
+            cursor: zone.cursor as never,
+            ...zone.style,
+          }}
+        />
+      ))}
+    </>
+  )
+}
+
+/** The rail, a floating top strip, and a wide stage for one page. */
+export function Shell({
+  page,
+  onPage,
+  dark,
+  onToggleTheme,
+  data,
+  frameless,
+  children,
+}: ShellProps) {
+  const theme = useTheme()
+  const t = useT()
+  const { width } = useWindowSize()
+  const renderer = useGpuixRequired()
+  const compact = width < 1000
+  const files = data.minecraft
+  const ready = files.installed && data.prepared
+
+  const status = ready
+    ? t("ready")
+    : !files.installed
+      ? t("needs game files")
+      : t("needs preparing")
+
+  const close = () => process.exit(0)
+
+  return (
+    <div
+      style={{
+        display: "flex",
         width: "100%",
         height: "100%",
-        backgroundColor: theme.colors.background,
+        padding: frameless ? 10 : 0,
+        backgroundColor: frameless ? "transparent" : theme.colors.background,
       }}
     >
       <div
         style={{
           display: "flex",
           flexDirection: "row",
-          alignItems: "stretch",
-          height: 66,
-          flexShrink: 0,
-          paddingLeft: compact ? 20 : 32,
-          paddingRight: compact ? 16 : 28,
-          gap: compact ? 16 : 30,
-          borderBottomWidth: 1,
+          width: "100%",
+          height: "100%",
+          overflow: "hidden",
+          borderRadius: frameless ? 24 : 0,
+          borderWidth: frameless ? 1 : 0,
           borderStyle: "solid",
           borderColor: theme.colors.border,
           backgroundColor: theme.colors.background,
+          position: "relative",
         }}
       >
-        <div
-          style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 11, cursor: "pointer" }}
-          onClick={() => onPage("home")}
-        >
-          <Mark size={24} />
-          <Text
-            style={{
-              fontSize: 16,
-              lineHeight: 20,
-              fontWeight: "700",
-              color: theme.colors.foreground,
-            }}
-          >
-            Scoria
-          </Text>
-          {compact ? null : (
-            <Text mono size="xs" tone="muted" style={{ marginLeft: 2 }}>
-              {data.minecraft.version}
-            </Text>
-          )}
-        </div>
+        <Rail page={page} onPage={onPage} dark={dark} onToggleTheme={onToggleTheme} />
 
-        <div style={{ display: "flex", flexDirection: "row", alignItems: "stretch", gap: 2, flexGrow: 1 }}>
-          {NAV.map((item) => {
-            const active = page === item.id
-            return (
-              <div
-                key={item.id}
-                role="tab"
-                tabIndex={0}
-                aria-selected={active}
-                onClick={() => onPage(item.id)}
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 7,
-                  height: 66,
-                  paddingLeft: compact ? 10 : 13,
-                  paddingRight: compact ? 10 : 13,
-                  borderBottomWidth: 2,
-                  borderStyle: "solid",
-                  borderColor: active ? theme.colors.primary : "transparent",
-                  cursor: "pointer",
-                  hover: { backgroundColor: theme.colors.accent },
-                }}
-              >
-                <Icon
-                  name={item.icon}
-                  size={14}
-                  color={active ? theme.colors.primary : theme.colors.mutedForeground}
-                />
-                {compact ? null : (
-                  <Text
-                    size="sm"
-                    weight={active ? "semibold" : "regular"}
-                    style={{ color: active ? theme.colors.foreground : theme.colors.mutedForeground }}
-                  >
-                    {t(item.label)}
-                  </Text>
-                )}
-              </div>
-            )
-          })}
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 14 }}>
-          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <div
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: data.live ? theme.colors.success : theme.colors.mutedForeground,
-                boxShadow: data.live
-                  ? { offsetX: 0, offsetY: 0, blurRadius: 8, spreadRadius: 1, color: "#8ED9B266" }
-                  : undefined,
-              }}
-            />
-            <Text mono size="xs" tone="muted">
-              {t(data.live ? "engine" : "preview")}
-            </Text>
-          </div>
-
-          {compact ? null : (
-            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Text size="sm" style={{ color: theme.colors.foreground }}>
-                {data.offlineName}
-              </Text>
-              <Text mono size="xs" tone="muted">
-                {t("offline")}
-              </Text>
-            </div>
-          )}
-
-          <div
-            role="button"
-            tabIndex={0}
-            aria-label={t("Toggle theme")}
-            onClick={onToggleTheme}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 30,
-              height: 30,
-              borderRadius: theme.radius.sm,
-              borderWidth: 1,
-              borderStyle: "solid",
-              borderColor: theme.colors.border,
-              cursor: "pointer",
-              hover: { backgroundColor: theme.colors.accent },
-            }}
-          >
-            <Icon name={dark ? "sun" : "moon"} size={14} color={theme.colors.mutedForeground} />
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          flexGrow: 1,
-          minHeight: 0,
-          overflow: "scroll",
-          scrollbarColor: theme.colors.border,
-          scrollbarWidth: 8,
-        }}
-      >
         <div
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: 30,
-            width: "100%",
-            maxWidth: 1440,
-            paddingLeft: compact ? 20 : 40,
-            paddingRight: compact ? 20 : 40,
-            paddingTop: 30,
-            paddingBottom: 48,
+            flexGrow: 1,
+            minWidth: 0,
+            position: "relative",
           }}
         >
-          {children}
+          <Backdrop strong={page === "home"} />
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              height: 58,
+              flexShrink: 0,
+              gap: 12,
+              paddingLeft: compact ? 18 : 26,
+              paddingRight: 12,
+              position: "relative",
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 7,
+                  height: 30,
+                  paddingLeft: 12,
+                  paddingRight: 12,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderStyle: "solid",
+                  borderColor: "#FFFFFF14",
+                  backgroundColor: "#FFFFFF0D",
+                }}
+              >
+                <div
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor: ready ? "#7FD8A4" : "#D8B26A",
+                  }}
+                />
+                <Text size="xs" style={{ color: BONE }}>
+                  {status}
+                </Text>
+                <Text mono size="xs" style={{ color: CHROME_MUTED }}>
+                  {files.version}
+                </Text>
+              </div>
+            </div>
+
+            <div
+              onMouseDown={frameless ? () => startWindowMove() : undefined}
+              style={{
+                flexGrow: 1,
+                alignSelf: "stretch",
+                pointerEvents: frameless ? "auto" : "none",
+                cursor: "default",
+              }}
+            />
+
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label={t("Settings")}
+              onClick={() => onPage("settings")}
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                height: 34,
+                paddingLeft: 5,
+                paddingRight: 10,
+                borderRadius: 999,
+                cursor: "pointer",
+                hover: { backgroundColor: "#FFFFFF14" },
+              }}
+            >
+              <Avatar name={data.offlineName} size={26} />
+              {compact ? null : (
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  <Text size="xs" weight="medium" style={{ color: BONE }}>
+                    {data.offlineName}
+                  </Text>
+                  <Text mono size="xs" style={{ color: CHROME_MUTED }}>
+                    {t("offline")}
+                  </Text>
+                </div>
+              )}
+            </div>
+
+            {frameless ? (
+              <div style={{ display: "flex", flexDirection: "row", gap: 2, marginLeft: 2 }}>
+                <WindowButton icon="minus" label={t("Minimize")} onClick={() => renderer.minimizeWindow?.()} />
+                <WindowButton icon="square" label={t("Maximize")} onClick={() => renderer.zoomWindow?.()} />
+                <WindowButton icon="x" label={t("Close")} danger onClick={close} />
+              </div>
+            ) : null}
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              flexGrow: 1,
+              minHeight: 0,
+              overflow: "scroll",
+              scrollbarColor: theme.colors.border,
+              scrollbarWidth: 8,
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 24,
+                width: "100%",
+                maxWidth: 1360,
+                paddingLeft: compact ? 18 : 30,
+                paddingRight: compact ? 18 : 30,
+                paddingTop: 4,
+                paddingBottom: 32,
+                flexGrow: 1,
+              }}
+            >
+              {children}
+            </div>
+          </div>
         </div>
+
+        {frameless ? <ResizeHandles /> : null}
       </div>
     </div>
   )

@@ -31,6 +31,11 @@ cp "$addon" "$out/gpuix-native.node"
 cat > "$out/scoria-launcher-ui" <<'WRAPPER'
 #!/bin/sh
 DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ "${SCORIA_UI_WAYLAND:-0}" != "1" ] && [ -n "${DISPLAY:-}" ]; then
+  WAYLAND_DISPLAY=
+  WINIT_UNIX_BACKEND=x11
+  export WAYLAND_DISPLAY WINIT_UNIX_BACKEND
+fi
 NAPI_RS_NATIVE_LIBRARY_PATH="$DIR/gpuix-native.node" exec "$DIR/scoria-ui" "$@"
 WRAPPER
 chmod +x "$out/scoria-launcher-ui"

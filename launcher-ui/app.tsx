@@ -5,15 +5,25 @@ import { App } from "./src/app"
 // come up without showing anything on the user's desktop.
 const headless = process.env.SCORIA_UI_HEADLESS === "1"
 
-const width = Number(process.env.SCORIA_UI_WIDTH ?? 1800)
-const height = Number(process.env.SCORIA_UI_HEIGHT ?? 720)
+// The launcher draws its own titlebar on Linux (chrome.ts), which needs the
+// XWayland backend. scripts/run.ts and the packaged wrapper set that before
+// this module loads; SCORIA_UI_WAYLAND=1 keeps the native Wayland window.
+const linux = process.platform === "linux"
+
+const width = Number(process.env.SCORIA_UI_WIDTH ?? 1600)
+const height = Number(process.env.SCORIA_UI_HEIGHT ?? 920)
 
 render(<App />, {
   title: "Scoria",
+  appId: "scoria-launcher",
   width,
   height,
+  minWidth: 1040,
+  minHeight: 660,
   focus: !headless,
   show: !headless,
+  transparent: linux,
+  windowBackground: linux ? "transparent" : undefined,
 })
 
-if (headless) setTimeout(() => process.exit(0), 2000)
+if (headless) setTimeout(() => process.exit(0), Number(process.env.SCORIA_UI_HEADLESS_MS ?? 2000))

@@ -19,6 +19,7 @@ export const ICONS = {
   search: wrap('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>'),
   plus: wrap('<path d="M5 12h14"/><path d="M12 5v14"/>'),
   minus: wrap('<path d="M5 12h14"/>'),
+  square: wrap('<rect width="14" height="14" x="5" y="5" rx="2"/>'),
   alert: wrap('<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>'),
   info: wrap('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>'),
   circle: wrap('<circle cx="12" cy="12" r="10"/>'),

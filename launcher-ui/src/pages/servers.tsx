@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { addServer, play, removeServer, savedServers, type SavedServer } from "../api"
 import { useT } from "../i18n"
-import { Panel } from "../visual"
+import { Sheet } from "../visual"
 
 export function ServersPage() {
   const theme = useTheme()
   const t = useT()
   const { width } = useWindowSize()
-  const narrow = width < 900
+  const narrow = width < 1000
   const [servers, setServers] = useState<SavedServer[]>([])
   const [adding, setAdding] = useState(false)
   const [name, setName] = useState("")
@@ -29,92 +29,84 @@ export function ServersPage() {
   useEffect(refresh, [])
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: narrow ? "column" : "row",
-          alignItems: narrow ? "flex-start" : "flex-end",
-          gap: 16,
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, flexGrow: 1 }}>
-          <Text style={{ fontSize: 38, lineHeight: 42, fontWeight: "700" }}>{t("Servers")}</Text>
-          <Text size="sm" tone="muted" style={{ maxWidth: 620 }}>
-            {t("Saved in this instance's servers.dat; offline-mode servers only.")}
+    <Sheet style={{ padding: narrow ? 20 : 30, gap: 20, }}>
+      <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-end", gap: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, flexGrow: 1 }}>
+          <Text style={{ fontSize: narrow ? 30 : 38, lineHeight: 42, fontWeight: "700" }}>
+            {t("Servers")}
+          </Text>
+          <Text size="sm" tone="muted">
+            {t("Offline-mode servers, saved in this instance.")}
           </Text>
         </div>
         <Button
           variant={adding ? "ghost" : "secondary"}
-          size="sm"
           onClick={() => {
             setAdding((value) => !value)
             setNote(null)
           }}
+          style={{ borderRadius: 999, height: 36, paddingLeft: 16, paddingRight: 16 }}
         >
-          <Icon name={adding ? "x" : "plus"} size={13} color={theme.colors.mutedForeground} />
+          <Icon name={adding ? "x" : "plus"} size={13} color={theme.colors.foreground} />
           {adding ? t("Cancel") : t("Add server")}
         </Button>
       </div>
 
       {adding ? (
-        <Panel style={{ padding: 16, gap: 10, borderStyle: "dashed" }}>
-          <Text size="xs" tone="muted">
-            {t("A name is only a label. The address is what the game connects to.")}
-          </Text>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: narrow ? "column" : "row",
-              gap: 8,
-              alignItems: narrow ? "stretch" : "center",
-            }}
-          >
-            <div style={{ width: narrow ? "100%" : 220 }}>
-              <Input value={name} placeholder={t("Name")} onChange={(event) => setName(event.value ?? "")} />
-            </div>
-            <div style={{ width: narrow ? "100%" : 280 }}>
-              <Input value={ip} placeholder="host:port" onChange={(event) => setIp(event.value ?? "")} />
-            </div>
-            <Button
-              variant="secondary"
-              loading={busy === "add"}
-              onClick={() => {
-                setBusy("add")
-                void addServer(name.trim(), ip.trim())
-                  .then((list) => {
-                    setServers(list)
-                    setAdding(false)
-                    setName("")
-                    setIp("")
-                    setNote(null)
-                  })
-                  .catch((error: Error) => setNote(error.message))
-                  .finally(() => setBusy(null))
-              }}
-            >
-              {t("Add")}
-            </Button>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: narrow ? "column" : "row",
+            alignItems: narrow ? "stretch" : "center",
+            gap: 8,
+            padding: 14,
+            borderRadius: 18,
+            borderWidth: 1,
+            borderStyle: "dashed",
+            borderColor: theme.colors.border,
+            backgroundColor: theme.colors.muted,
+          }}
+        >
+          <div style={{ width: narrow ? "100%" : 200 }}>
+            <Input value={name} placeholder={t("Name")} onChange={(event) => setName(event.value ?? "")} />
           </div>
-          {note ? (
-            <Text size="xs" tone="destructive">
-              {note}
-            </Text>
-          ) : null}
-        </Panel>
+          <div style={{ width: narrow ? "100%" : 260 }}>
+            <Input value={ip} placeholder="host:port" onChange={(event) => setIp(event.value ?? "")} />
+          </div>
+          <Button
+            variant="primary"
+            loading={busy === "add"}
+            onClick={() => {
+              setBusy("add")
+              void addServer(name.trim(), ip.trim())
+                .then((list) => {
+                  setServers(list)
+                  setAdding(false)
+                  setName("")
+                  setIp("")
+                  setNote(null)
+                })
+                .catch((error: Error) => setNote(error.message))
+                .finally(() => setBusy(null))
+            }}
+            style={{ borderRadius: 999, height: 36, paddingLeft: 18, paddingRight: 18 }}
+          >
+            {t("Add")}
+          </Button>
+        </div>
       ) : null}
 
-      <div style={{ display: "flex", flexDirection: "column", borderTopWidth: 1, borderStyle: "solid", borderColor: theme.colors.border }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {servers.length === 0 ? (
           <div
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: 8,
-              paddingTop: 22,
-              paddingBottom: 22,
-              borderBottomWidth: 1,
-              borderStyle: "solid",
+              gap: 6,
+              padding: 22,
+              borderRadius: 18,
+              borderWidth: 1,
+              borderStyle: "dashed",
               borderColor: theme.colors.border,
             }}
           >
@@ -132,12 +124,9 @@ export function ServersPage() {
                 flexDirection: narrow ? "column" : "row",
                 alignItems: narrow ? "stretch" : "center",
                 gap: 12,
-                paddingTop: 13,
-                paddingBottom: 13,
-                paddingLeft: 4,
-                borderBottomWidth: 1,
-                borderStyle: "solid",
-                borderColor: theme.colors.border,
+                padding: 12,
+                borderRadius: 16,
+                backgroundColor: theme.colors.muted,
                 hover: { backgroundColor: theme.colors.accent },
               }}
             >
@@ -146,18 +135,15 @@ export function ServersPage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: 34,
-                  height: 34,
-                  flexShrink: 0,
-                  borderRadius: theme.radius.sm,
-                  borderWidth: 1,
-                  borderStyle: "solid",
-                  borderColor: theme.colors.border,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 12,
+                  backgroundColor: theme.colors.accent,
                 }}
               >
-                <Icon name="server" size={14} color={theme.colors.mutedForeground} />
+                <Icon name="server" size={15} color={theme.colors.mutedForeground} />
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, minWidth: 0 }}>
                 <Text size="base" weight="medium" truncate>
                   {server.name || server.ip}
                 </Text>
@@ -165,9 +151,6 @@ export function ServersPage() {
                   {server.ip}
                 </Text>
               </div>
-              <Text mono size="xs" tone="muted">
-                {t("offline-mode")}
-              </Text>
               <div style={{ display: "flex", flexDirection: "row", gap: 6 }}>
                 <Button
                   size="sm"
@@ -181,6 +164,7 @@ export function ServersPage() {
                       setBusy(null)
                     })
                   }}
+                  style={{ borderRadius: 999, height: 28, paddingLeft: 14, paddingRight: 14 }}
                 >
                   {t("Join")}
                 </Button>
@@ -197,6 +181,7 @@ export function ServersPage() {
                       .then(setServers)
                       .catch((error: Error) => setNote(error.message))
                   }}
+                  style={{ borderRadius: 999, height: 28, paddingLeft: 12, paddingRight: 12 }}
                 >
                   {confirming === index ? t("Confirm") : t("Remove")}
                 </Button>
@@ -212,16 +197,10 @@ export function ServersPage() {
         </Text>
       ) : null}
 
-      <Panel style={{ padding: 18, gap: 6 }}>
-        <Text size="sm" weight="medium">
-          {t("Online-mode servers need a Microsoft session")}
-        </Text>
-        <Text size="xs" tone="muted">
-          {t(
-            "Scoria has no Microsoft session, so online-mode servers refuse it. Use an offline-mode server, Open to LAN, or Play with friends.",
-          )}
-        </Text>
-      </Panel>
-    </div>
+      <div style={{ flexGrow: 1 }} />
+      <Text size="xs" tone="muted">
+        {t("Online-mode servers need a Microsoft session. Scoria has none, so use offline-mode servers or LAN.")}
+      </Text>
+    </Sheet>
   )
 }

@@ -1,16 +1,23 @@
 # Scoria launcher UI
 
-The launcher's interface: React on **GPUIX 0.11.0** with **flint-ui 0.1.0** components copied in
-(`src/lib/flint`, `src/components/ui`). It is a desktop window, not a web app.
+The launcher's interface: React on **GPUIX 0.11.0** with **flint-ui 0.1.1** components copied in
+(`src/lib/flint`, `src/components/ui`). It is a desktop window, not a web app. Everything is a pill
+or a soft rounded panel; the backdrop is a procedurally painted, blurred world, not game art.
 
 ## Run
 
 ```sh
 bun install
-bun run dev            # hot reload
+bun run dev            # hot reload, through scripts/run.ts
 bun run typecheck
 bun run build          # dist/scoria-launcher-ui, one Linux binary (~106 MB)
 ```
+
+On Linux the window is frameless and draws its own titlebar (`src/chrome.ts`): a slim violet strip
+with minimize, maximize and close, dragging and eight resize edges. That needs the XWayland
+backend, so `bun run dev` and the packaged wrapper start it with `WINIT_UNIX_BACKEND=x11` and an
+empty `WAYLAND_DISPLAY`. Set `SCORIA_UI_WAYLAND=1` to keep the native Wayland window and its native
+titlebar instead.
 
 The UI talks to the Rust engine over JSON lines. The engine downloads Minecraft 26.3 from
 Mojang's piston-meta when it is not already prepared:
@@ -29,7 +36,11 @@ Headless smoke, for CI or an agent (no window, exits after 2 s):
 SCORIA_UI_HEADLESS=1 bun app.tsx
 # [gpuix] created native window
 # [gpuix] mount complete
+# [scoria] preview: engine not found at …
 ```
+
+`SCORIA_UI_PAGE=instances|servers|settings` opens one page; `SCORIA_UI_WIDTH` and
+`SCORIA_UI_HEIGHT` override the window size. The engine path is `SCORIA_LAUNCHER_BIN`.
 
 ## Methods
 
@@ -60,10 +71,12 @@ instances the CLI does.
 
 ## Screens
 
-- **Play**: the hero, Play/Prepare, worlds, and this install's file state.
-- **Instances**: release, ported packs, modpacks; which are prepared.
-- **Game files**: Minecraft 26.3 from piston-meta, per-file progress, launcher builds.
+- **Play**: one instance, one Play button, a Continue link for the last world, and only the
+  state a player needs (ready, needs files, needs preparing).
+- **Instances**: rounded cards for the game folders; create one, use one.
 - **Servers**: the instance's servers.dat; join, add, remove. Offline-mode only.
-- **Settings**: offline name, appearance, launcher behaviour, language (EN/RU), build facts.
+- **Settings**: everything else — profile, appearance, language, launcher behaviour, Minecraft
+  26.3 file status and download, installed Scoria builds, and build facts. Technical details
+  (folder, manifest sha1, per-file counts) sit behind **Show details**.
 
 There is no Microsoft account anywhere: offline profiles are the only identity.

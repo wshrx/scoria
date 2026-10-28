@@ -7,7 +7,7 @@ describe the engine itself (1773 Rust files, ~800k lines, `horizon-client` being
 ## Layers
 
 ```
-launcher-ui/            flint-ui 0.1.0 on gpuix 0.11.0 (Bun/React) ← new, P3 started
+launcher-ui/            flint-ui 0.1.1 on gpuix 0.11.0 (Bun/React) ← new, P3 started
         │  JSON-RPC over a local socket
 launcher/               Rust: installs, preparation, processes, MCP  ← upstream, rebranded
         │
@@ -96,7 +96,8 @@ P1 removes the gate itself:
 ## Known gaps after P1
 
 - The Mojang game-download code is still compiled (unreachable from the UI); P2 deletes it.
-- `launcher-ui/` is a preview: three screens from `src/api.ts` mock data, no engine bridge yet.
+- `launcher-ui/` is the shipping interface: Play, Instances, Servers and Settings over the
+  JSON-lines engine, with a frameless X11 titlebar on Linux (drag, resize, minimize/maximize/close).
   The shipped launcher is still the Rust GPUI one.
 - Horizon's release, nightly, parity, game-build and registry workflows are deleted. `.github/`
   keeps only `ci.yml` (format, clippy, tests, public-tree check) and `cancel-on-close.yml`;

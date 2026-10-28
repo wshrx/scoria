@@ -72,6 +72,7 @@ export const Input: ForwardRefExoticComponent<InputProps & RefAttributes<PublicI
           height: "100%",
           backgroundColor: "transparent",
           color: theme.colors.foreground,
+          selectionColor: theme.colors.selection,
           fontSize: theme.text.base,
           fontFamily: theme.font.sans,
         }}

@@ -7,11 +7,11 @@ import { setAppearance, setLanguage, snapshot, type Snapshot } from "./api"
 import { Shell, type Page } from "./shell"
 import { HomePage } from "./pages/home"
 import { InstancesPage } from "./pages/instances"
-import { FilesPage } from "./pages/files"
 import { ServersPage } from "./pages/servers"
 import { SettingsPage } from "./pages/settings"
 import { scoriaDark, scoriaLight } from "./theme"
 import { LangProvider } from "./i18n"
+import { enableFrameless } from "./chrome"
 
 /** Fonts need a live renderer, so they are registered after the window exists. */
 function Fonts() {
@@ -28,9 +28,10 @@ function Fonts() {
 
 export function App() {
   const [dark, setDark] = useState(true)
+  const [frameless, setFrameless] = useState(false)
   const [page, setPage] = useState<Page>(() => {
     const requested = process.env.SCORIA_UI_PAGE
-    return requested === "instances" || requested === "files" || requested === "servers" || requested === "settings"
+    return requested === "instances" || requested === "servers" || requested === "settings"
       ? requested
       : "home"
   })
@@ -43,6 +44,16 @@ export function App() {
 
   useEffect(() => {
     void snapshot().then(apply)
+  }, [])
+
+  useEffect(() => {
+    let alive = true
+    void enableFrameless().then((ok) => {
+      if (alive) setFrameless(ok)
+    })
+    return () => {
+      alive = false
+    }
   }, [])
 
   const theme = dark ? scoriaDark : scoriaLight
@@ -58,7 +69,16 @@ export function App() {
   if (!data) {
     return (
       <ThemeProvider theme={theme}>
-        <div style={{ display: "flex", width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            width: "100%",
+            height: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: frameless ? "transparent" : theme.colors.background,
+          }}
+        >
           <Text tone="muted">Loading…</Text>
         </div>
       </ThemeProvider>
@@ -68,30 +88,30 @@ export function App() {
   return (
     <ThemeProvider theme={theme}>
       <LangProvider lang={data.language === "ru" ? "ru" : "en"}>
-      <Fonts />
-      <Shell
-        page={page}
-        onPage={setPage}
-        dark={dark}
-        onToggleTheme={toggleTheme}
-        data={data}
-      >
-        {page === "home" ? <HomePage data={data} onRefresh={refresh} onPage={setPage} /> : null}
-        {page === "instances" ? <InstancesPage data={data} onRefresh={refresh} /> : null}
-        {page === "files" ? <FilesPage data={data} onRefresh={refresh} /> : null}
-        {page === "servers" ? <ServersPage /> : null}
-        {page === "settings" ? (
-          <SettingsPage
-            data={data}
-            dark={dark}
-            onToggleTheme={toggleTheme}
-            onRefresh={refresh}
-            onLanguage={(value) => {
-              void setLanguage(value).then(apply)
-            }}
-          />
-        ) : null}
-      </Shell>
+        <Fonts />
+        <Shell
+          page={page}
+          onPage={setPage}
+          dark={dark}
+          onToggleTheme={toggleTheme}
+          data={data}
+          frameless={frameless}
+        >
+          {page === "home" ? <HomePage data={data} onRefresh={refresh} onPage={setPage} /> : null}
+          {page === "instances" ? <InstancesPage data={data} onRefresh={refresh} /> : null}
+          {page === "servers" ? <ServersPage /> : null}
+          {page === "settings" ? (
+            <SettingsPage
+              data={data}
+              dark={dark}
+              onToggleTheme={toggleTheme}
+              onRefresh={refresh}
+              onLanguage={(value) => {
+                void setLanguage(value).then(apply)
+              }}
+            />
+          ) : null}
+        </Shell>
       </LangProvider>
     </ThemeProvider>
   )

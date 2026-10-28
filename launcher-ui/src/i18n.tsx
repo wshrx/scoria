@@ -17,6 +17,49 @@ const RU: Record<string, string> = {
   offline: "оффлайн",
   "Toggle theme": "Сменить тему",
 
+  General: "Общие",
+  Builds: "Сборки",
+  About: "О программе",
+  Configure: "Настроить",
+  Continue: "Продолжить",
+  "Download 26.3": "Скачать 26.3",
+  Prepare: "Подготовить",
+  "to download": "скачать",
+  "needs game files": "нужны файлы игры",
+  "needs attention": "нужно внимание",
+  "Working…": "Работаем…",
+  "Ready to play.": "Готово к игре.",
+  "Ready to play. Your worlds and settings stay on this machine.":
+    "Готово к игре. Миры и настройки остаются на этой машине.",
+  "Minecraft 26.3 is not here yet. Download it once and it is yours.":
+    "Minecraft 26.3 ещё нет на этой машине. Скачайте один раз — и он ваш.",
+  "The files are here. One more step prepares the resources.":
+    "Файлы на месте. Остался один шаг — подготовить ресурсы.",
+  "The files are here. Prepare the resources.":
+    "Файлы на месте. Подготовьте ресурсы.",
+  "Download the pinned version from Mojang.":
+    "Скачайте закреплённую версию с Mojang.",
+  "Every file is checked against Mojang's sha1. A stopped download resumes where it stopped.":
+    "Каждый файл сверяется с sha1 от Mojang. Прерванная загрузка продолжается с того же места.",
+  "Show details": "Показать детали",
+  "Hide details": "Скрыть детали",
+  "not downloaded yet": "ещё не скачано",
+  "Offline-mode servers, saved in this instance.":
+    "Offline-mode серверы, сохранённые в этом инстансе.",
+  "Online-mode servers need a Microsoft session. Scoria has none, so use offline-mode servers or LAN.":
+    "Для online-mode нужна сессия Microsoft. У Scoria её нет: используйте offline-mode или LAN.",
+  "Two surfaces, the same violet light.": "Две поверхности, один фиолетовый свет.",
+  Night: "Ночь",
+  Lilac: "Сирень",
+  "Indigo and iris": "Индиго и ирис",
+  "Versions of Scoria installed on this machine.": "Установленные на этой машине версии Scoria.",
+  "A local-first launcher: no account, no session, no telemetry.":
+    "Лаунчер, который живёт локально: без аккаунта, сессии и телеметрии.",
+  Saved: "Сохранено",
+  "Saved.": "Сохранено.",
+  Client: "Клиент",
+  Maximize: "Развернуть",
+  Close: "Закрыть",
   "Minecraft Java Edition": "Minecraft Java Edition",
   "Your worlds, lit from below.": "Ваши миры, освещённые снизу.",
   "Minecraft 26.3, prepared from your own files and run natively. No account, no session, nothing leaves this machine.":

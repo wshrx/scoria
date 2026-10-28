@@ -17,7 +17,7 @@ written in Rust, with a launcher that plays without a Microsoft account.
 | Starting the game | requires a signed-in Microsoft account that owns Java Edition (the "owner gate") | any offline name, no account needed |
 | Microsoft sign-in | required before Play | **removed**: no sign-in, no tokens, no online-mode |
 | Game files | can be downloaded from Mojang for an owner | prepared from an installation you already have; only the 26.3 server jar is fetched once, for data generation |
-| Launcher UI | Rust + GPUI | **flint-ui 0.1.0 on gpuix 0.11.0** (`launcher-ui/`, ADR-0006); the old GPUI screens still ship |
+| Launcher UI | Rust + GPUI | **flint-ui 0.1.1 on gpuix 0.11.0** (`launcher-ui/`, ADR-0006); the old GPUI screens still ship |
 | Telemetry | opt-in, shipped | removed |
 | Mod registry, nightly channel | shipped | removed; Scoria's own registry later |
 | Self-update | from Horizon's GitHub releases | disabled until Scoria has its own releases |
@@ -67,7 +67,7 @@ The launcher is its own workspace. Scoria's copy is at `/home/shrx/dev/scoria/la
   is launched with `HORIZON_TELEMETRY_URL=off`. The Nightly channel is gone too: no
   `nightly.rs`, no setting, no Nightly instance. Still to do: the remaining registry code, then
   CI.
-- P3 (started): `launcher-ui/` runs on **gpuix 0.11.0 + flint-ui 0.1.0** (ADR-0006); Home,
+- P3 (started): `launcher-ui/` runs on **gpuix 0.11.0 + flint-ui 0.1.1** (ADR-0006); Home,
   Instances and Settings render real state through `horizon-launcher api` (JSON lines);
   Microsoft is removed from the Rust launcher (ADR-0007). Next: packaging the UI with the engine
   and the remaining screens. P4: full RU/EN documentation. P5: own signed releases.
