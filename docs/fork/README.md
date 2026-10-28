@@ -67,5 +67,6 @@ The launcher is its own workspace. Scoria's copy is at `/home/shrx/dev/scoria/la
   `nightly.rs`, no setting, no Nightly instance. Still to do: the remaining registry code, then
   CI.
 - P3 (started): `launcher-ui/` runs on **gpuix 0.11.0 + flint-ui 0.1.0** (ADR-0006); Home,
-  Instances and Settings render on a preview snapshot. Next: the engine bridge and removing
-  Microsoft from the Rust launcher. P4: full RU/EN documentation. P5: Scoria's own signed releases.
+  Instances and Settings render real state through `horizon-launcher api` (JSON lines);
+  Microsoft is removed from the Rust launcher (ADR-0007). Next: packaging the UI with the engine
+  and the remaining screens. P4: full RU/EN documentation. P5: own signed releases.

@@ -119,6 +119,9 @@ export function Shell({ page, onPage, dark, onToggleTheme, data, children }: She
         >
           <Text size="md" weight="semibold">{TITLES[page]}</Text>
           <div style={{ flexGrow: 1 }} />
+          <Badge variant={data.live ? "success" : "secondary"} dot>
+            {data.live ? "engine" : "preview"}
+          </Badge>
           <Badge variant="outline">{data.branch}</Badge>
           <Button variant="ghost" size="icon" onClick={onToggleTheme} aria-label="Toggle theme">
             <Icon name={dark ? "sun" : "moon"} size={16} color={theme.colors.mutedForeground} />

@@ -733,6 +733,14 @@ Serve the Model Context Protocol on stdin and stdout, for AI agents (refused whi
 
 MCP: none: this command is the MCP server.
 
+## `horizon-launcher api`
+
+Machine interface for the launcher UI: JSON lines on stdin/stdout.
+
+    horizon-launcher api
+
+MCP: `api`.
+
 ## `horizon-launcher agent-config`
 
 How to connect an AI agent (Claude Code, Codex, Cursor, any MCP client) to `mcp`: the config to paste and the command that adds it (refused while No AI is on).

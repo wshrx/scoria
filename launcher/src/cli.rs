@@ -656,6 +656,9 @@ enum Cmd {
     /// Serve the Model Context Protocol on stdin and stdout, for AI agents (refused while No AI
     /// is on)
     Mcp,
+    /// Machine interface for the launcher UI: JSON lines on stdin/stdout
+    #[command(hide = true)]
+    Api,
     /// How to connect an AI agent (Claude Code, Codex, Cursor, any MCP client) to `mcp`: the
     /// config to paste and the command that adds it (refused while No AI is on)
     AgentConfig {
@@ -800,6 +803,7 @@ pub fn run() -> Option<i32> {
     let result = match command {
         Cmd::Mcp | Cmd::AgentConfig { .. } if no_ai => Err(horizon_core::no_ai::REFUSAL.into()),
         Cmd::Mcp => crate::mcp::serve(),
+        Cmd::Api => horizon_launcher::api::serve(),
         command => execute(command, cli.json),
     };
     Some(match result {
@@ -1194,7 +1198,7 @@ fn execute(command: Cmd, as_json: bool) -> Result<(), String> {
         Cmd::Modpack { action } => modpack(action.unwrap_or(ModpackCmd::List), as_json)?,
         Cmd::Mods { action } => mods(action.unwrap_or(ModsCmd::List { instance: None }), as_json)?,
         Cmd::Servers { action } => servers(action.unwrap_or(ServersCmd::List), as_json)?,
-        Cmd::Mcp => unreachable!(),
+        Cmd::Mcp | Cmd::Api => unreachable!(),
     }
     Ok(())
 }
