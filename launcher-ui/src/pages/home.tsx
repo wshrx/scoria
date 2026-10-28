@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useWindowSize } from "@gpuix/react"
 import { Icon, Text, useTheme } from "@/lib/flint"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,6 +20,8 @@ export function HomePage({
 }) {
   const theme = useTheme()
   const t = useT()
+  const { width } = useWindowSize()
+  const narrow = width < 1060
   const [note, setNote] = useState<string | null>(null)
   const [log, setLog] = useState<string | null>(null)
   const [busy, setBusy] = useState<"play" | "prepare" | null>(null)
@@ -30,7 +33,7 @@ export function HomePage({
           position: "relative",
           display: "flex",
           flexDirection: "column",
-          height: 340,
+          height: narrow ? 470 : 340,
           flexShrink: 0,
           overflow: "hidden",
           borderRadius: theme.radius.xl,
@@ -64,7 +67,14 @@ export function HomePage({
 
           <div style={{ flexGrow: 1 }} />
 
-          <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-end", gap: 32 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: narrow ? "column" : "row",
+              alignItems: narrow ? "stretch" : "flex-end",
+              gap: narrow ? 18 : 32,
+            }}
+          >
             <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, minWidth: 0 }}>
               <Text mono size="xs" tone="muted">MINECRAFT 26.3</Text>
               <Text
@@ -136,7 +146,7 @@ export function HomePage({
                 display: "flex",
                 flexDirection: "column",
                 gap: 10,
-                width: 250,
+                width: narrow ? "100%" : 250,
                 flexShrink: 0,
                 padding: 18,
                 borderRadius: theme.radius.lg,
@@ -185,7 +195,14 @@ export function HomePage({
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "row", gap: 20, alignItems: "flex-start" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: narrow ? "column" : "row",
+          gap: 20,
+          alignItems: "flex-start",
+        }}
+      >
         <div style={{ display: "flex", flexDirection: "column", gap: 14, flexGrow: 1, minWidth: 0 }}>
           <div style={{ display: "flex", flexDirection: "row", alignItems: "baseline", gap: 10 }}>
             <Text size="lg" weight="semibold">{t("Worlds")}</Text>
@@ -203,7 +220,7 @@ export function HomePage({
                     flexDirection: "row",
                     alignItems: "center",
                     gap: 12,
-                    width: 330,
+                    width: narrow ? "100%" : 330,
                     padding: 10,
                     borderRadius: theme.radius.lg,
                     borderWidth: 1,
@@ -232,7 +249,7 @@ export function HomePage({
           </div>
         </div>
 
-        <Panel style={{ width: 280, padding: 18, gap: 10 }}>
+        <Panel style={{ width: narrow ? "100%" : 280, padding: 18, gap: 10 }}>
           <Text mono size="xs" tone="muted">QUICK</Text>
           {[
             { page: "instances" as Page, label: t("Instances"), detail: `${data.instances.length}` },

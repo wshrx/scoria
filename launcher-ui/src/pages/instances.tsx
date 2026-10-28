@@ -23,7 +23,7 @@ export function InstancesPage({ data, onRefresh }: { data: Snapshot; onRefresh: 
   const [note, setNote] = useState<string | null>(null)
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 1080 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 1080, width: "100%", alignSelf: "center" }}>
       <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
         <Text size="sm" tone="muted">
           {t("Separate game folders, each with its own worlds, options and packs.")}

@@ -36,7 +36,7 @@ export function ServersPage() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 820 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 820, width: "100%", alignSelf: "center" }}>
       <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
         <Text size="sm" tone="muted">{t("Saved in this instance's servers.dat; offline-mode servers only.")}</Text>
         <div style={{ flexGrow: 1 }} />

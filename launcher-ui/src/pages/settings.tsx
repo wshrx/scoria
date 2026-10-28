@@ -56,7 +56,7 @@ export function SettingsPage({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 720 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 720, width: "100%", alignSelf: "center" }}>
       <div style={panel}>
         <Text mono size="xs" tone="muted">{t("OFFLINE PROFILE")}</Text>
         <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-end", gap: 10 }}>

@@ -5,10 +5,13 @@ import { App } from "./src/app"
 // come up without showing anything on the user's desktop.
 const headless = process.env.SCORIA_UI_HEADLESS === "1"
 
+const width = Number(process.env.SCORIA_UI_WIDTH ?? 1800)
+const height = Number(process.env.SCORIA_UI_HEIGHT ?? 720)
+
 render(<App />, {
   title: "Scoria",
-  width: 1800,
-  height: 720,
+  width,
+  height,
   focus: !headless,
   show: !headless,
 })

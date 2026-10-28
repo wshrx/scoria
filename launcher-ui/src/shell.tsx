@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import { useWindowSize } from "@gpuix/react"
 import { Icon, Text, useTheme, type IconName } from "@/lib/flint"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -35,6 +36,7 @@ export interface ShellProps {
 export function Shell({ page, onPage, dark, onToggleTheme, data, children }: ShellProps) {
   const theme = useTheme()
   const t = useT()
+  const { width } = useWindowSize()
 
   return (
     <div
@@ -161,7 +163,8 @@ export function Shell({ page, onPage, dark, onToggleTheme, data, children }: She
               flexDirection: "column",
               gap: 24,
               width: "100%",
-              maxWidth: 1240,
+              maxWidth: width > 1500 ? 1480 : 1240,
+              alignSelf: "center",
               paddingLeft: 32,
               paddingRight: 32,
               paddingTop: 28,
