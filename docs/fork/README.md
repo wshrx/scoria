@@ -36,6 +36,7 @@ session file (`docs/microsoft-account.md`, "Handing the session to the game").
   flint-ui.
 - [entire.md](entire.md): where `origin` lives (Entire `/et/redmoon/basalt`) and what its
   agent checkpoints are.
+- [branches.md](branches.md): `main`, `dev`, `nightly` and the merge/test rules.
 - Upstream docs stay authoritative for the engine: [`docs/README.md`](../README.md),
   [`AGENTS.md`](../../AGENTS.md), [`docs/parity-workflow.md`](../parity-workflow.md).
 - Russian translations land in `docs/fork/ru/` (P4 of the plan).
