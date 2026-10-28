@@ -1,9 +1,10 @@
 import type { ReactNode } from "react"
 import { Icon, Text, useTheme, type IconName } from "@/lib/flint"
-import { useT } from "./i18n"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { Snapshot } from "./api"
+import { useT } from "./i18n"
+import { gradient } from "./visual"
 
 export type Page = "home" | "instances" | "servers" | "settings"
 
@@ -30,7 +31,7 @@ export interface ShellProps {
   children?: ReactNode
 }
 
-/** A rail, a thin header and a page. The rail carries icons, not labels. */
+/** A floating rail, a hairline header, and a page on a warm basalt field. */
 export function Shell({ page, onPage, dark, onToggleTheme, data, children }: ShellProps) {
   const theme = useTheme()
   const t = useT()
@@ -42,7 +43,7 @@ export function Shell({ page, onPage, dark, onToggleTheme, data, children }: She
         flexDirection: "row",
         width: "100%",
         height: "100%",
-        backgroundColor: theme.colors.background,
+        background: gradient("#0C0908", "#060504", 160),
       }}
     >
       <div
@@ -50,15 +51,15 @@ export function Shell({ page, onPage, dark, onToggleTheme, data, children }: She
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          width: 64,
+          width: 76,
           flexShrink: 0,
-          gap: 6,
-          paddingTop: 14,
-          paddingBottom: 14,
+          gap: 8,
+          paddingTop: 18,
+          paddingBottom: 16,
           borderRightWidth: 1,
           borderStyle: "solid",
-          borderColor: theme.colors.border,
-          backgroundColor: theme.colors.card,
+          borderColor: "#FFFFFF0D",
+          background: gradient("#100C0B", "#090706", 180),
         }}
       >
         <div
@@ -66,17 +67,19 @@ export function Shell({ page, onPage, dark, onToggleTheme, data, children }: She
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: 36,
-            height: 36,
-            marginBottom: 14,
-            backgroundColor: theme.colors.primary,
+            width: 42,
+            height: 42,
+            marginBottom: 16,
+            borderRadius: 14,
+            background: gradient("#FF7A45", "#B33A12", 150),
+            boxShadow: { offsetX: 0, offsetY: 10, blurRadius: 26, spreadRadius: -6, color: "#FF6B3566" },
           }}
         >
           <Text
             style={{
               color: theme.colors.primaryForeground,
               fontFamily: theme.font.mono,
-              fontSize: 17,
+              fontSize: 19,
               fontWeight: "700",
             }}
           >
@@ -93,17 +96,20 @@ export function Shell({ page, onPage, dark, onToggleTheme, data, children }: She
               size="icon"
               aria-label={t(item.label)}
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: theme.radius.sm,
-                backgroundColor: active ? theme.colors.accent : "transparent",
+                width: 44,
+                height: 44,
+                borderRadius: 13,
+                backgroundColor: active ? theme.colors.primary : "transparent",
+                boxShadow: active
+                  ? { offsetX: 0, offsetY: 10, blurRadius: 24, spreadRadius: -8, color: "#FF6B3577" }
+                  : undefined,
               }}
               onClick={() => onPage(item.id)}
             >
               <Icon
                 name={item.icon}
-                size={17}
-                color={active ? theme.colors.primary : theme.colors.mutedForeground}
+                size={18}
+                color={active ? theme.colors.primaryForeground : theme.colors.mutedForeground}
               />
             </Button>
           )
@@ -115,10 +121,10 @@ export function Shell({ page, onPage, dark, onToggleTheme, data, children }: She
           variant="ghost"
           size="icon"
           aria-label={t("Toggle theme")}
-          style={{ width: 40, height: 40 }}
+          style={{ width: 44, height: 44, borderRadius: 13 }}
           onClick={onToggleTheme}
         >
-          <Icon name={dark ? "sun" : "moon"} size={16} color={theme.colors.mutedForeground} />
+          <Icon name={dark ? "sun" : "moon"} size={17} color={theme.colors.mutedForeground} />
         </Button>
       </div>
 
@@ -129,22 +135,17 @@ export function Shell({ page, onPage, dark, onToggleTheme, data, children }: She
             flexDirection: "row",
             alignItems: "center",
             gap: 10,
-            height: 50,
+            height: 52,
             flexShrink: 0,
-            paddingLeft: 28,
-            paddingRight: 22,
+            paddingLeft: 32,
+            paddingRight: 24,
             borderBottomWidth: 1,
             borderStyle: "solid",
-            borderColor: theme.colors.border,
+            borderColor: "#FFFFFF0A",
           }}
         >
-          <Text
-            mono
-            size="xs"
-            tone="muted"
-            style={{ fontFamily: theme.font.mono }}
-          >
-            SCORIA / {t(TITLES[page]).toUpperCase()}
+          <Text mono size="xs" tone="muted">
+            SCORIA / <Text mono size="xs" style={{ color: theme.colors.foreground }}>{t(TITLES[page]).toUpperCase()}</Text>
           </Text>
           <div style={{ flexGrow: 1 }} />
           <Badge variant={data.live ? "success" : "secondary"} dot>
@@ -158,13 +159,13 @@ export function Shell({ page, onPage, dark, onToggleTheme, data, children }: She
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: 22,
+              gap: 24,
               width: "100%",
-              maxWidth: 1120,
-              paddingLeft: 36,
-              paddingRight: 36,
-              paddingTop: 30,
-              paddingBottom: 36,
+              maxWidth: 1240,
+              paddingLeft: 32,
+              paddingRight: 32,
+              paddingTop: 28,
+              paddingBottom: 40,
             }}
           >
             {children}

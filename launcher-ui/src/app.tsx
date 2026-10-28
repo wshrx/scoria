@@ -70,7 +70,7 @@ export function App() {
         onToggleTheme={toggleTheme}
         data={data}
       >
-        {page === "home" ? <HomePage data={data} onRefresh={refresh} /> : null}
+        {page === "home" ? <HomePage data={data} onRefresh={refresh} onPage={setPage} /> : null}
         {page === "instances" ? <InstancesPage data={data} onRefresh={refresh} /> : null}
         {page === "servers" ? <ServersPage /> : null}
         {page === "settings" ? (
