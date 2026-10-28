@@ -1213,39 +1213,26 @@ fn download_for_owner(
         &mut accounts,
     );
     let _ = accounts.save();
-    match pass {
-        Ok(account::Launch {
-            owner: Some((owner, _)),
-            ..
-        }) => {
-            let name = owner.name;
-            log(format!(
-                "{name} owns Minecraft: downloading {v} from Mojang"
-            ));
-            let os = match sources::Os::current() {
-                sources::Os::Linux => "linux",
-                sources::Os::MacOs => "osx",
-                sources::Os::Windows => "windows",
-            };
-            mojang::download(pins, dir, os, 8, fetch, &mojang::CANCEL, log).map_err(|e| {
-                format!("\n  • Basalt tried to download {v} from Mojang for {name}, but: {e}")
-            })
-        }
-        // An owner by its last answer, who can't be asked now.
-        Ok(pass) => Err(format!(
-            "\n  • Downloading {v} from Mojang needs your Microsoft account, which could not be \
-             checked: {}",
-            pass.offline.unwrap_or_default()
-        )),
-        Err(_) if !accounts.accounts.is_empty() => Err(
-            "\n  • No signed-in account owns Minecraft: Java Edition, so Basalt can't download it."
-                .into(),
-        ),
-        Err(_) => Err(format!(
-            "\n  • Or sign in with the Microsoft account that owns Minecraft: Basalt then \
-             downloads {v} from Mojang itself."
-        )),
-    }
+    let Some((owner, _)) = pass.owner else {
+        return Err(format!(
+            "\n  • Basalt cannot download {v} from Mojang without an account that owns \
+             Minecraft: Java Edition{}. Sign in and try again.",
+            pass.offline
+                .map(|why| format!(" ({why})"))
+                .unwrap_or_default()
+        ));
+    };
+    let name = owner.name;
+    log(format!(
+        "{name} owns Minecraft: downloading {v} from Mojang"
+    ));
+    let os = match sources::Os::current() {
+        sources::Os::Linux => "linux",
+        sources::Os::MacOs => "osx",
+        sources::Os::Windows => "windows",
+    };
+    mojang::download(pins, dir, os, 8, fetch, &mojang::CANCEL, log)
+        .map_err(|e| format!("\n  • Basalt tried to download {v} from Mojang for {name}, but: {e}"))
 }
 
 /// The Java home for this version: a runtime for precompiled exporters, a JDK for older
@@ -1910,12 +1897,10 @@ pub fn need_prepared(tag: &str) -> Result<(), String> {
     }
 }
 
-/// The client's command, once the owner gate lets it start and its resources are prepared. Past
-/// the gate, a sign-in that can't be renewed (no network, expired) still lets the game start,
-/// offline.
+/// The client's command, once its resources are prepared. Basalt has no owner gate: no account
+/// (or a sign-in that can't be renewed) starts the game offline.
 pub fn client(tag: &str) -> Result<Command, String> {
-    let (session, offline) = account::session_for_game(&game_home())
-        .map_err(|refused| format!("{refused} Sign in with `horizon-launcher account sign-in`."))?;
+    let (session, offline) = account::session_for_game(&game_home());
     need_prepared(tag)?;
     complete_assets(tag);
     crate::browser::horizon::before_play(&game_home());
@@ -2474,11 +2459,9 @@ pub enum Msg {
     Reused(Vec<(String, String)>),
     /// Whether secrets are kept in the OS keychain (else only until the launcher closes).
     Keychain(bool),
-    /// Whether an account in the launcher owned the game at its last check (the owner gate).
-    Owner(bool),
-    /// The owner gate's answer for the game about to start: the selected account's session
-    /// file (none = offline) and why it plays offline, if it does.
-    Session(Result<(Option<PathBuf>, Option<String>), crate::account::NoOwner>),
+    /// The game about to start: the selected account's session file (none = offline) and why it
+    /// plays offline, if it does. Never a refusal.
+    Session((Option<PathBuf>, Option<String>)),
     /// A modpack step's line (`modpacks`).
     PackLine(String),
     /// A modpack step ended: the pack as it now is.

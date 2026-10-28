@@ -320,7 +320,7 @@ fn an_owner_plays_with_a_session() {
     let (_, ep) = mock(|_| {});
     let store = MemoryStore::default();
     let mut accounts = signed_in(&store, &secrets("mc-token", true));
-    let pass = launch(&ep, Some("test-client"), &store, &mut accounts).unwrap();
+    let pass = launch(&ep, Some("test-client"), &store, &mut accounts);
     let (account, session) = pass.session.unwrap();
     assert_eq!(
         (account.name.as_str(), session.minecraft_token.as_str()),
@@ -332,46 +332,51 @@ fn an_owner_plays_with_a_session() {
 }
 
 #[test]
-fn a_no_from_the_services_blocks_at_once() {
+fn a_no_from_the_services_plays_offline() {
+    // Basalt: "doesn't own" no longer refuses Play. The account keeps its answer, Play goes on
+    // without a session, and the reason is reported to the player.
     let (_, ep) = mock(|m| m.owns_game = false);
     let store = MemoryStore::default();
     let mut accounts = signed_in(&store, &secrets("mc-token", true));
     assert!(accounts.has_owner(&store));
-    assert_eq!(
-        launch(&ep, Some("test-client"), &store, &mut accounts).unwrap_err(),
-        NoOwner
-    );
+    let pass = launch(&ep, Some("test-client"), &store, &mut accounts);
+    assert!(pass.session.is_none() && pass.owner.is_none());
+    assert!(pass.offline.unwrap().contains("doesn't own"));
     // The answer is kept beside the tokens: offline now, it still says no.
     assert!(!kept(&store).owns && !accounts.has_owner(&store));
-    assert_eq!(
-        launch(&offline(), Some("test-client"), &store, &mut accounts).unwrap_err(),
-        NoOwner
-    );
-    assert_eq!(
-        NoOwner.to_string(),
-        "Sign in with a Microsoft account that owns Minecraft: Java Edition to play."
-    );
+    let pass = launch(&offline(), Some("test-client"), &store, &mut accounts);
+    assert!(pass.session.is_none());
 }
 
 #[test]
 fn no_network_never_blocks_a_past_owner() {
     let store = MemoryStore::default();
     let mut accounts = signed_in(&store, &secrets("mc-token", true));
-    let pass = launch(&offline(), Some("test-client"), &store, &mut accounts).unwrap();
+    let pass = launch(&offline(), Some("test-client"), &store, &mut accounts);
     // Plays, offline, and says why.
     assert!(pass.session.is_none() && pass.owner.is_none());
     assert!(pass.offline.unwrap().contains("Could not reach"));
-    // A token to renew with no network, or a build without sign-in: the same.
+    // A token to renew with no network, or a build without sign-in: the same, and Play goes on.
     let stale = Secrets {
         minecraft_expires_at: 0,
         ..secrets("mc-token", true)
     };
     let mut accounts = signed_in(&store, &stale);
-    assert!(launch(&offline(), Some("test-client"), &store, &mut accounts).is_ok());
-    assert!(launch(&offline(), None, &store, &mut accounts).is_ok());
-    // An account that never passed doesn't pass offline.
+    assert!(
+        launch(&offline(), Some("test-client"), &store, &mut accounts)
+            .session
+            .is_none()
+    );
+    assert!(launch(&offline(), None, &store, &mut accounts)
+        .session
+        .is_none());
+    // An account that never passed plays offline too; Basalt does not refuse it.
     let mut accounts = signed_in(&store, &secrets("mc-token", false));
-    assert!(launch(&offline(), Some("test-client"), &store, &mut accounts).is_err());
+    assert!(
+        launch(&offline(), Some("test-client"), &store, &mut accounts)
+            .session
+            .is_none()
+    );
 }
 
 #[test]
@@ -393,7 +398,7 @@ fn any_owner_opens_the_gate_and_the_one_who_plays_brings_the_session() {
         cape: None,
     });
     accounts.selected = Some("other".into());
-    let pass = launch(&ep, Some("test-client"), &store, &mut accounts).unwrap();
+    let pass = launch(&ep, Some("test-client"), &store, &mut accounts);
     assert!(pass.session.is_none());
     assert!(pass
         .offline
@@ -403,34 +408,39 @@ fn any_owner_opens_the_gate_and_the_one_who_plays_brings_the_session() {
     // An offline name plays: Notch is asked, and no session goes to the game.
     accounts.selected = None;
     m.lock().unwrap().log.clear();
-    let pass = launch(&ep, Some("test-client"), &store, &mut accounts).unwrap();
+    let pass = launch(&ep, Some("test-client"), &store, &mut accounts);
     assert!(pass.session.is_none() && pass.offline.is_none());
     assert_eq!(m.lock().unwrap().log.len(), 2);
-    // No account at all.
-    assert!(launch(&ep, Some("test-client"), &store, &mut Accounts::default()).is_err());
+    // No account at all: still a launch, offline.
+    let pass = launch(&ep, Some("test-client"), &store, &mut Accounts::default());
+    assert!(pass.session.is_none() && pass.owner.is_none());
 }
 
 #[test]
-fn offline_names_play_only_beside_an_owner() {
+fn offline_names_play_without_an_owner() {
+    // Basalt: no account, no keychain, no problem.
     let store = MemoryStore::default();
     let mut accounts = Accounts::default();
-    let refused = accounts.play_as(&store, Player::Offline("Builder_1".into()));
-    assert_eq!(refused.unwrap_err(), OFFLINE_NEEDS_OWNER);
-    assert!(accounts.offline.is_empty());
-    let mut accounts = signed_in(&store, &secrets("mc-token", true));
     accounts
         .play_as(&store, Player::Offline("Builder_1".into()))
         .unwrap();
-    // Signing the last owner out keeps the name, which no longer plays.
-    accounts.remove(&store, UUID).unwrap();
     assert_eq!(accounts.offline, ["Builder_1"]);
     assert_eq!(accounts.player(), Player::Offline("Builder_1".into()));
     assert!(!accounts.has_owner(&store));
     let (_, ep) = mock(|_| {});
-    assert!(launch(&ep, Some("test-client"), &store, &mut accounts).is_err());
-    assert!(accounts
+    let pass = launch(&ep, Some("test-client"), &store, &mut accounts);
+    assert!(pass.session.is_none());
+    // Another offline name works just the same.
+    accounts
         .play_as(&store, Player::Offline("Builder_2".into()))
-        .is_err());
+        .unwrap();
+    // Signing the last account out keeps the names.
+    let mut accounts = signed_in(&store, &secrets("mc-token", true));
+    accounts
+        .play_as(&store, Player::Offline("Builder_1".into()))
+        .unwrap();
+    accounts.remove(&store, UUID).unwrap();
+    assert_eq!(accounts.player(), Player::Offline("Builder_1".into()));
 }
 
 #[test]

@@ -1,6 +1,6 @@
 # ADR-0001: Offline-first launching
 
-- Status: accepted (P0), implemented in P1
+- Status: accepted (P0), implemented (P1)
 - Date: 2026-10-28
 
 ## Context

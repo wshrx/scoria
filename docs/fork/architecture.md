@@ -43,7 +43,7 @@ Offline support already exists upstream and is what Basalt promotes to the defau
   installations, including `instances/<name>/minecraft` — so an install made by Freesm/Prism can
   be prepared without any Mojang download.
 
-## P0 changes (this commit)
+## P0/P1 changes
 
 1. `upstream` remote; no `origin` yet; baseline tag.
 2. User-facing brand: Basalt (window title, macOS menu, crash screen, desktop entries, app id,
@@ -60,6 +60,19 @@ Offline support already exists upstream and is what Basalt promotes to the defau
 4. No signature/verification code was deleted. Self-update is off, so the release-signing path is
    dormant, not bypassed.
 
+P1 removes the gate itself:
+
+- `account::launch` returns `Launch` (no `NoOwner`); `session_for_game` returns the session pair
+  and never refuses; `play_as(Player::Offline)` no longer asks for an owner.
+- `NoOwner`, `NEEDS_OWNER` and `OFFLINE_NEEDS_OWNER` are gone; `owner_page.rs` is deleted; Home's
+  "Sign in to play" row and the "Download and prepare" button are gone.
+- `horizon-launcher play` and MCP `play` reach preparation instead of stopping at the gate
+  (`launcher/tests/offline_play.rs` asserts it).
+- Microsoft sign-in, its keychain storage and the session-file handoff stay: they are what
+  online-mode servers need.
+- The Mojang **download** path (`download_for_owner`) still exists but is only reachable from the
+  removed UI/CLI entry points; P2 deletes it.
+
 ## Invariants the fork keeps
 
 - **No Mojang files in the tree.** `tools/check_public_tree.py` still runs on commit
@@ -69,9 +82,9 @@ Offline support already exists upstream and is what Basalt promotes to the defau
 - **No session forgery.** The game still joins online-mode servers only with a real Microsoft
   session; Basalt only stops *requiring* one to start the game.
 
-## Known gaps after P0
+## Known gaps after P1
 
-- The launcher still refuses Play without an owner (P1).
+- The Mojang game-download code is still compiled (unreachable from the UI); P2 deletes it.
 - The GPUIX UI does not exist yet; the Rust GPUI UI is unchanged (P3).
 - No CI in the fork yet; upstream workflows are left in place but they target Horizon's runners,
   secrets and self-hosted machines and must be trimmed before the fork is pushed (P2).

@@ -27,7 +27,6 @@ mod modpacks_page;
 mod mods_page;
 mod mods_project;
 mod multiplayer_page;
-mod owner_page;
 mod packs_page;
 mod partner;
 mod perf;
@@ -208,11 +207,6 @@ struct Launcher {
     sign_in: Option<SignIn>,
     sign_in_state: Option<SignInState>,
     keychain: bool,
-    /// Whether an account here owns the game, by the keychain's last answers (the owner gate);
-    /// none until the keychain has been read.
-    owner: Option<bool>,
-    /// Play was refused (or Home's Sign in pressed): the owner gate's screen is open.
-    owner_screen_open: bool,
     /// The game is waiting for its session (a token renewal) before it starts.
     starting_client: Option<String>,
     /// Join a friend: the code typed on the Play page, and the one the game
@@ -417,8 +411,6 @@ impl Launcher {
             sign_in: None,
             sign_in_state: None,
             keychain: true,
-            owner: None,
-            owner_screen_open: false,
             starting_client: None,
             friend_code: String::new(),
             friend_focused: false,
@@ -471,11 +463,9 @@ impl Launcher {
         let tx = this.tx.clone();
         let keychain_tx = this.tx.clone();
         // Asking the keychain can block (D-Bus), so not on this thread.
-        let accounts = this.accounts.clone();
         std::thread::spawn(move || {
             let store = account::store();
             let _ = keychain_tx.send(Msg::Keychain(store.persistent()));
-            let _ = keychain_tx.send(Msg::Owner(accounts.has_owner(store)));
         });
         std::thread::spawn(move || {
             let reused = backend::reuse_prepared_everywhere();
@@ -643,24 +633,11 @@ impl Launcher {
                 // The page reads is_prepared when drawn; `changed` redraws it.
                 Msg::Reused(_) => self.installed = backend::installed(),
                 Msg::Keychain(persistent) => self.keychain = persistent,
-                Msg::Owner(owns) => self.owner = Some(owns),
                 Msg::Playing(playing) => self.playing = playing,
                 Msg::Session(session) => {
                     if let Some(tag) = self.starting_client.take() {
                         let mut cmd = backend::client_command(&tag);
-                        let (file, offline) = match session {
-                            Ok(pass) => pass,
-                            Err(account::NoOwner) => {
-                                self.owner = Some(false);
-                                self.owner_screen_open = true;
-                                self.client_error = Some(format!("{}.", tr(account::NEEDS_OWNER)));
-                                self.starting_pack = None;
-                                self.joining = None;
-                                self.quick_play = None;
-                                continue;
-                            }
-                        };
-                        self.owner = Some(true);
+                        let (file, offline) = session;
                         if let Some(file) = file {
                             cmd.arg("--session-file").arg(file);
                         }
@@ -920,14 +897,7 @@ impl Launcher {
             if changed_state {
                 if let SignInState::Done(Ok(_)) = state {
                     self.accounts = Accounts::load();
-                    // Sign-in refuses accounts that don't own the game.
-                    self.owner = Some(true);
-                    self.owner_screen_open = false;
                     self.client_error = None;
-                    if !self.settings.owner_notice_seen {
-                        self.settings.owner_notice_seen = true;
-                        self.settings.save();
-                    }
                 }
                 self.sign_in_state = Some(state);
                 changed = true;
@@ -2235,23 +2205,9 @@ impl Launcher {
                     .child(play),
             );
 
-        // Not prepared: an owner can have Basalt download Minecraft from Mojang; without an
-        // owner there is nothing to play, so signing in comes first.
-        let first = (!prepared && !self.preparing)
-            .then_some(self.owner)
-            .flatten();
-        let resources_value = match first {
-            _ if self.preparing => tr("Preparing…").to_string(),
-            Some(true) => trf(
-                "Not prepared. Basalt can download Minecraft {version} from Mojang for your account, or use your own install.",
-                &[("version", &version)],
-            ),
-            Some(false) => trf(
-                "Not prepared. Sign in with the Microsoft account that owns Minecraft {version} first.",
-                &[("version", &version)],
-            ),
-            None => backend::resources_summary(prepared, !silent, &version),
-        };
+        // Basalt never downloads the game: preparation reads an installation the player already
+        // has (the official launcher, Prism, Freesm, MultiMC...).
+        let resources_value = backend::resources_summary(prepared, !silent, &version);
         let mut prepare = button(
             "prepare",
             if prepared { "Prepare again" } else { "Prepare" },
@@ -2270,40 +2226,7 @@ impl Launcher {
                 cx.notify();
             }));
         }
-        let prepare = match first {
-            Some(true) => div()
-                .flex()
-                .gap(px(8.))
-                .child(
-                    button("prepare-install", "From my install", Kind::Ghost, &t).on_click(
-                        cx.listener(|this, _: &ClickEvent, _, cx| {
-                            this.prepare(backend::MinecraftFrom::Install);
-                            cx.notify();
-                        }),
-                    ),
-                )
-                .child(
-                    button(
-                        "prepare-download",
-                        "Download and prepare",
-                        Kind::Secondary,
-                        &t,
-                    )
-                    .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
-                        this.prepare(backend::MinecraftFrom::Mojang);
-                        cx.notify();
-                    })),
-                ),
-            Some(false) => div().child(
-                button("prepare-sign-in", "Sign in", Kind::Secondary, &t).on_click(cx.listener(
-                    |this, _: &ClickEvent, _, cx| {
-                        this.sign_in_to_play();
-                        cx.notify();
-                    },
-                )),
-            ),
-            None => div().child(prepare),
-        };
+        let prepare = div().child(prepare);
         let minecraft = self.settings.minecraft_dir.as_deref().map_or_else(
             || {
                 div()
@@ -2346,28 +2269,9 @@ impl Launcher {
             ));
         {
             rows = rows.child(self.join_friend_row(prepared && !running, cx));
-            // The top bar shows who plays; a row only when there is something to do about it:
-            // no account that owns the game (Play needs one), or offline.
-            if self.owner == Some(false) {
-                rows = rows.child(index_row(
-                    5,
-                    tr("Microsoft account"),
-                    Some(
-                        div()
-                            .child(format!("{}.", tr(account::NEEDS_OWNER)))
-                            .into_any_element(),
-                    ),
-                    Some(
-                        button("gate-sign-in", "Sign in", Kind::Primary, &t)
-                            .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
-                                this.sign_in_to_play();
-                                cx.notify();
-                            }))
-                            .into_any_element(),
-                    ),
-                    &t,
-                ));
-            } else if self.accounts.selected().is_none() && account::client_id().is_some() {
+            // The top bar shows who plays; a row only when there is something to do about it.
+            // Basalt plays offline without an account; signing in only adds online servers.
+            if self.accounts.selected().is_none() && account::client_id().is_some() {
                 rows = rows.child(index_row(
                     5,
                     tr("Playing offline"),
@@ -3246,7 +3150,6 @@ impl Launcher {
                             this.sign_in_state = Some(SignInState::Done(Err(e)));
                         }
                         let _ = this.accounts.save();
-                        this.owner = Some(this.accounts.has_owner(store));
                         cx.notify();
                     },
                 )),
@@ -3986,9 +3889,6 @@ impl Render for Launcher {
         }
         if self.asking_consent() {
             root = root.child(self.consent_screen(cx));
-        }
-        if self.asking_owner() {
-            root = root.child(self.owner_screen(cx));
         }
         if let Some(opening) = &self.opening {
             // The wordmark arrives letter by letter, then gives way to the launcher; a click or

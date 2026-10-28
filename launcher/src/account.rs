@@ -18,13 +18,10 @@ use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 /// The keychain service name every secret is stored under.
-pub const SERVICE: &str = "dev.playhorizon.launcher";
+pub const SERVICE: &str = "dev.basalt.launcher";
 const SCOPE: &str = "XboxLive.signin offline_access";
 pub const NOT_CONFIGURED: &str =
     "This build of the launcher has no Microsoft sign-in (HORIZON_MSA_CLIENT_ID), so it can't start the game.";
-/// What every Play says while no account in the launcher owns the game.
-pub const NEEDS_OWNER: &str =
-    "Sign in with a Microsoft account that owns Minecraft: Java Edition to play";
 const DOES_NOT_OWN: &str = "This account doesn't own Minecraft: Java Edition.";
 const NO_PROFILE: &str =
     "This account has no Minecraft profile yet. Create one at minecraft.net, then sign in again.";
@@ -784,9 +781,6 @@ pub enum Player {
     GameName,
 }
 
-const OFFLINE_NEEDS_OWNER: &str =
-    "Offline names need a Microsoft account that owns Minecraft: Java Edition in the launcher.";
-
 /// The secrets an account keeps in `store`, if it still has them there.
 fn secrets_in(store: &dyn SecretStore, uuid: &str) -> Option<Secrets> {
     store
@@ -866,9 +860,10 @@ impl Accounts {
         }
     }
 
-    /// Plays as `who`: an account, an offline name (kept, only beside an account that owns the
-    /// game), or the game's own name.
-    pub fn play_as(&mut self, store: &dyn SecretStore, who: Player) -> Result<(), String> {
+    /// Plays as `who`: an account, an offline name (kept, no account needed), or the game's own
+    /// name. `_store` stays in the signature so older callers (and the CLI) keep working; Basalt
+    /// no longer asks it whether anyone owns the game.
+    pub fn play_as(&mut self, _store: &dyn SecretStore, who: Player) -> Result<(), String> {
         match who {
             Player::Microsoft(uuid) => {
                 if !self.accounts.iter().any(|a| a.uuid == uuid) {
@@ -877,9 +872,8 @@ impl Accounts {
                 self.selected = Some(uuid);
             }
             Player::Offline(name) => {
-                if !self.has_owner(store) {
-                    return Err(OFFLINE_NEEDS_OWNER.into());
-                }
+                // Basalt: an offline name needs no account. Signing one in only adds online
+                // play, cloud skins and the (removed) Mojang download path.
                 let name = self.add_offline(&name)?;
                 self.selected = None;
                 self.offline_selected = Some(name);
@@ -968,15 +962,6 @@ impl Accounts {
     }
 }
 
-/// No account in the launcher owns Minecraft: Java Edition: the game must not start.
-#[derive(Debug, PartialEq)]
-pub struct NoOwner;
-impl std::fmt::Display for NoOwner {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{NEEDS_OWNER}.")
-    }
-}
-
 /// The owner gate's pass for one launch.
 #[derive(Debug, Default)]
 pub struct Launch {
@@ -990,17 +975,18 @@ pub struct Launch {
     pub owner: Option<(Account, Secrets)>,
 }
 
-/// The owner gate: the game starts only while an account in the launcher owns Minecraft: Java
-/// Edition. The accounts are asked again, the selected one first, until one owns it; each keeps
-/// the answer in the keychain. An account that gets no answer (no network) keeps its last one, so
-/// being offline never blocks a player who passed before, while "doesn't own" blocks at once.
+/// Renews the selected account's session, if any, and records which accounts own the game.
+///
+/// Basalt removed the owner gate: this never refuses a launch. An account that cannot be
+/// renewed plays offline (`Launch::offline` says why) and an offline name needs no account at
+/// all. `Launch::owner` is informational (and still used by the Mojang download path until P2).
 /// The caller saves `accounts` (renewed names and skins).
 pub fn launch(
     ep: &Endpoints,
     client_id: Option<&str>,
     store: &dyn SecretStore,
     accounts: &mut Accounts,
-) -> Result<Launch, NoOwner> {
+) -> Launch {
     let selected = accounts.selected.clone();
     let mut order = accounts.accounts.clone();
     order.sort_by_key(|a| Some(&a.uuid) != selected.as_ref());
@@ -1045,11 +1031,7 @@ pub fn launch(
             }
         }
     }
-    if owned {
-        Ok(pass)
-    } else {
-        Err(NoOwner)
-    }
+    pass
 }
 
 /// Write the session for the game, readable by this user only, in a fresh file it deletes
@@ -1144,23 +1126,24 @@ impl SignIn {
     }
 }
 
-/// The owner gate for the game about to start, then the selected account's session in a file
-/// for it: the file (none: offline) and why the account plays offline this time, if it does.
-pub fn session_for_game(game_home: &Path) -> Result<(Option<PathBuf>, Option<String>), NoOwner> {
+/// The selected account's session in a file for the game about to start: the file (none:
+/// offline) and why the account plays offline this time, if it does. Never refuses: Basalt plays
+/// without an account.
+pub fn session_for_game(game_home: &Path) -> (Option<PathBuf>, Option<String>) {
     let mut accounts = Accounts::load();
     let pass = launch(
         &Endpoints::live(),
         client_id().as_deref(),
         store(),
         &mut accounts,
-    )?;
+    );
     let _ = accounts.save();
     let Some((account, secrets)) = pass.session else {
-        return Ok((None, pass.offline));
+        return (None, pass.offline);
     };
     match write_session_file(&game_home.join("sessions"), &account, &secrets) {
-        Ok(file) => Ok((Some(file), None)),
-        Err(e) => Ok((None, Some(e))),
+        Ok(file) => (Some(file), None),
+        Err(e) => (None, Some(e)),
     }
 }
 

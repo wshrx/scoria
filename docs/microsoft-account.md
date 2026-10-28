@@ -1,5 +1,11 @@
 # Microsoft account sign-in and online-mode play
 
+> **Basalt fork:** the owner gate below is removed. Play works without any account (see
+> [fork/offline-mode.md](fork/offline-mode.md)); Microsoft sign-in stays optional and is what
+> online-mode servers, cloud skins and the Mojang download path use. Everything else on this page
+> — the device-code flow, the Xbox/XSTS/Minecraft exchange, token storage and the session file —
+> still describes the code.
+
 Horizon signs players in with their Microsoft account in the launcher and joins online-mode
 (authenticated) servers like vanilla 26.3 does. The launcher plays only with an account that owns
 Minecraft: Java Edition ([the owner gate](#the-owner-gate)); offline names, LAN and offline-mode

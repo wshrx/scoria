@@ -1331,8 +1331,8 @@ fn account_command(action: AccountCmd, as_json: bool) -> Result<(), String> {
                 }));
             } else if accounts.accounts.is_empty() && accounts.offline.is_empty() {
                 println!(
-                    "No Microsoft account signed in. Play needs one that owns Minecraft: Java \
-                     Edition: horizon-launcher account sign-in"
+                    "No Microsoft account signed in. Basalt plays offline; sign in for online \
+                     servers and cloud skins: horizon-launcher account sign-in"
                 );
             } else {
                 for a in &accounts.accounts {
@@ -1351,9 +1351,6 @@ fn account_command(action: AccountCmd, as_json: bool) -> Result<(), String> {
                     println!(
                         "Playing offline as the game's own name (`account select NAME` to switch)."
                     );
-                }
-                if !accounts.has_owner(account::store()) {
-                    println!("{}.", account::NEEDS_OWNER);
                 }
             }
         }
