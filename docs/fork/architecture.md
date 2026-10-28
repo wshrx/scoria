@@ -101,5 +101,6 @@ P1 removes the gate itself:
 
 - The Mojang game-download code is still compiled (unreachable from the UI); P2 deletes it.
 - The UI is still upstream's Rust GPUI (P3 paused until flint-ui has code; ADR-0003).
-- No CI in the fork yet; upstream workflows are left in place but they target Horizon's runners,
-  secrets and self-hosted machines and must be trimmed before the fork is pushed (P2).
+- Horizon's release, nightly, parity, game-build and registry workflows are deleted. `.github/`
+  keeps only `ci.yml` (format, clippy, tests, public-tree check) and `cancel-on-close.yml`;
+  `ci.yml` runs on GitHub's runners and needs no secrets from Horizon.

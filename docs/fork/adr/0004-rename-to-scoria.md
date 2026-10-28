@@ -45,3 +45,8 @@ under the same name.
 - **Redmoon Launcher.** No conflict, but it merges the product with the studio name; Scoria keeps
   the launcher a distinct project under the Redmoon umbrella.
 - **Nadir.** No launcher conflict, but a much more common word and less distinctive.
+
+## Later
+
+The repository moved again, from Entire to GitHub (`git@github.com:wshrx/flint-ui.git`); the
+Entire repository and its checkpoint tooling were removed. The product name Scoria is unchanged.

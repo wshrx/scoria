@@ -30,10 +30,11 @@ git switch main && git merge --ff-only dev && git push origin main
 A change that cannot fast-forward (because `main` moved) goes back to `dev` with a rebase
 (`git switch dev && git rebase main`) and is tested again.
 
-## Checkpoints
+## Hosting
 
-Entire records checkpoints per branch (`refs/entire/checkpoints/…`) and uploads them on push.
-Work on `dev` therefore stays explainable after it reaches `main` through the merge commit.
+`origin` is `git@github.com:wshrx/flint-ui.git`; `upstream` stays Horizon for engine updates.
+Pushes to `main`, `dev` and `nightly` go to GitHub. No agent-checkpoint tooling is part of the
+repository any more.
 
 ## Notes
 
