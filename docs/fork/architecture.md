@@ -7,7 +7,7 @@ describe the engine itself (1773 Rust files, ~800k lines, `horizon-client` being
 ## Layers
 
 ```
-launcher-ui/            flint-ui (planned; stack not chosen yet)   ← new, P3 paused
+launcher-ui/            flint-ui 0.1.0 on gpuix 0.11.0 (Bun/React) ← new, P3 started
         │  JSON-RPC over a local socket
 launcher/               Rust: installs, preparation, processes, MCP  ← upstream, rebranded
         │
@@ -19,8 +19,9 @@ horizon-client          the game (800k-line workspace)               ← upstrea
 ```
 
 The launcher is a **separate Cargo workspace** on purpose (`launcher/Cargo.toml`), so the game's
-build never waits for GPUI. Scoria keeps that split: the future flint-ui workspace will never enter either Rust build
-(ADR-0003). Until it exists, the launcher is the upstream GPUI UI, rebranded.
+build never waits for GPUI. Scoria keeps that split: `launcher-ui/` (Bun + React + flint-ui +
+gpuix) never enters either Rust build (ADR-0006). Until its screens are done, the upstream GPUI
+launcher still ships beside it.
 
 ## Where the Microsoft account decides things (upstream)
 
@@ -100,7 +101,8 @@ P1 removes the gate itself:
 ## Known gaps after P1
 
 - The Mojang game-download code is still compiled (unreachable from the UI); P2 deletes it.
-- The UI is still upstream's Rust GPUI (P3 paused until flint-ui has code; ADR-0003).
+- `launcher-ui/` is a preview: three screens from `src/api.ts` mock data, no engine bridge yet.
+  The shipped launcher is still the Rust GPUI one.
 - Horizon's release, nightly, parity, game-build and registry workflows are deleted. `.github/`
   keeps only `ci.yml` (format, clippy, tests, public-tree check) and `cancel-on-close.yml`;
   `ci.yml` runs on GitHub's runners and needs no secrets from Horizon.
