@@ -52,24 +52,10 @@ export function HomePage({
     })
   }
 
-  const downloadNow = async () => {
-    setBusy("download")
-    setNote(null)
-    setProgress(null)
-    try {
-      await downloadMinecraft(undefined, setProgress)
-      onRefresh()
-    } catch (error) {
-      fail(`The download stopped: ${(error as Error).message}`)
-    } finally {
-      setBusy(null)
-      setProgress(null)
-    }
-  }
-
-  const prepareNow = async () => {
+  const prepareAll = async () => {
     setBusy("prepare")
     setNote(null)
+    setProgress(null)
     try {
       if (!files.installed) await downloadMinecraft(undefined, setProgress)
       const said = await prepare(undefined, undefined, false)
@@ -83,8 +69,12 @@ export function HomePage({
     }
   }
 
-  const action = !files.installed ? downloadNow : !data.prepared ? prepareNow : () => playNow()
-  const actionLabel = !files.installed ? t("Download 26.3") : !data.prepared ? t("Prepare") : t("Play")
+  const action = !files.installed || !data.prepared ? prepareAll : () => playNow()
+  const actionLabel = !files.installed
+    ? t("Download and prepare")
+    : !data.prepared
+      ? t("Prepare")
+      : t("Play")
   const actionIcon: IconName = !files.installed ? "download" : !data.prepared ? "refresh" : "play"
   const percent = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0
 
@@ -163,7 +153,6 @@ export function HomePage({
                 borderRadius: 999,
                 backgroundColor: theme.colors.primary,
                 color: theme.colors.primaryForeground,
-                boxShadow: { offsetX: 0, offsetY: 10, blurRadius: 30, spreadRadius: -8, color: "#8B5CF688" },
                 hover: { backgroundColor: theme.colors.primaryHover },
               }}
             >

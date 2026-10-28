@@ -1,5 +1,5 @@
-import type { ReactNode } from "react"
-import type { LinearGradientBackground } from "@gpuix/react"
+import { useState, type ReactNode } from "react"
+import { motion, type LinearGradientBackground } from "@gpuix/react"
 import { Text, useTheme } from "@/lib/flint"
 
 export const gradient = (from: string, to: string, angle = 160): LinearGradientBackground => ({
@@ -157,16 +157,6 @@ export function Backdrop({ strong = true }: { strong?: boolean }) {
           }}
         />
       ) : null}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: 0,
-          height: 140,
-          background: gradient("#06040B99", "#06040B00", 180),
-        }}
-      />
     </div>
   )
 }
@@ -183,7 +173,6 @@ export function Mark({ size = 40 }: { size?: number }) {
         height: size,
         borderRadius: Math.round(size * 0.34),
         background: gradient("#A78BFA", "#6D28D9", 145),
-        boxShadow: { offsetX: 0, offsetY: 8, blurRadius: 24, spreadRadius: -4, color: "#8B5CF666" },
       }}
     >
       <Text
@@ -212,7 +201,6 @@ export function Avatar({ name, size = 30 }: { name: string; size?: number }) {
         height: size,
         borderRadius: Math.round(size * 0.32),
         background: gradient("#C4B5FD", "#7C3AED", 150),
-        boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 14, spreadRadius: -2, color: "#8B5CF644" },
       }}
     >
       <Text
@@ -229,12 +217,14 @@ export function Avatar({ name, size = 30 }: { name: string; size?: number }) {
   )
 }
 
-/** A pill meter: the only progress shape in the launcher. */
+/** A pill meter: the fill eases to each new value instead of jumping. */
 export function Meter({ value, total, height = 6 }: { value: number; total: number; height?: number }) {
   const theme = useTheme()
+  const [track, setTrack] = useState(0)
   const done = total > 0 ? Math.max(0, Math.min(1, value / total)) : 0
   return (
     <div
+      onLayout={(event) => setTrack(event.width ?? 0)}
       style={{
         display: "flex",
         flexDirection: "row",
@@ -245,8 +235,16 @@ export function Meter({ value, total, height = 6 }: { value: number; total: numb
         backgroundColor: theme.colors.muted,
       }}
     >
-      <div style={{ flexGrow: done * 1000, borderRadius: height, backgroundColor: theme.colors.primary }} />
-      <div style={{ flexGrow: (1 - done) * 1000 }} />
+      <motion.div
+        initial={{ width: 0 }}
+        animate={{ width: Math.max(0, done * track) }}
+        transition={{ duration: 0.32, ease: "easeOut" }}
+        style={{
+          height,
+          borderRadius: height,
+          backgroundColor: theme.colors.primary,
+        }}
+      />
     </div>
   )
 }
@@ -271,7 +269,6 @@ export function Sheet({
         borderStyle: "solid",
         borderColor: theme.colors.border,
         backgroundColor: theme.appearance === "dark" ? "#110C1BE8" : theme.colors.card,
-        boxShadow: theme.shadow.lg,
         ...style,
       }}
     >

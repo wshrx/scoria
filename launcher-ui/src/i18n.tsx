@@ -24,6 +24,8 @@ const RU: Record<string, string> = {
   Continue: "Продолжить",
   "Download 26.3": "Скачать 26.3",
   Prepare: "Подготовить",
+  "Download and prepare": "Скачать и подготовить",
+  "Verify files": "Проверить файлы",
   "to download": "скачать",
   "needs game files": "нужны файлы игры",
   "needs attention": "нужно внимание",

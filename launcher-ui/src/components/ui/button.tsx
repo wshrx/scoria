@@ -4,7 +4,7 @@ import { Button as HeadlessButton } from "@gpuix/react"
 import type { ButtonProps as HeadlessButtonProps, ButtonState, PublicInstance } from "@gpuix/react"
 import { useTheme } from "@/lib/flint/theme-provider.js"
 import { mergeStyles, type StateStyle, type Style } from "@/lib/flint/utils.js"
-import { Icon } from "@/lib/flint/icon.js"
+import { Spinner } from "./spinner.js"
 
 export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "destructive" | "link"
 export type ButtonSize = "sm" | "md" | "lg" | "icon"
@@ -115,7 +115,7 @@ export const Button: ForwardRefExoticComponent<ButtonProps & RefAttributes<Publi
         )
       }
     >
-      {loading ? <Icon name="dot" size={10} color={c.primaryForeground} /> : null}
+      {loading ? <Spinner color={c.primaryForeground} /> : null}
       {children}
     </HeadlessButton>
   )

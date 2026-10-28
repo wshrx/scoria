@@ -130,18 +130,21 @@ export function SettingsPage({
     }
   }
 
-  const prepareNow = async () => {
+  const prepareAll = async () => {
     setBusy("prepare")
     setNote(null)
     setLog([])
+    setProgress(null)
     try {
-      const said = await prepare(undefined, pushLog, true)
+      if (!files.installed) await downloadMinecraft(pushLog, setProgress)
+      const said = await prepare(undefined, pushLog, false)
       if (said.startsWith("Preparation failed")) setNote(said)
       onRefresh()
     } catch (error) {
       setNote(`The download stopped: ${(error as Error).message}`)
     } finally {
       setBusy(null)
+      setProgress(null)
     }
   }
 
@@ -407,25 +410,23 @@ export function SettingsPage({
               </Text>
             </div>
 
-            <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", gap: 8 }}>
-              <Button
-                variant="primary"
-                loading={busy === "download"}
-                onClick={() => void download()}
-                style={{ borderRadius: 999, height: 38, paddingLeft: 18, paddingRight: 18, flexGrow: 1 }}
-              >
-                <Icon name="download" size={14} color={theme.colors.primaryForeground} />
-                {files.installed ? t("Verify and repair") : t("Download game files")}
-              </Button>
-              <Button
-                variant="secondary"
-                loading={busy === "prepare"}
-                onClick={() => void prepareNow()}
-                style={{ borderRadius: 999, height: 38, paddingLeft: 18, paddingRight: 18, flexGrow: 1 }}
-              >
-                {t("Prepare resources")}
-              </Button>
-            </div>
+            <Button
+              variant="primary"
+              loading={busy !== null}
+              onClick={() => void (files.installed && data.prepared ? download() : prepareAll())}
+              style={{ borderRadius: 999, height: 38, paddingLeft: 18, paddingRight: 18, alignSelf: "flex-start" }}
+            >
+              <Icon
+                name={files.installed && data.prepared ? "download" : files.installed ? "refresh" : "download"}
+                size={14}
+                color={theme.colors.primaryForeground}
+              />
+              {files.installed && data.prepared
+                ? t("Verify files")
+                : files.installed
+                  ? t("Prepare resources")
+                  : t("Download and prepare")}
+            </Button>
 
             {log.length > 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 3, padding: 12, borderRadius: 14, backgroundColor: theme.colors.muted }}>

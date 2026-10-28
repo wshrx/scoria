@@ -1,10 +1,10 @@
-import type { ReactNode } from "react"
-import { useGpuixRequired, useWindowSize } from "@gpuix/react"
+import { useEffect, type ReactNode } from "react"
+import { motion, useGpuixRequired, useWindowSize } from "@gpuix/react"
 import { Icon, Text, useTheme, type IconName } from "@/lib/flint"
 import type { Snapshot } from "./api"
 import { useT } from "./i18n"
 import { Avatar, Backdrop, BONE, CHROME_MUTED, Mark, gradient } from "./visual"
-import { startWindowMove, startWindowResize } from "./chrome"
+import { shapeWindow, startWindowMove, startWindowResize } from "./chrome"
 
 export type Page = "home" | "instances" | "servers" | "settings"
 
@@ -95,11 +95,8 @@ function Rail({
           borderRadius: 14,
           background: active ? gradient("#A78BFA", "#6D28D9", 150) : undefined,
           backgroundColor: active ? theme.colors.primary : "transparent",
-          boxShadow: active
-            ? { offsetX: 0, offsetY: 8, blurRadius: 22, spreadRadius: -6, color: "#8B5CF677" }
-            : undefined,
           cursor: "pointer",
-          hover: active ? {} : { backgroundColor: "#FFFFFF14" },
+          hover: active ? {} : { backgroundColor: "#1A1428" },
         }}
       >
         <Icon
@@ -157,7 +154,7 @@ function Rail({
           height: 44,
           borderRadius: 14,
           cursor: "pointer",
-          hover: { backgroundColor: "#FFFFFF14" },
+          hover: { backgroundColor: "#1A1428" },
         }}
       >
         <Icon
@@ -211,9 +208,13 @@ export function Shell({
 }: ShellProps) {
   const theme = useTheme()
   const t = useT()
-  const { width } = useWindowSize()
+  const { width, height } = useWindowSize()
   const renderer = useGpuixRequired()
   const compact = width < 1000
+
+  useEffect(() => {
+    if (frameless) void shapeWindow(width, height, 10, 24)
+  }, [frameless, width, height])
   const files = data.minecraft
   const ready = files.installed && data.prepared
 
@@ -334,7 +335,7 @@ export function Shell({
                 paddingRight: 10,
                 borderRadius: 999,
                 cursor: "pointer",
-                hover: { backgroundColor: "#FFFFFF14" },
+                hover: { backgroundColor: "#1A1428" },
               }}
             >
               <Avatar name={data.offlineName} size={26} />
@@ -372,7 +373,11 @@ export function Shell({
               position: "relative",
             }}
           >
-            <div
+            <motion.div
+              key={page}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -387,7 +392,7 @@ export function Shell({
               }}
             >
               {children}
-            </div>
+            </motion.div>
           </div>
         </div>
 
