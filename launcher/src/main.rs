@@ -47,7 +47,7 @@ use gpui::{
     FontWeight, Hsla, KeyBinding, KeyDownEvent, Menu, MenuItem, PathPromptOptions, SharedString,
     Stateful, Subscription, Window, WindowBounds, WindowOptions,
 };
-use horizon_launcher::account::{self, Accounts, SignIn, SignInState};
+use horizon_launcher::account::{self, Accounts};
 use horizon_launcher::backend::{self, Job, Msg, Release, Running, Settings, Updates};
 use horizon_launcher::i18n::{self, tr, trf};
 use horizon_launcher::instances;
@@ -193,11 +193,8 @@ struct Launcher {
     internet: internet::Internet,
     /// The window's own focus, so Tab reaches the controls when nothing else has the keyboard.
     root_focus: FocusHandle,
-    /// Microsoft accounts (accounts.json), the sign-in under way and what it last showed.
+    /// The offline names and the one that plays (accounts.json).
     accounts: Accounts,
-    sign_in: Option<SignIn>,
-    sign_in_state: Option<SignInState>,
-    keychain: bool,
     /// The game is waiting for its session (a token renewal) before it starts.
     starting_client: Option<String>,
     /// Join a friend: the code typed on the Play page, and the one the game
@@ -392,9 +389,6 @@ impl Launcher {
             internet: internet::Internet::new(),
             root_focus: cx.focus_handle(),
             accounts: Accounts::load(),
-            sign_in: None,
-            sign_in_state: None,
-            keychain: true,
             starting_client: None,
             friend_code: String::new(),
             friend_focused: false,
@@ -443,12 +437,6 @@ impl Launcher {
             this.perf.keep_local_log(false);
         }
         let tx = this.tx.clone();
-        let keychain_tx = this.tx.clone();
-        // Asking the keychain can block (D-Bus), so not on this thread.
-        std::thread::spawn(move || {
-            let store = account::store();
-            let _ = keychain_tx.send(Msg::Keychain(store.persistent()));
-        });
         std::thread::spawn(move || {
             let reused = backend::reuse_prepared_everywhere();
             if !reused.is_empty() {
@@ -576,18 +564,9 @@ impl Launcher {
                 Msg::Links(links) => self.links = links,
                 // The page reads is_prepared when drawn; `changed` redraws it.
                 Msg::Reused(_) => self.installed = backend::installed(),
-                Msg::Keychain(persistent) => self.keychain = persistent,
-                Msg::Session(session) => {
+                Msg::Session => {
                     if let Some(tag) = self.starting_client.take() {
                         let mut cmd = backend::client_command(&tag);
-                        let (file, offline) = session;
-                        if let Some(file) = file {
-                            cmd.arg("--session-file").arg(file);
-                        }
-                        // Still play, offline, and say why.
-                        if let Some(e) = offline {
-                            self.client_error = Some(format!("Playing offline: {e}"));
-                        }
                         self.accounts = Accounts::load();
                         // An offline name the player picked (the quick switch).
                         if let Some(name) = self.accounts.name_arg() {
@@ -810,18 +789,6 @@ impl Launcher {
         }
         changed |= self.servers_tick();
         changed |= self.mods_tick();
-        if let Some(sign_in) = &self.sign_in {
-            let state = sign_in.state();
-            let changed_state = format!("{state:?}") != format!("{:?}", self.sign_in_state);
-            if changed_state {
-                if let SignInState::Done(Ok(_)) = state {
-                    self.accounts = Accounts::load();
-                    self.client_error = None;
-                }
-                self.sign_in_state = Some(state);
-                changed = true;
-            }
-        }
         if self
             .checked
             .is_some_and(|at| at.elapsed() > backend::CHECK_EVERY)
@@ -985,17 +952,8 @@ impl Launcher {
         let tx = self.tx.clone();
         std::thread::spawn(move || {
             backend::complete_assets(&tag);
-            let session = account::session_for_game(&backend::game_home());
-            let _ = tx.send(Msg::Session(session));
+            let _ = tx.send(Msg::Session);
         });
-    }
-
-    /// Starts the Microsoft sign-in; Settings and the owner gate's screen show its code.
-    fn start_sign_in(&mut self) {
-        if let Some(old) = self.sign_in.replace(SignIn::start()) {
-            old.cancel();
-        }
-        self.sign_in_state = Some(SignInState::Starting);
     }
 
     fn choose_folder(&mut self, cx: &mut Context<Self>) {
@@ -1570,7 +1528,7 @@ impl Launcher {
                 }));
             nav = nav.child(keyboard(track_hover(item, id), &t));
         }
-        // Only a signed-in account says "Microsoft account"; otherwise an offline name, or the
+        // An offline name, or the name the game made up.
         // one the game made up.
         let (name, how) = self.who_plays();
         let account = keyboard(div().id("account"), &t)
@@ -2188,28 +2146,6 @@ impl Launcher {
             ));
         {
             rows = rows.child(self.join_friend_row(prepared && !running, cx));
-            // The top bar shows who plays; a row only when there is something to do about it.
-            // Scoria plays offline without an account; signing in only adds online servers.
-            if self.accounts.selected().is_none() && account::client_id().is_some() {
-                rows = rows.child(index_row(
-                    5,
-                    tr("Playing offline"),
-                    Some(
-                        div()
-                            .child(tr("Online servers need a Microsoft account."))
-                            .into_any_element(),
-                    ),
-                    Some(
-                        button("accounts", "Accounts…", Kind::Ghost, &t)
-                            .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
-                                this.go(Page::Settings);
-                                cx.notify();
-                            }))
-                            .into_any_element(),
-                    ),
-                    &t,
-                ));
-            }
         }
 
         // The banner: Scoria's landscape (`art.rs`) under a veil of the page colour, the hero and
@@ -2648,8 +2584,7 @@ impl Launcher {
         };
         let mono = |s: String| div().font_family(theme::MONO).child(s).into_any_element();
         let plain = |s: &str| div().child(tr(s).to_string()).into_any_element();
-        let (accounts, n) = self.account_rows(cx);
-        let (offline, n) = self.offline_rows(n, cx);
+        let (offline, n) = self.offline_rows(0, cx);
         let appearance = segments(
             "appearance",
             &[
@@ -2689,7 +2624,6 @@ impl Launcher {
                     .flex()
                     .flex_col()
                     .child(group("Account", "user").mt_0())
-                    .child(accounts)
                     .child(offline)
                     .child(group("Updates", "reload"))
                     .child(index_row(
@@ -2920,170 +2854,6 @@ impl Launcher {
         self.settings.proxy = (!value.is_empty()).then_some(value);
         self.settings.save();
         horizon_launcher::proxy::announce(self.settings.proxy.clone());
-    }
-
-    /// Settings' Microsoft accounts: who is signed in and plays, the sign-in with its code. The
-    /// rows are numbered from 01; returns them and how many there are.
-    fn account_rows(&mut self, cx: &mut Context<Self>) -> (Div, usize) {
-        let t = self.theme;
-        let mut rows = div().flex().flex_col();
-        let mut n = 0;
-        let selected = self.accounts.selected.clone();
-        for (i, a) in self.accounts.accounts.clone().into_iter().enumerate() {
-            let plays = selected.as_ref() == Some(&a.uuid);
-            let uuid = a.uuid.clone();
-            let mut actions = div().flex().gap(px(4.));
-            if plays {
-                actions = actions.child(
-                    button(format!("offline-{i}"), "Play offline", Kind::Ghost, &t).on_click(
-                        cx.listener(|this, _: &ClickEvent, _, cx| {
-                            this.accounts.selected = None;
-                            let _ = this.accounts.save();
-                            cx.notify();
-                        }),
-                    ),
-                );
-            } else {
-                let uuid = uuid.clone();
-                actions = actions.child(
-                    button(format!("select-{i}"), "Play as", Kind::Secondary, &t).on_click(
-                        cx.listener(move |this, _: &ClickEvent, _, cx| {
-                            this.accounts.selected = Some(uuid.clone());
-                            let _ = this.accounts.save();
-                            cx.notify();
-                        }),
-                    ),
-                );
-            }
-            actions = actions.child(
-                button(format!("sign-out-{i}"), "Sign out", Kind::Ghost, &t).on_click(cx.listener(
-                    move |this, _: &ClickEvent, _, cx| {
-                        let store = account::store();
-                        if let Err(e) = this.accounts.remove(store, &uuid) {
-                            this.sign_in_state = Some(SignInState::Done(Err(e)));
-                        }
-                        let _ = this.accounts.save();
-                        cx.notify();
-                    },
-                )),
-            );
-            n += 1;
-            rows = rows.child(index_row(
-                n,
-                a.name.clone(),
-                Some(
-                    div()
-                        .child(tr(if plays {
-                            "Microsoft account · plays"
-                        } else {
-                            "Microsoft account · signed in"
-                        }))
-                        .into_any_element(),
-                ),
-                Some(actions.into_any_element()),
-                &t,
-            ));
-        }
-        let configured = account::client_id().is_some();
-        let busy = matches!(
-            self.sign_in_state,
-            Some(SignInState::Starting | SignInState::Code(_))
-        );
-        let detail = match &self.sign_in_state {
-            _ if !configured => div().child(tr(account::NOT_CONFIGURED)),
-            Some(SignInState::Starting) => div().child(tr("Asking Microsoft…")),
-            Some(SignInState::Code(code)) => div()
-                .flex()
-                .flex_col()
-                .gap(px(6.))
-                .child(trf(
-                    "Open {link} in your browser and enter this code:",
-                    &[("link", &code.verification_uri)],
-                ))
-                .child(
-                    text(theme::HEADING)
-                        .font_family(theme::MONO)
-                        .text_color(t.ink)
-                        .child(code.user_code.clone()),
-                ),
-            Some(SignInState::Done(Ok(a))) => div().child(format!("Signed in as {}.", a.name)),
-            Some(SignInState::Done(Err(e))) => div().text_color(t.danger).child(e.clone()),
-            None if self.accounts.accounts.is_empty() => div().child(tr(
-                "Scoria needs a Microsoft account that owns Minecraft: Java Edition, like other launchers. It also plays online servers with your name and skin.",
-            )),
-            None => div().child(tr("Add another account.")),
-        };
-        let detail = if self.keychain || self.accounts.accounts.is_empty() {
-            detail
-        } else {
-            div()
-                .flex()
-                .flex_col()
-                .gap(px(4.))
-                .child(detail)
-                .child(div().child(account::NO_KEYCHAIN))
-        };
-        let action = if !configured {
-            None
-        } else if let Some(SignInState::Code(code)) = &self.sign_in_state {
-            let (uri, user_code) = (code.verification_uri.clone(), code.user_code.clone());
-            Some(
-                div()
-                    .flex()
-                    .gap(px(4.))
-                    .child(
-                        button("sign-in-copy", "Copy code", Kind::Secondary, &t).on_click(
-                            move |_, _, cx| {
-                                copy_to_clipboard(
-                                    cx,
-                                    gpui::ClipboardItem::new_string(user_code.clone()),
-                                )
-                            },
-                        ),
-                    )
-                    .child(
-                        button("sign-in-open", "Open link", Kind::Secondary, &t)
-                            .on_click(move |_, _, cx| cx.open_url(&uri)),
-                    )
-                    .child(
-                        button("sign-in-cancel", "Cancel", Kind::Ghost, &t).on_click(cx.listener(
-                            |this, _: &ClickEvent, _, cx| {
-                                if let Some(s) = this.sign_in.take() {
-                                    s.cancel();
-                                }
-                                this.sign_in_state = None;
-                                cx.notify();
-                            },
-                        )),
-                    )
-                    .into_any_element(),
-            )
-        } else if busy {
-            None
-        } else {
-            Some(
-                button("sign-in", "Sign in with Microsoft", Kind::Secondary, &t)
-                    .on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
-                        this.start_sign_in();
-                        cx.notify();
-                    }))
-                    .into_any_element(),
-            )
-        };
-        n += 1;
-        let title = if self.accounts.accounts.is_empty() {
-            "Microsoft account"
-        } else {
-            "Another account"
-        };
-        rows = rows.child(index_row(
-            n,
-            tr(title),
-            Some(detail.into_any_element()),
-            action,
-            &t,
-        ));
-        (rows, n)
     }
 
     /// Join a friend: a code field and Join, which starts the game straight

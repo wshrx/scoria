@@ -1,6 +1,7 @@
 # ADR-0001: Offline-first launching
 
-- Status: accepted (P0), implemented (P1)
+- Status: accepted (P0), implemented (P1); Microsoft sign-in removed entirely by
+  [ADR-0007](0007-remove-microsoft.md)
 - Date: 2026-10-28
 
 ## Context

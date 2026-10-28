@@ -8,12 +8,6 @@ impl Launcher {
     /// The chip's two lines: the name that plays, and how.
     pub(super) fn who_plays(&self) -> (String, &'static str) {
         match self.accounts.player() {
-            Player::Microsoft(_) => (
-                self.accounts
-                    .selected()
-                    .map_or_else(String::new, |a| a.name.clone()),
-                tr("Microsoft account"),
-            ),
             Player::Offline(name) => (name, tr("Offline")),
             Player::GameName => (
                 self.offline_name.clone().unwrap_or_else(|| "Player".into()),
@@ -24,36 +18,25 @@ impl Launcher {
 
     pub(super) fn play_as(&mut self, who: Player) {
         let mut accounts = Accounts::load();
-        let done = accounts
-            .play_as(account::store(), who)
-            .and_then(|()| accounts.save());
+        let done = accounts.play_as(who).and_then(|()| accounts.save());
         match done {
-            Ok(()) => self.accounts = accounts,
-            Err(e) => self.sign_in_state = Some(SignInState::Done(Err(e))),
+            Ok(()) => {
+                self.accounts = accounts;
+                self.client_error = None;
+            }
+            Err(e) => self.client_error = Some(e),
         }
         self.account_menu = false;
     }
 
-    /// Everyone the player can play as, with how each signs in.
+    /// Everyone the player can play as, with how each is identified.
     fn players(&self) -> Vec<(Player, String, &'static str)> {
         let mut out: Vec<_> = self
             .accounts
-            .accounts
+            .offline
             .iter()
-            .map(|a| {
-                (
-                    Player::Microsoft(a.uuid.clone()),
-                    a.name.clone(),
-                    tr("Microsoft"),
-                )
-            })
+            .map(|n| (Player::Offline(n.clone()), n.clone(), tr("Offline")))
             .collect();
-        out.extend(
-            self.accounts
-                .offline
-                .iter()
-                .map(|n| (Player::Offline(n.clone()), n.clone(), tr("Offline"))),
-        );
         out.push((
             Player::GameName,
             self.offline_name.clone().unwrap_or_else(|| "Player".into()),
@@ -141,7 +124,7 @@ impl Launcher {
             return;
         }
         self.play_as(Player::Offline(name));
-        if !matches!(self.sign_in_state, Some(SignInState::Done(Err(_)))) {
+        if self.client_error.is_none() {
             self.servers.text(Field::OfflineName).clear();
         }
     }
@@ -151,8 +134,8 @@ impl Launcher {
         self.add_offline_name();
     }
 
-    /// Settings' rows for the offline names, after the Microsoft accounts: each with Play as
-    /// and Forget, then a field to add one.
+    /// Settings' rows for the offline names: each with Play as and Forget, then a field to add
+    /// one.
     pub(super) fn offline_rows(&mut self, mut n: usize, cx: &mut Context<Self>) -> (Div, usize) {
         let t = self.theme;
         let mut rows = div().flex().flex_col();

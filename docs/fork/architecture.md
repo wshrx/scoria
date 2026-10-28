@@ -23,17 +23,12 @@ build never waits for GPUI. Scoria keeps that split: `launcher-ui/` (Bun + React
 gpuix) never enters either Rust build (ADR-0006). Until its screens are done, the upstream GPUI
 launcher still ships beside it.
 
-## Where the Microsoft account decides things (upstream)
+## Accounts: there are none
 
-| Concern | File |
-|---|---|
-| device-code sign-in, Xbox/XSTS/Minecraft exchange, entitlements | `launcher/src/account.rs` |
-| the owner gate (`NoOwner`, `has_owner`, `play_as`, `session_for_game`) | `launcher/src/account.rs:854-1168` |
-| refusal paths | `launcher/src/main.rs:656`, `launcher/src/main.rs:2357`, `launcher/src/cli.rs:1356`, `launcher/src/mcp.rs:203` |
-| the gate's screen | `launcher/src/owner_page.rs` |
-| downloads from Mojang for an owner | `launcher/src/backend.rs:1201`, `launcher/src/mojang.rs` |
-| keychain storage of tokens | `launcher/src/account.rs:552-740` |
-| handing a session to the game | `launcher/src/account.rs:1057`; game side in `docs/microsoft-account.md` |
+Scoria has no Microsoft account (ADR-0007). `launcher/src/account.rs` is offline profiles plus the
+generic keychain used for the Play-with-friends Tailscale token. There is no sign-in, no token, no
+`session_for_game`, no `--session-file` and no owner gate; the game always starts offline with
+`--name` when an offline name plays.
 
 Offline support already exists upstream and is what Scoria promotes to the default:
 

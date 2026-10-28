@@ -304,12 +304,12 @@ pub(super) fn stop_on_quit() {
     }
 }
 
-/// The player's own name, to let them in on a friends-only server: the Microsoft account that plays,
+/// The player's own name, to let them in on a friends-only server: the offline name that plays,
 /// else the name the game made up for them (`horizon-player.txt`).
 fn own_name(accounts: &Accounts) -> Option<String> {
     accounts
-        .selected()
-        .map(|a| a.name.clone())
+        .name_arg()
+        .map(str::to_string)
         .or_else(crate::offline_name)
 }
 

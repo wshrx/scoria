@@ -34,18 +34,14 @@ The 26.3 **server jar** is the one Mojang file preparation fetches (into
 the download. There is no `--download` flag and no "download the game" button: the client jar,
 libraries and assets always come from your install.
 
-## What needs a Microsoft account
+## No Microsoft account at all
 
-Nothing, to play. Signing in (Settings → Account) adds:
+Scoria has no sign-in: no device code, no tokens, no keychain entry for an account, no session
+file. `accounts.json` holds offline names and their skins only.
 
-- joining **online-mode servers**, which check your session with Mojang;
-- your cloud skin and cape, and your real UUID on servers that use it.
-
-Scoria does not fake sessions and does not patch the online-mode handshake. An offline name cannot
-join an online-mode server, exactly as in vanilla and Prism.
-
-LAN worlds, `Open to LAN`, offline-mode servers and **Play with friends** (invite codes and the
-relay) work without an account; `horizon-friends` never used one.
+Online-mode servers therefore cannot be joined: Scoria does not fake a session and does not patch
+the handshake. LAN worlds, `Open to LAN`, offline-mode servers and **Play with friends** (invite
+codes and the relay) work; `horizon-friends` never used an account.
 
 ## Where things are kept
 

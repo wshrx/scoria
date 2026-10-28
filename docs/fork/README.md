@@ -14,8 +14,8 @@ written in Rust, with a launcher that plays without a Microsoft account.
 
 | Area | Horizon | Scoria |
 |---|---|---|
-| Starting the game | requires a signed-in Microsoft account that owns Java Edition (the "owner gate") | any offline name, no account needed (P1) |
-| Microsoft sign-in | required before Play | optional: online-mode servers, cloud skins |
+| Starting the game | requires a signed-in Microsoft account that owns Java Edition (the "owner gate") | any offline name, no account needed |
+| Microsoft sign-in | required before Play | **removed**: no sign-in, no tokens, no online-mode |
 | Game files | can be downloaded from Mojang for an owner | prepared from an installation you already have; only the 26.3 server jar is fetched once, for data generation |
 | Launcher UI | Rust + GPUI | **flint-ui 0.1.0 on gpuix 0.11.0** (`launcher-ui/`, ADR-0006); the old GPUI screens still ship |
 | Telemetry | opt-in, shipped | removed |
@@ -36,6 +36,7 @@ session file (`docs/microsoft-account.md`, "Handing the session to the game").
 - [adr/0003-launcher-ui-flint-ui.md](adr/0003-launcher-ui-flint-ui.md): the wait for flint-ui
   (superseded).
 - [adr/0006-flint-ui-gpuix.md](adr/0006-flint-ui-gpuix.md): the launcher UI is flint-ui on gpuix.
+- [adr/0007-remove-microsoft.md](adr/0007-remove-microsoft.md): no Microsoft account at all.
 - [adr/0004-rename-to-scoria.md](adr/0004-rename-to-scoria.md): Basalt becomes Scoria.
 - [adr/0005-two-remotes.md](adr/0005-two-remotes.md): Entire keeps everything, GitHub gets
   `main` and `nightly`.

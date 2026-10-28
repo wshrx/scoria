@@ -1,7 +1,7 @@
 //! Everything that is not UI: GitHub, installs, resource preparation, the game's processes and
 //! updates. The GUI, the CLI and the MCP server all go through this module. Functions here
 //! block; the GUI runs them on threads and reads their messages.
-use crate::{account, mojang, sources};
+use crate::{mojang, sources};
 use std::fs;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
@@ -1851,20 +1851,13 @@ pub fn need_prepared(tag: &str) -> Result<(), String> {
     }
 }
 
-/// The client's command, once its resources are prepared. Scoria has no owner gate: no account
-/// (or a sign-in that can't be renewed) starts the game offline.
+/// The client's command, once its resources are prepared. Scoria has no account: the game
+/// always starts offline, with the profile's `--name` added by the caller.
 pub fn client(tag: &str) -> Result<Command, String> {
-    let (session, offline) = account::session_for_game(&game_home());
     need_prepared(tag)?;
     complete_assets(tag);
     crate::browser::horizon::before_play(&game_home());
     let mut cmd = client_command(tag);
-    if let Some(file) = session {
-        cmd.arg("--session-file").arg(file);
-    }
-    if let Some(e) = offline {
-        eprintln!("Playing offline: {e}");
-    }
     append_game_args(&mut cmd);
     Ok(cmd)
 }
@@ -2411,11 +2404,8 @@ pub enum Msg {
     LauncherUpdated(Result<(), String>),
     /// `reuse_prepared_everywhere` prepared these versions.
     Reused(Vec<(String, String)>),
-    /// Whether secrets are kept in the OS keychain (else only until the launcher closes).
-    Keychain(bool),
-    /// The game about to start: the selected account's session file (none = offline) and why it
-    /// plays offline, if it does. Never a refusal.
-    Session((Option<PathBuf>, Option<String>)),
+    /// The game about to start: its resources are ready, start it. There is no session to fetch.
+    Session,
     /// A modpack step's line (`modpacks`).
     PackLine(String),
     /// A modpack step ended: the pack as it now is.

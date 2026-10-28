@@ -4,10 +4,11 @@ A small desktop app that installs Scoria builds, prepares them from your own cop
 Minecraft, and starts the client or a dedicated server. Built with [GPUI](https://www.gpui.rs),
 Zed's UI framework; it has its own Cargo workspace and is not part of the game's builds.
 
-> **Scoria fork:** Play no longer needs a Microsoft account; offline names are first-class, the
-> Mojang game download is removed (preparation reads Freesm/Prism/official installs), and the
-> launcher does not update itself from Horizon's releases. See [docs/fork/README.md](../docs/fork/README.md). The GPUIX React UI (ADR-0002) is
-> not in this tree yet; this is the upstream GPUI launcher, rebranded.
+> **Scoria fork:** Microsoft accounts are removed entirely (ADR-0007): offline names only, no
+> sign-in, no session, no online-mode. The Mojang game download is removed too (preparation reads
+> Freesm/Prism/official installs), and the launcher does not update itself from Horizon's
+> releases. The flint-ui launcher lives in `launcher-ui/` (ADR-0006); this GPUI launcher is still
+> the one that ships. See [docs/fork/README.md](../docs/fork/README.md).
 
 ![Play](docs/play.png)
 
