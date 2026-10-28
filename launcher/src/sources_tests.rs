@@ -515,6 +515,7 @@ fn each_system_has_its_launcher_folders() {
         "the official launcher: /home/r/.minecraft",
         "Prism Launcher: /home/r/.local/share/PrismLauncher",
         "Prism Launcher: /home/r/.var/app/org.prismlauncher.PrismLauncher/data/PrismLauncher",
+        "Freesm Launcher: /home/r/.local/share/FreesmLauncher",
         "MultiMC: /home/r/.local/share/multimc",
         "Modrinth App: /home/r/.local/share/ModrinthApp",
         "Modrinth App: /home/r/.var/app/com.modrinth.ModrinthApp/data/ModrinthApp",
@@ -538,6 +539,8 @@ fn each_system_has_its_launcher_folders() {
     assert!(
         got.contains(&"Prism Launcher: /Users/r/Library/Application Support/PrismLauncher".into())
     );
+    assert!(got
+        .contains(&"Freesm Launcher: /Users/r/Library/Application Support/FreesmLauncher".into()));
     let windows = Folders {
         home: "C:/Users/r".into(),
         data: "C:/Users/r/AppData/Roaming".into(),
@@ -549,4 +552,34 @@ fn each_system_has_its_launcher_folders() {
         "the official launcher: C:/Users/r/AppData/Roaming/.minecraft"
     );
     assert!(got.contains(&"ATLauncher: C:/Users/r/AppData/Roaming/ATLauncher".into()));
+    assert!(got.contains(&"Freesm Launcher: C:/Users/r/AppData/Roaming/FreesmLauncher".into()));
+}
+
+#[test]
+fn prism_and_freesm_java_runtimes_are_found() {
+    let s = Scratch::new("freesm-java");
+    let exe = if cfg!(windows) { "java.exe" } else { "java" };
+    let root = s.0.join("FreesmLauncher");
+    let runtime = root.join("java/java-runtime-epsilon");
+    fs::create_dir_all(runtime.join("bin")).unwrap();
+    fs::write(runtime.join("bin").join(exe), b"").unwrap();
+    // The runtime the instance picked for itself, in instance.cfg.
+    let picked = root.join("java/java-runtime-other");
+    fs::create_dir_all(picked.join("bin")).unwrap();
+    fs::write(picked.join("bin").join(exe), b"").unwrap();
+    let instance = root.join("instances/26.3");
+    fs::create_dir_all(instance.join("minecraft")).unwrap();
+    fs::write(
+        instance.join("instance.cfg"),
+        format!(
+            "[General]\nJavaPath={}\n",
+            picked.join("bin").join(exe).display()
+        ),
+    )
+    .unwrap();
+
+    let from_root = launcher_java_homes(&root);
+    assert!(from_root.contains(&runtime), "{from_root:#?}");
+    let from_instance = launcher_java_homes(&instance.join("minecraft"));
+    assert!(from_instance.contains(&picked), "{from_instance:#?}");
 }

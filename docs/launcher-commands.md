@@ -36,18 +36,17 @@ MCP: `remove`, needs `confirm: true`.
 
 ## `horizon-launcher prepare`
 
-Prepare a version's resources from your own Minecraft install, or from Mojang.
+Prepare a version's resources from your own Minecraft install.
 
     horizon-launcher prepare
 
-- `--minecraft`: The game folder of the official launcher, Prism Launcher, MultiMC, the Modrinth App, ATLauncher or GDLauncher (default: the launcher's, then every launcher's default)
-- `--download`: Download Minecraft from Mojang for the signed-in account that owns it, instead of using an install
+- `--minecraft`: The game folder of the official launcher, Prism/Freesm, MultiMC, the Modrinth App, ATLauncher or GDLauncher (default: the launcher's, then every launcher's default)
 
 MCP: `prepare`.
 
 ## `horizon-launcher play`
 
-Start the client (needs a signed-in Microsoft account that owns Minecraft: Java Edition).
+Start the client (offline by default; a Microsoft account only adds online servers).
 
     horizon-launcher play
 

@@ -43,7 +43,7 @@ Offline support already exists upstream and is what Basalt promotes to the defau
   installations, including `instances/<name>/minecraft` — so an install made by Freesm/Prism can
   be prepared without any Mojang download.
 
-## P0/P1 changes
+## P0/P1/P2 changes
 
 1. `upstream` remote; no `origin` yet; baseline tag.
 2. User-facing brand: Basalt (window title, macOS menu, crash screen, desktop entries, app id,
@@ -70,8 +70,16 @@ P1 removes the gate itself:
   (`launcher/tests/offline_play.rs` asserts it).
 - Microsoft sign-in, its keychain storage and the session-file handoff stay: they are what
   online-mode servers need.
-- The Mojang **download** path (`download_for_owner`) still exists but is only reachable from the
-  removed UI/CLI entry points; P2 deletes it.
+- P2 removes the Mojang **game download** (`--download`, `download_for_owner`,
+  `mojang::download`): preparation always reads an installation the player has.
+- P2 adds Freesm Launcher to `sources::known_folders` (Linux, macOS, Windows) and to
+  `launcher_of`, so it is found without choosing a folder.
+- P2 makes preparation reuse the launcher's Java: `<root>/java/<runtime>` and an instance's
+  `instance.cfg` `JavaPath` are tried before downloading Mojang's runtime
+  (`sources::launcher_java_homes`).
+- The 26.3 **server jar** is still fetched from Mojang once for data generation unless it is
+  already in `<data>/server-jars/26.3.jar`. That is the only remaining Mojang game file (the
+  client jar, libraries and assets never are).
 
 ## Invariants the fork keeps
 

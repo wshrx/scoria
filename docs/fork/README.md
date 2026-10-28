@@ -15,7 +15,7 @@ written in Rust, with a launcher that plays without a Microsoft account.
 |---|---|---|
 | Starting the game | requires a signed-in Microsoft account that owns Java Edition (the "owner gate") | any offline name, no account needed (P1) |
 | Microsoft sign-in | required before Play | optional: online-mode servers, cloud skins |
-| Game files | can be downloaded from Mojang for an owner | never downloaded; prepared from an installation you already have |
+| Game files | can be downloaded from Mojang for an owner | prepared from an installation you already have; only the 26.3 server jar is fetched once, for data generation |
 | Launcher UI | Rust + GPUI | React/TypeScript on GPUIX (planned, see ADR-0002) |
 | Telemetry | opt-in, shipped | removed |
 | Mod registry, nightly channel | shipped | removed; Basalt's own registry later |
@@ -51,6 +51,7 @@ The launcher is its own workspace. Basalt's copy is at `/home/shrx/dev/basalt/la
 - **P0 (done):** fork, rebrand, upstream infrastructure detached, ADRs.
 - **P1 (done):** the owner gate is gone. `account::launch` never refuses, offline names need no
   account, the owner screen is deleted, and `horizon-launcher play` / MCP `play` start without one.
-- **P2 (next):** delete the Mojang game-download path, telemetry, the remaining registry code and
-  nightly UI, then trim CI.
+- **P2 (in progress):** the Mojang game download is gone (`--download`, `download_for_owner`,
+  `mojang::download`); Freesm/Prism are auto-detected and their Java 25 is reused. Still to do:
+  telemetry, the remaining registry code and the nightly UI, then CI.
 - P3: the GPUIX launcher UI. P4: full RU/EN documentation. P5: Basalt's own signed releases.

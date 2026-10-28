@@ -5,8 +5,8 @@ Minecraft, and starts the client or a dedicated server. Built with [GPUI](https:
 Zed's UI framework; it has its own Cargo workspace and is not part of the game's builds.
 
 > **Basalt fork:** Play no longer needs a Microsoft account; offline names are first-class, the
-> Mojang game download is being removed and the launcher does not update itself from Horizon's
-> releases. See [docs/fork/README.md](../docs/fork/README.md). The GPUIX React UI (ADR-0002) is
+> Mojang game download is removed (preparation reads Freesm/Prism/official installs), and the
+> launcher does not update itself from Horizon's releases. See [docs/fork/README.md](../docs/fork/README.md). The GPUIX React UI (ADR-0002) is
 > not in this tree yet; this is the upstream GPUI launcher, rebranded.
 
 ![Play](docs/play.png)

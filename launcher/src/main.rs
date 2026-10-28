@@ -991,9 +991,9 @@ impl Launcher {
         });
     }
 
-    /// Prepares the selected version, its Minecraft files from the player's install or, for an
-    /// owner who asks, from Mojang.
-    fn prepare(&mut self, from: backend::MinecraftFrom) {
+    /// Prepares the selected version, its Minecraft files from an install the player already
+    /// has (the official launcher, Prism/Freesm, MultiMC...).
+    fn prepare(&mut self) {
         let Some(tag) = self.selected().cloned() else {
             return;
         };
@@ -1013,7 +1013,7 @@ impl Launcher {
             let log = |line| {
                 let _ = tx.send(Msg::Line(Job::Prepare, line));
             };
-            let result = backend::preparer(&tag, &minecraft, from, &log)
+            let result = backend::preparer(&tag, &minecraft, &log)
                 .inspect(|(_, minecraft)| backend::sounds(&tag, minecraft, &log))
                 .and_then(|(p, _)| match p {
                     backend::Preparer::Process(cmd) => {
@@ -2222,7 +2222,7 @@ impl Launcher {
             prepare = disabled(prepare);
         } else {
             prepare = prepare.on_click(cx.listener(|this, _: &ClickEvent, _, cx| {
-                this.prepare(backend::MinecraftFrom::Install);
+                this.prepare();
                 cx.notify();
             }));
         }

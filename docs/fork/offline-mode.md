@@ -14,18 +14,25 @@ Basalt starts the game without a Microsoft account. This page is the player-faci
 
 ## Where the game files come from
 
-Basalt never downloads Minecraft. Preparation reads a copy you already installed, and
+Basalt never downloads the game itself (client jar, libraries, assets). Preparation reads a copy
+you already installed, and
 `launcher/src/sources.rs` looks in:
 
 - the official launcher (`~/.minecraft`, Flatpak included);
-- Prism Launcher (including **Freesm**, which is a Prism fork) and MultiMC, including their
-  `instances/<name>/minecraft` folders;
+- Prism Launcher and **Freesm Launcher** (a Prism fork, detected automatically) and MultiMC,
+  including their `instances/<name>/minecraft` folders;
 - Modrinth App, ATLauncher and GDLauncher.
 
 If yours lives somewhere else, choose the folder in Settings (**Minecraft folder**) or pass
-`--minecraft-dir`, or set `HORIZON_MINECRAFT_DIR`. Preparation needs Java 25 once; the launcher
-uses the runtime it finds, and falls back to a JDK it can download from Mojang (a JDK, not game
-content). Sounds are optional and come from the same installation.
+`--minecraft-dir`, or set `HORIZON_MINECRAFT_DIR`. Preparation needs Java 25 once and reuses the
+launcher's own runtime (`<root>/java/<runtime>`, or the `JavaPath` in an instance's
+`instance.cfg`); if there is none it can download Mojang's JDK (a JDK, not game content).
+Sounds are optional and come from the same installation.
+
+The 26.3 **server jar** is the one Mojang file preparation fetches (into
+`<launcher data>/server-jars/26.3.jar`) when it is not there yet; put it there yourself to avoid
+the download. There is no `--download` flag and no "download the game" button: the client jar,
+libraries and assets always come from your install.
 
 ## What needs a Microsoft account
 

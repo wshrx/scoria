@@ -1195,46 +1195,6 @@ fn preparer_binary(dir: &Path) -> Option<PathBuf> {
     binary.is_file().then_some(binary)
 }
 
-/// Downloads the pinned version from Mojang into `dir` when an account in the launcher owns
-/// Minecraft (asked again now), else says what signing in would do, as the last line of the
-/// not-found error.
-fn download_for_owner(
-    pins: &sources::Pins,
-    dir: &Path,
-    fetch: sources::Fetch,
-    log: &dyn Fn(String),
-) -> Result<(), String> {
-    let v = &pins.version;
-    let mut accounts = account::Accounts::load();
-    let pass = account::launch(
-        &account::Endpoints::live(),
-        account::client_id().as_deref(),
-        account::store(),
-        &mut accounts,
-    );
-    let _ = accounts.save();
-    let Some((owner, _)) = pass.owner else {
-        return Err(format!(
-            "\n  • Basalt cannot download {v} from Mojang without an account that owns \
-             Minecraft: Java Edition{}. Sign in and try again.",
-            pass.offline
-                .map(|why| format!(" ({why})"))
-                .unwrap_or_default()
-        ));
-    };
-    let name = owner.name;
-    log(format!(
-        "{name} owns Minecraft: downloading {v} from Mojang"
-    ));
-    let os = match sources::Os::current() {
-        sources::Os::Linux => "linux",
-        sources::Os::MacOs => "osx",
-        sources::Os::Windows => "windows",
-    };
-    mojang::download(pins, dir, os, 8, fetch, &mojang::CANCEL, log)
-        .map_err(|e| format!("\n  • Basalt tried to download {v} from Mojang for {name}, but: {e}"))
-}
-
 /// The Java home for this version: a runtime for precompiled exporters, a JDK for older
 /// preparers or changed sources. Forward the selection to external preparers too.
 /// Else try the official launcher's Java in `games`, then download the runtime named by
@@ -1261,6 +1221,15 @@ fn java(
     {
         if !runtimes.contains(&home) {
             runtimes.push(home);
+        }
+    }
+    // Prism and Freesm keep their runtimes beside the instances (`java/<runtime>`), and an
+    // instance records the one it picked in its `instance.cfg`: use theirs before downloading.
+    for game in games {
+        for home in sources::launcher_java_homes(game) {
+            if !runtimes.contains(&home) {
+                runtimes.push(home);
+            }
         }
     }
     let missing = match find(major, &runtimes) {
@@ -1339,16 +1308,6 @@ fn assets_folder(
     }
 }
 
-/// Where the preparation takes Minecraft's files from.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum MinecraftFrom {
-    /// The player's own install (any launcher's); Mojang only when none has the version and an
-    /// account that owns the game is signed in.
-    Install,
-    /// Mojang, for the signed-in account that owns the game ("Download and prepare").
-    Mojang,
-}
-
 /// Checks what the preparation needs and picks how to run it. PLAY.txt describes the same
 /// steps: the player's own launcher install, the server jar from that version's own json, and
 /// Java (and Python, for versions before horizon-prepare). Also returns the Minecraft folder
@@ -1357,7 +1316,6 @@ pub enum MinecraftFrom {
 pub fn preparer(
     tag: &str,
     minecraft: &Path,
-    from: MinecraftFrom,
     log: &dyn Fn(String),
 ) -> Result<(Preparer, PathBuf), String> {
     let version = game_version(tag);
@@ -1370,7 +1328,7 @@ pub fn preparer(
             .and_then(|lock| sources::Pins::read(&lock))
             .ok_or("The version's research-lock.json doesn't pin the Minecraft files")?;
         let own = data_dir().join("minecraft");
-        let mut known = vec![("Basalt's own download", own.clone())];
+        let mut known = vec![("Basalt's own folder", own.clone())];
         known.extend(
             sources::Folders::current()
                 .map(|f| sources::known_folders(sources::Os::current(), &f))
@@ -1385,23 +1343,16 @@ pub fn preparer(
             Ok(body)
         };
         let linked = data_dir().join("linked-minecraft");
-        if from == MinecraftFrom::Mojang {
-            // Straight from Mojang (what is already there and whole is kept), for an owner only.
-            download_for_owner(&pins, &own, &fetch, log)
-                .map_err(|e| e.trim_start_matches("\n  • ").to_string())?;
-            own
+        // Basalt never downloads the game: the files come from an install the player already
+        // has, or preparation stops with the list of folders that were checked.
+        let resolved = sources::resolve(minecraft, &pins, &known, &linked, &fetch, log);
+        if reused {
+            assets_folder(resolved, &chosen, &version, log)
         } else {
-            let resolved = sources::resolve(minecraft, &pins, &known, &linked, &fetch, log);
-            if reused {
-                assets_folder(resolved, &chosen, &version, log)
-            } else {
-                match resolved? {
-                    sources::Resolved::Folder(dir) => dir,
-                    sources::Resolved::NotFound(checked) => {
-                        let not_found = sources::not_found(&version, &checked, minecraft);
-                        download_for_owner(&pins, &own, &fetch, log).map_err(|e| not_found + &e)?;
-                        own
-                    }
+            match resolved? {
+                sources::Resolved::Folder(dir) => dir,
+                sources::Resolved::NotFound(checked) => {
+                    return Err(sources::not_found(&version, &checked, minecraft));
                 }
             }
         }

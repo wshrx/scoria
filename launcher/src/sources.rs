@@ -111,6 +111,8 @@ pub fn known_folders(os: Os, f: &Folders) -> Vec<(&'static str, PathBuf)> {
                 "Prism Launcher",
                 flatpak("org.prismlauncher.PrismLauncher", "data/PrismLauncher"),
             ),
+            // Freesm Launcher is a Prism fork with the same layout, its own folder name.
+            ("Freesm Launcher", f.data.join("FreesmLauncher")),
             ("MultiMC", f.data.join("multimc")),
             ("Modrinth App", f.data.join("ModrinthApp")),
             (
@@ -126,6 +128,7 @@ pub fn known_folders(os: Os, f: &Folders) -> Vec<(&'static str, PathBuf)> {
         Os::MacOs => vec![
             (OFFICIAL, f.data.join("minecraft")),
             ("Prism Launcher", f.data.join("PrismLauncher")),
+            ("Freesm Launcher", f.data.join("FreesmLauncher")),
             ("MultiMC", f.data.join("MultiMC")),
             ("Modrinth App", f.data.join("ModrinthApp")),
             ("ATLauncher", f.data.join("ATLauncher")),
@@ -133,6 +136,7 @@ pub fn known_folders(os: Os, f: &Folders) -> Vec<(&'static str, PathBuf)> {
         Os::Windows => vec![
             (OFFICIAL, f.data.join(".minecraft")),
             ("Prism Launcher", f.data.join("PrismLauncher")),
+            ("Freesm Launcher", f.data.join("FreesmLauncher")),
             ("Modrinth App", f.data.join("ModrinthApp")),
             ("ATLauncher", f.data.join("ATLauncher")),
         ],
@@ -244,12 +248,56 @@ fn launcher_of(path: &Path) -> Option<&'static str> {
         .filter_map(|name| name.to_str())
         .find_map(|name| match name {
             "PrismLauncher" => Some("Prism Launcher"),
+            "FreesmLauncher" => Some("Freesm Launcher"),
             "multimc" | "MultiMC" => Some("MultiMC"),
             "ModrinthApp" | "com.modrinth.theseus" => Some("the Modrinth App"),
             "atlauncher" | "ATLauncher" => Some("ATLauncher"),
             "gdlauncher_carbon" | "gdlauncher_next" => Some("GDLauncher"),
             _ => None,
         })
+}
+
+/// Java homes a Prism-family launcher keeps beside its instances, for `backend::java`: every
+/// runtime under `<root>/java/<runtime>/`, and the `JavaPath` an instance's `instance.cfg`
+/// records (Freesm/Prism pick a runtime per instance). Empty for other layouts.
+pub fn launcher_java_homes(game: &Path) -> Vec<PathBuf> {
+    let exe = if cfg!(windows) { "java.exe" } else { "java" };
+    let mut homes = Vec::new();
+    for entry in fs::read_dir(game.join("java"))
+        .into_iter()
+        .flatten()
+        .flatten()
+    {
+        let home = entry.path();
+        // macOS runtimes keep the JDK inside a bundle.
+        for candidate in [home.join("jre.bundle/Contents/Home"), home] {
+            if candidate.join("bin").join(exe).is_file() {
+                if !homes.contains(&candidate) {
+                    homes.push(candidate);
+                }
+                break;
+            }
+        }
+    }
+    // A chosen instance's game folder: `<instance>/minecraft`, its config one level up.
+    if let Some(instance) = game.parent() {
+        if let Ok(config) = fs::read_to_string(instance.join("instance.cfg")) {
+            for line in config.lines() {
+                let Some(path) = line.strip_prefix("JavaPath=") else {
+                    continue;
+                };
+                let java = Path::new(path.trim());
+                let (Some(bin), Some(home)) = (java.parent(), java.parent().and_then(Path::parent))
+                else {
+                    continue;
+                };
+                if bin.join(exe).is_file() && !homes.contains(&home.to_path_buf()) {
+                    homes.push(home.to_path_buf());
+                }
+            }
+        }
+    }
+    homes
 }
 
 /// The pinned version in one launcher folder, or what the folder lacks. The folder holding
