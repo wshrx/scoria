@@ -38,6 +38,7 @@ done
 
 mkdir -p "$out/.github/workflows"
 cp "$root/.github/workflows/release.yml" "$out/.github/workflows/"
+cp "$root/.github/workflows/public-ci.yml" "$out/.github/workflows/ci.yml"
 
 cat > "$out/.gitignore" <<'IGNORE'
 node_modules/

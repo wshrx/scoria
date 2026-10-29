@@ -15,6 +15,9 @@ no online-mode servers, no Minecraft assets.
   without an explicit request.
 - Do not push without the user's word. Pushing to Entire is allowed when asked; GitHub only when
   explicitly asked.
+- **Draft → showcase**: Entire is the draft; GitHub is a filtered snapshot. `tools/publish_public.sh`
+  pushes `dist/public` to GitHub `staging`; public CI (`public-ci.yml`) tests it; only green
+  `staging` is promoted to `main` and tagged. There is no merge from GitHub back to Entire.
 - **Entire is the working remote** (all branches, project memory, QA fixtures, agent skills).
   **GitHub is the public showcase**: curated history, README/screenshots, release tags and
   artifacts. Never push `.opencode/`, `PROJECT_STATE.md`, `docs/agents/` or internal QA fixtures
