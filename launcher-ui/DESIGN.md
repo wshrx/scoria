@@ -23,13 +23,14 @@ the painted backdrop. Rounding is a house rule; shadows are not.
 
 ## Layout
 
-- Sidebar: brand, current instance, Play / Instances / Mods / Servers, Settings at the bottom,
-  static profile. The sidebar is the only page navigation and the only Settings entry.
+- Sidebar: brand, Play / Mods / Servers, Settings at the bottom, static profile. The sidebar is
+  the only page navigation and the only Settings entry. Instances are a test-only screen
+  (`SCORIA_UI_INSTANCES=1`), never in a release build.
 - Topbar: engine status and window controls. Profile is not repeated there.
 - Content: page header (28 px title, one-line subtitle, one action), then cards. Max width 1360.
-- Home: current-instance hero with Play or Download+Prepare, Continue; three stats; Worlds list;
+- Home: Minecraft 26.3 hero with Play or Download+Prepare, Continue; three stats; Worlds list;
   Mods and Servers shortcuts. No file counts, hashes or logs.
-- Instances: cards, current instance outlined, Use in place.
+- Instances: test-only, hidden from the release registry until create/delete/switch are complete.
 - Mods: Modrinth search, support pill, install progress, installed list.
 - Servers: list, add form, offline-mode note.
 - Settings: Profile, Appearance, Language, While playing; Game files with one state-aware action;

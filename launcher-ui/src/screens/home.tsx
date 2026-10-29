@@ -27,8 +27,6 @@ export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
   const files = data.minecraft
   const ready = files.installed && data.prepared
   const recent = data.worlds[0]
-  const selected = data.instances.find((instance) => instance.selected)
-  const instance = selected?.name ?? "Scoria"
 
   const summary = ready
     ? t("Ready to play. Your worlds and settings stay on this machine.")
@@ -67,8 +65,8 @@ export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
 
   const stats = [
     { label: t("Worlds"), value: String(data.worlds.length), icon: "layers" as const },
-    { label: t("Instances"), value: String(data.instances.length), icon: "box" as const },
     { label: t("Minecraft"), value: files.version, icon: "globe" as const },
+    { label: t("Status"), value: ready ? t("ready") : t("needs attention"), icon: "check" as const },
   ]
 
   return (
@@ -81,10 +79,10 @@ export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
       <Panel style={{ overflow: "hidden", flexDirection: narrow ? "column" : "row", padding: 0 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: narrow ? 18 : 24, flexGrow: 1, maxWidth: 720 }}>
           <Text mono size="xs" tone="muted">
-            {t("Current instance").toUpperCase()}
+            {t("Minecraft Java Edition").toUpperCase()}
           </Text>
           <Text size="2xl" weight="bold" truncate>
-            {instance}
+            {`Minecraft ${files.version}`}
           </Text>
           <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <Text size="xs" tone="muted">
@@ -151,7 +149,7 @@ export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
         </div>
 
         <div style={{ width: narrow ? "100%" : 360, flexShrink: 0, padding: narrow ? 16 : 10 }}>
-          <SceneThumb seed={data.instances.findIndex((entry) => entry.selected)} width="100%" height={narrow ? 170 : 220} />
+          <SceneThumb seed={0} width="100%" height={narrow ? 170 : 220} />
         </div>
       </Panel>
 

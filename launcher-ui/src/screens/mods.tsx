@@ -74,6 +74,8 @@ export function ModsPage() {
   }
 
   const percent = progress ? Math.round(progress.value * 100) : 0
+  const isInstalled = (project: ModProject) =>
+    entries.some((entry) => entry.project === project.id || entry.slug === project.slug)
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -200,7 +202,29 @@ export function ModsPage() {
                         {project.summary}
                       </Text>
                     </div>
-                    {project.installable ? (
+                    {isInstalled(project) ? (
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 5,
+                          height: 28,
+                          paddingLeft: 10,
+                          paddingRight: 10,
+                          borderRadius: 999,
+                          borderWidth: 1,
+                          borderStyle: "solid",
+                          borderColor: theme.colors.successBorder,
+                          backgroundColor: "#7FD8A41A",
+                        }}
+                      >
+                        <Icon name="check" size={12} color={theme.colors.success} />
+                        <Text mono size="xs" tone="muted">
+                          {t("Installed")}
+                        </Text>
+                      </div>
+                    ) : project.installable ? (
                       <Button
                         size="sm"
                         variant="secondary"

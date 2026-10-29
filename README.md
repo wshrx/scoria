@@ -18,7 +18,8 @@ not have.
 - **Use your own game files.** Scoria reads the official launcher, Prism, Freesm, MultiMC, the
   Modrinth App or ATLauncher. If none has 26.3, it downloads the pinned version from Mojang's
   piston-meta into its own folder.
-- **Keep instances** — separate game folders with their own worlds, options and packs.
+- **One game folder by default.** The instance manager is a test-only feature
+  (`SCORIA_UI_INSTANCES=1`, branch `test/instances`), not part of the release UI.
 - **Install from Modrinth** — mods, ported to Scoria's runtime, and resource packs. Every project is
   labelled **Works**, **Partly** or **Doesn't run** before you install it. Java mods are ported;
   Java itself is not run. CurseForge is not supported yet.

@@ -32,9 +32,13 @@ export interface ScreenDefinition {
  * One entry per screen. Adding a page means adding a component and one line
  * here; the rail and the app's renderer both read this list.
  */
+const INSTANCES_ENABLED = process.env.SCORIA_UI_INSTANCES === "1"
+
 export const SCREENS: ScreenDefinition[] = [
   { id: "home", label: "Play", icon: "play", rail: "main", component: HomePage },
-  { id: "instances", label: "Instances", icon: "layers", rail: "main", component: InstancesPage },
+  ...(INSTANCES_ENABLED
+    ? [{ id: "instances" as const, label: "Instances", icon: "layers" as const, rail: "main" as const, component: InstancesPage }]
+    : []),
   { id: "mods", label: "Mods", icon: "box", rail: "main", component: ModsPage },
   { id: "servers", label: "Servers", icon: "server", rail: "main", component: ServersPage },
   { id: "settings", label: "Settings", icon: "sliders", rail: "footer", component: SettingsPage },

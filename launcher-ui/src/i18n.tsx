@@ -46,6 +46,7 @@ const RU: Record<string, string> = {
   results: "результатов",
   "Modrinth mods and resource packs.": "Моды и ресурспаки с Modrinth.",
   "Offline-mode servers and LAN.": "Offline-mode серверы и LAN.",
+  Status: "Статус",
   General: "Общие",
   Builds: "Сборки",
   About: "О программе",

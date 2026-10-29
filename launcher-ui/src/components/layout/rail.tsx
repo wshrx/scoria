@@ -19,7 +19,6 @@ export function Rail({
   const t = useT()
   const { width } = useWindowSize()
   const compact = width < 1100
-  const selected = data.instances.find((instance) => instance.selected)
 
   const item = (id: ScreenId, icon: IconName, label: string) => {
     const active = page === id
@@ -97,59 +96,11 @@ export function Rail({
       >
         <Mark size={30} />
         {compact ? null : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <Text size="sm" weight="semibold">
-              Scoria
-            </Text>
-            <Text mono size="xs" tone="muted">
-              {data.version}
-            </Text>
-          </div>
+          <Text size="sm" weight="semibold">
+            Scoria
+          </Text>
         )}
       </div>
-
-      {compact ? null : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 14 }}>
-          <Text mono size="xs" tone="muted" style={{ paddingLeft: 4 }}>
-            {t("Instance")}
-          </Text>
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => onPage("instances")}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 3,
-              padding: 10,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderStyle: "solid",
-              borderColor: theme.colors.border,
-              backgroundColor: theme.colors.muted,
-              cursor: "pointer",
-              hover: { backgroundColor: theme.colors.accent },
-            }}
-          >
-            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 7 }}>
-              <div
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor: selected?.prepared ? theme.colors.success : "#D8B26A",
-                }}
-              />
-              <Text size="xs" weight="medium" truncate style={{ flexGrow: 1 }}>
-                {selected?.name ?? data.selectedInstance}
-              </Text>
-            </div>
-            <Text mono size="xs" tone="muted">
-              {`Minecraft ${data.minecraft.version}`}
-            </Text>
-          </div>
-        </div>
-      )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
         {SCREENS.filter((screen) => screen.rail === "main").map((screen) =>

@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input"
 import { addServer, play, removeServer, savedServers, type SavedServer } from "../api"
 import { useT } from "../i18n"
 import { PageHeader } from "../components/layout/page-header"
-import { Panel } from "../visual"
 
 export function ServersPage() {
   const theme = useTheme()
@@ -33,7 +32,7 @@ export function ServersPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <PageHeader
         title={t("Servers")}
-        subtitle={t("Offline-mode servers, saved in this instance.")}
+        subtitle={t("Offline-mode servers and LAN.")}
         actions={
           <Button
             variant={adding ? "ghost" : "secondary"}
@@ -193,11 +192,6 @@ export function ServersPage() {
         </Text>
       ) : null}
 
-      <Panel style={{ padding: 14 }}>
-        <Text size="xs" tone="muted">
-          {t("Online-mode servers need a Microsoft session. Scoria has none, so use offline-mode servers or LAN.")}
-        </Text>
-      </Panel>
     </div>
   )
 }

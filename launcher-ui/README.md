@@ -83,7 +83,8 @@ instances the CLI does.
 - **Play**: one instance, one Play button, a Continue link for the last world, and only the
   state a player needs (ready, needs files, needs preparing). Screens are listed in
   `src/screens/registry.tsx`; the rail is generated from that list.
-- **Instances**: rounded cards for the game folders; create one, use one.
+- **Instances** are not in the release UI. They live behind `SCORIA_UI_INSTANCES=1` on the
+  `test/instances` branch until creating, switching and removing them is complete.
 - **Mods**: Modrinth mods and resource packs; Java mods are ported and labelled Works / Partly /
   Doesn't run before install.
 - **Servers**: the instance's servers.dat; join, add, remove. Offline-mode only.

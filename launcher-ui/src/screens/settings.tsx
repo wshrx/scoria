@@ -624,7 +624,6 @@ export function SettingsPage({
               {[
                 [t("Launcher"), data.version],
                 [t("Minecraft"), data.minecraft.version],
-                [t("Instance"), data.instances.find((entry) => entry.selected)?.name ?? data.selectedInstance],
                 [t("Profile"), data.offlineName],
               ].map(([label, value], index) => (
                 <div

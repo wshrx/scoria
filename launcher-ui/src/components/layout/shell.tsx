@@ -67,7 +67,7 @@ export function Shell({ page, onPage, data, frameless, children }: ShellProps) {
           <Backdrop strong={page === "home"} dark={dark} />
           <ParticleField dark={dark} />
 
-          <Topbar data={data} frameless={frameless} />
+          <Topbar frameless={frameless} />
 
           <div
             style={{
