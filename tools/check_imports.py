@@ -37,9 +37,13 @@ LINUX_SYSTEM = {
 LINUX_DESKTOP_ONLY = {"libasound.so.2", "libudev.so.1"}
 
 
-def windows_allowed(name):
+def windows_allowed(name, shipped=()):
     name = name.lower()
-    return name in WINDOWS_SYSTEM or name.startswith(("api-ms-win-", "ext-ms-win-"))
+    return (
+        name in WINDOWS_SYSTEM
+        or name.startswith(("api-ms-win-", "ext-ms-win-"))
+        or name in shipped
+    )
 
 
 def pe_imports(data):
@@ -116,12 +120,16 @@ def elf_needs(data):
     return interpreter, needed, runpath
 
 
-def check(path, server=False):
+def check(path, server=False, shipped=()):
     data = Path(path).read_bytes()
     problems = []
     if data[:2] == b"MZ":
         names = pe_imports(data)
-        problems += [f"imports {n}, which Windows does not ship" for n in names if not windows_allowed(n)]
+        problems += [
+            f"imports {n}, which Windows does not ship and nothing beside it provides"
+            for n in names
+            if not windows_allowed(n, shipped)
+        ]
         summary = ", ".join(sorted(set(n.lower() for n in names)))
     else:
         interpreter, needed, runpath = elf_needs(data)
@@ -143,8 +151,13 @@ def main():
     parser.add_argument("binaries", nargs="+")
     parser.add_argument("--server", action="store_true",
                         help="a server build: not even ALSA or udev (the game's sound and controllers)")
+    parser.add_argument("--shipped", action="append", default=[], metavar="DIR",
+                        help="a directory whose DLLs ship with the build (app-local deployment)")
     args = parser.parse_args()
-    ok = all([check(path, args.server) for path in args.binaries])
+    shipped = set()
+    for folder in args.shipped:
+        shipped |= {entry.name.lower() for entry in Path(folder).iterdir() if entry.is_file()}
+    ok = all([check(path, args.server, shipped) for path in args.binaries])
     sys.exit(0 if ok else 1)
 
 
