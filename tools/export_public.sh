@@ -20,7 +20,7 @@ copy() {
 copy crates launcher launcher-ui docs packaging mods third_party xtask
 # mods/horizon holds the clean-room Java oracles the preparer compiles; they ship in the game
 # bundle and are allowed by check_public_tree.py (original code, no Mojang sources).
-cp "$root/Cargo.toml" "$root/Cargo.lock" "$out/"
+cp "$root/Cargo.toml" "$root/Cargo.lock" "$root/research-lock.json" "$out/"
 rm -rf "$out/docs/media" "$out/docs/public" "$out/docs/agents" "$out/docs/fork" \
        "$out/launcher/docs" "$out/packaging/macos/background.png" "$out/packaging/macos/background@2x.png"
 mkdir -p "$out/tools"
