@@ -1,6 +1,6 @@
 name: release
-# Builds the launcher for Linux, macOS (Apple silicon) and Windows, and the game bundle for Linux
-# and Windows (macOS game bundle deferred), then attaches the archives plus SHA256SUMS to the
+# Builds the launcher for Linux and Windows, and the game bundle for Linux and Windows (macOS is
+# deferred until signing/notarization), then attaches the archives plus SHA256SUMS to the
 # GitHub Release for the tag. The game archives carry no Minecraft assets; signing is the next
 # release step (docs/public/RELEASE.md).
 on:
@@ -20,10 +20,6 @@ jobs:
             os: ubuntu-latest
             script: sh tools/package_ui.sh
             file: dist/scoria-launcher-linux-x86_64.tar.gz
-          - name: macos-arm64
-            os: macos-14
-            script: sh tools/package_macos.sh
-            file: dist/scoria-launcher-macos-arm64.zip
           - name: windows-x64
             os: windows-latest
             script: sh tools/package_windows.sh
