@@ -85,12 +85,14 @@ fn agent(url: &str) -> ureq::Agent {
     crate::proxy::agent(
         ureq::AgentBuilder::new()
             .user_agent(&format!("horizon-launcher/{VERSION}"))
-            // Try IPv4 first: on a machine with a broken IPv6 route, DNS may list AAAA
-            // addresses that make every asset host look unreachable.
+            // IPv4 only when the host has it: on a broken IPv6 route, DNS may list AAAA
+            // addresses that make every asset host look unreachable. IPv6 stays as the fallback.
             .resolver(|netloc: &str| {
                 use std::net::ToSocketAddrs;
                 let mut addrs: Vec<std::net::SocketAddr> = netloc.to_socket_addrs()?.collect();
-                addrs.sort_by_key(|addr| if addr.is_ipv4() { 0 } else { 1 });
+                if addrs.iter().any(std::net::SocketAddr::is_ipv4) {
+                    addrs.retain(std::net::SocketAddr::is_ipv4);
+                }
                 Ok(addrs)
             }),
         url,
@@ -1165,11 +1167,9 @@ fn minecraft_folders() -> Vec<PathBuf> {
 /// The official launcher's game directory, else the first other launcher's found
 /// (sources.rs); preparing looks in all of them anyway.
 pub fn default_minecraft_dir() -> Option<PathBuf> {
-    let folders = sources::Folders::current()?;
-    sources::known_folders(sources::Os::current(), &folders)
-        .into_iter()
-        .map(|(_, dir)| dir)
-        .find(|dir| dir.is_dir())
+    // Scoria's own folder, never another launcher's: the first prepare downloads 26.3 from
+    // piston there, and later runs reuse it. A folder explicitly chosen in Settings still wins.
+    Some(data_dir().join("minecraft"))
 }
 
 fn found(program: &str, arg: &str) -> bool {

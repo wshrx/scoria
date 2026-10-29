@@ -193,9 +193,10 @@ fn fetch_file(fetch: Fetch, file: &File) -> Result<Vec<u8>, String> {
 }
 
 /// How often one file is tried before it is counted as failed.
-const ATTEMPTS: usize = 3;
-/// How many files may fail before the run stops: a dead connection should not try thousands.
-const MAX_ERRORS: usize = 8;
+const ATTEMPTS: usize = 5;
+/// How many files may fail before the run stops. The asset set is ~5 200 files and one broken
+/// route can drop a handful; the old cap of 8 aborted the whole download for a transient blip.
+const MAX_ERRORS: usize = 64;
 
 /// Downloads the files not already there, `jobs` at a time, with a line every second; retries a
 /// file, keeps the files that did land, and stops after a few failures or once `cancel` is set.
