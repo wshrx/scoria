@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { existsSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { useGpuixRequired } from "@gpuix/react"
@@ -31,14 +31,38 @@ export function App() {
     return SCREENS.some((screen) => screen.id === requested) ? (requested as ScreenId) : "home"
   })
   const [data, setData] = useState<Snapshot | null>(null)
+  const live = useRef(false)
 
   const apply = (state: Snapshot) => {
+    live.current = state.live
     setData(state)
     setDark(state.appearance !== "light")
   }
 
   useEffect(() => {
     void snapshot().then(apply)
+  }, [])
+
+  // A game writes a new world to disk while the launcher is open. Poll the
+  // engine so the list updates when the player comes back, without a restart.
+  useEffect(() => {
+    let cancelled = false
+    let running = false
+    const timer = setInterval(() => {
+      if (cancelled || !live.current || running) return
+      running = true
+      void snapshot()
+        .then((state) => {
+          if (!cancelled && state.live) apply(state)
+        })
+        .finally(() => {
+          running = false
+        })
+    }, 4000)
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+    }
   }, [])
 
   useEffect(() => {

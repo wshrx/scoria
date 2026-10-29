@@ -1,5 +1,9 @@
 # Horizon: a map for agents
 
+> **Scoria fork:** read [`PROJECT_STATE.md`](PROJECT_STATE.md) and
+> [`docs/agents/project-map.md`](docs/agents/project-map.md) first. The map below is Horizon's
+> engine reference; Scoria's launcher and offline changes are in the state file.
+
 Minecraft: Java Edition 26.3 rewritten in Rust (wgpu). Vanilla is the specification wherever it has the
 feature. Read [CONTRIBUTING.md](CONTRIBUTING.md) once; this page tells you where things are.
 Feature → files → harness for the most-changed areas: [docs/architecture.md](docs/architecture.md).
