@@ -61,6 +61,11 @@ no online-mode servers, no Minecraft assets.
 - **Engine patch queue**: `docs/fork/engine-patches/*.patch` (7 commits touching `crates/`);
   `tools/check_fork_surfaces.sh` fails if the input fallback, no-session rule, offline-only
   server, release key or icon disappears after a sync.
+- **Release state**: `v0.1.0-beta.1` is the only tag and the only release (pre-release, 8 assets,
+  Linux `.tar.gz` + `.tar.zst`, Windows `.zip`, signed). The Horizon-numbered `v0.2.98`/`v0.2.99`
+  releases and tags were deleted; `latest` now resolves to the beta. GitHub `main` == `staging`
+  at `d58211061`; `protect-main` blocks deletion and force-pushes only, so a green staging can be
+  fast-forwarded to main without a PR.
 - **Versioning**: Scoria is its own product, so releases are `v0.1.0-beta.N` (pre-release) and the
   launcher reports the tag (`HORIZON_LAUNCHER_VERSION`); Horizon's 0.2.x numbers apply to upstream
   only. `v0.2.98`/`v0.2.99` were Horizon-numbered previews and are removed once the beta is out.
