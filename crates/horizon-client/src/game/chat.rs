@@ -570,7 +570,8 @@ impl Game<'_> {
         let PhysicalKey::Code(key) = event.physical_key else {
             return;
         };
-        self.chat_key_code(key, event.text.as_deref());
+        let typed = self.typed(event);
+        self.chat_key_code(key, typed.as_deref());
     }
     /// A key (and the text it typed) while the chat screen is open.
     pub(super) fn chat_key_code(&mut self, key: KeyCode, typed_text: Option<&str>) {

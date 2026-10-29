@@ -1,8 +1,8 @@
-//! Mojang's Java runtime, the only thing Scoria downloads from Mojang. The game itself (the
-//! client jar, libraries, assets) never comes from here: preparation reads an installation the
-//! player already has (sources.rs). Each runtime file is checked against the size and sha1
-//! Mojang lists, and written whole. A download stopped half way (cancelled, no network) keeps
-//! the files it finished: the next one fetches only the rest.
+//! Mojang's Java runtime. The game's own files come from piston.rs (piston-meta) or from an
+//! installation the player already has (sources.rs); this module only fetches the JDK the
+//! preparer and the game's exporters need. Each runtime file is checked against the size and
+//! sha1 Mojang lists, and written whole. A download stopped half way (cancelled, no network)
+//! keeps the files it finished: the next one fetches only the rest.
 
 use crate::sources::{fetch_checked, sha1_file, sha1_hex, write_file, Fetch};
 use serde_json::Value;
@@ -30,11 +30,11 @@ pub fn progress() -> Option<(usize, usize)> {
 const CANCELLED: &str = "Download cancelled. Download again to go on where it stopped.";
 
 /// One file to download, with the size Mojang lists for it when it lists one.
-struct File {
-    url: String,
-    sha1: String,
-    size: Option<u64>,
-    path: PathBuf,
+pub(crate) struct File {
+    pub(crate) url: String,
+    pub(crate) sha1: String,
+    pub(crate) size: Option<u64>,
+    pub(crate) path: PathBuf,
 }
 
 /// Mojang's name for this system in its Java runtime index.
@@ -110,6 +110,7 @@ pub fn java_runtime(
         downloads.len()
     ));
     fetch_all(&downloads, jobs, fetch, cancel, log)?;
+
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -191,8 +192,13 @@ fn fetch_file(fetch: Fetch, file: &File) -> Result<Vec<u8>, String> {
     }
 }
 
-/// Downloads the files not already there, `jobs` at a time, with a line every second; stops at
-/// the first error, or between files once `cancel` is set.
+/// How often one file is tried before it is counted as failed.
+const ATTEMPTS: usize = 3;
+/// How many files may fail before the run stops: a dead connection should not try thousands.
+const MAX_ERRORS: usize = 8;
+
+/// Downloads the files not already there, `jobs` at a time, with a line every second; retries a
+/// file, keeps the files that did land, and stops after a few failures or once `cancel` is set.
 fn fetch_all(
     files: &[File],
     jobs: usize,
@@ -200,9 +206,23 @@ fn fetch_all(
     cancel: &AtomicBool,
     log: &dyn Fn(String),
 ) -> Result<(), String> {
+    fetch_all_with(files, jobs, fetch, cancel, log, &|_, _| {})
+}
+
+/// [`fetch_all`], reporting each finished file to `progress` as it lands.
+pub(crate) fn fetch_all_with(
+    files: &[File],
+    jobs: usize,
+    fetch: Fetch,
+    cancel: &AtomicBool,
+    log: &dyn Fn(String),
+    progress: &dyn Fn(usize, usize),
+) -> Result<(), String> {
     let next = AtomicUsize::new(0);
     let done = AtomicUsize::new(0);
     let failed = Mutex::new(None);
+    let errors = AtomicUsize::new(0);
+    let stopped = AtomicBool::new(false);
     DONE.store(0, Relaxed);
     TOTAL.store(files.len(), Relaxed);
     std::thread::scope(|scope| {
@@ -210,37 +230,69 @@ fn fetch_all(
             .map(|_| {
                 scope.spawn(|| {
                     while let Some(file) = files.get(next.fetch_add(1, Relaxed)) {
-                        if failed.lock().unwrap().is_some() {
+                        if stopped.load(Relaxed) {
                             break;
                         }
                         if cancel.load(Relaxed) {
                             failed.lock().unwrap().get_or_insert(CANCELLED.to_string());
+                            stopped.store(true, Relaxed);
                             break;
                         }
                         if sha1_file(&file.path).as_ref() != Some(&file.sha1) {
-                            let got = fetch_file(fetch, file)
-                                .map_err(|e| format!("{} {e}", file.url))
-                                .and_then(|body| write_file(&file.path, &body));
+                            let mut got = Err(String::new());
+                            for attempt in 0..ATTEMPTS {
+                                got = fetch_file(fetch, file)
+                                    .map_err(|e| format!("{} {e}", file.url))
+                                    .and_then(|body| write_file(&file.path, &body));
+                                if got.is_ok() {
+                                    break;
+                                }
+                                if attempt + 1 < ATTEMPTS {
+                                    std::thread::sleep(Duration::from_millis(
+                                        250 * (attempt as u64 + 1),
+                                    ));
+                                }
+                            }
                             if let Err(e) = got {
                                 failed.lock().unwrap().get_or_insert(e);
+                                if errors.fetch_add(1, Relaxed) + 1 >= MAX_ERRORS {
+                                    stopped.store(true, Relaxed);
+                                }
                             }
                         }
-                        DONE.store(done.fetch_add(1, Relaxed) + 1, Relaxed);
+                        let finished = done.fetch_add(1, Relaxed) + 1;
+                        DONE.store(finished, Relaxed);
                     }
                 })
             })
             .collect();
         let mut waited = 0;
+        let mut reported = usize::MAX;
         while !workers.iter().all(|w| w.is_finished()) {
             std::thread::sleep(Duration::from_millis(100));
             waited += 1;
+            let finished = done.load(Relaxed);
+            if finished != reported {
+                progress(finished, files.len());
+                reported = finished;
+            }
             if waited % 10 == 0 {
-                log(format!("{} of {} files", done.load(Relaxed), files.len()));
+                log(format!("{} of {} files", finished, files.len()));
             }
         }
+        progress(done.load(Relaxed), files.len());
     });
     TOTAL.store(0, Relaxed);
-    failed.into_inner().unwrap().map_or(Ok(()), Err)
+    match failed.into_inner().unwrap() {
+        None => Ok(()),
+        Some(error) if error == CANCELLED => Err(error),
+        Some(error) => {
+            let failed = errors.load(Relaxed);
+            Err(format!(
+                "{error}. {failed} file(s) could not be downloaded; the ones already here are kept.                  Try again to fetch only the rest."
+            ))
+        }
+    }
 }
 
 #[cfg(test)]

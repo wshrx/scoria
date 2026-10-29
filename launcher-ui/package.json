@@ -1,0 +1,23 @@
+{
+  "name": "scoria-launcher-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun scripts/run.ts --hot",
+    "start": "bun scripts/run.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "bun build --compile app.tsx --outfile dist/scoria-launcher-ui",
+    "check:ui": "bun scripts/check-ui.ts",
+    "check:i18n": "bun scripts/check-i18n.ts"
+  },
+  "dependencies": {
+    "@gpuix/native": "0.11.0",
+    "@gpuix/react": "0.11.0",
+    "react": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.0",
+    "@types/react": "19.3.0",
+    "typescript": "7.0.2"
+  }
+}

@@ -331,7 +331,8 @@ impl Game<'_> {
             PhysicalKey::Code(k) => Some(k),
             _ => None,
         };
-        self.book_input(key, event.text.as_deref());
+        let typed = self.typed(event);
+        self.book_input(key, typed.as_deref());
     }
     /// A key and the text it typed in the open book (the keyboard, or a
     /// controller's on-screen keyboard).

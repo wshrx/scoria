@@ -959,6 +959,7 @@ impl Game<'_> {
         };
         let ctrl = self.keys.contains(&winit::keyboard::KeyCode::ControlLeft);
         let shortcut = self.edit_shortcut(event);
+        let typed = self.typed(event);
         let Some(o) = self.world_options.as_mut() else {
             return;
         };
@@ -971,7 +972,7 @@ impl Game<'_> {
                     let mut handled = false;
                     rules.edit(|b| handled = b.key(key, ctrl, false));
                     if !handled && !ctrl {
-                        self.world_options_text(event.text.as_deref());
+                        self.world_options_text(typed.as_deref());
                     }
                 }
             }
@@ -985,7 +986,7 @@ impl Game<'_> {
             return;
         }
         if !o.port.key(key, ctrl, false) && !ctrl {
-            self.world_options_text(event.text.as_deref());
+            self.world_options_text(typed.as_deref());
         }
     }
     /// Digits typed into the port field (the keyboard, or a controller's

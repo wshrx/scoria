@@ -8,7 +8,6 @@ description = "Downloads, prepares and starts Scoria builds"
 [workspace]
 
 [dependencies]
-gpui = "0.2.2"
 ureq = { version = "2", features = ["json", "tls"], default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -45,8 +44,6 @@ trash = "5"
 # Backup names carry the local time, as vanilla's do
 base64 = "0.22"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
-# The session file's random name.
-getrandom = "0.3"
 # Players' heads on the Servers page, from the default skins in the player's own game files (already
 # in the lockfile through gpui).
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
@@ -58,10 +55,6 @@ oo7 = { version = "0.5", default-features = false, features = ["async-std", "nat
 futures-lite = "2"
 [target.'cfg(target_os = "macos")'.dependencies]
 keyring = { version = "3", features = ["apple-native"] }
-# Painting the window's title bar dark or light (titlebar::apply_appearance): crates already in
-# the lockfile through gpui and wgpu.
-objc2-app-kit = { version = "0.3", default-features = false, features = ["NSAppearance", "NSView", "NSWindow"] }
-raw-window-handle = "0.6"
 [target.'cfg(target_os = "windows")'.dependencies]
 keyring = { version = "3", features = ["windows-native"] }
 

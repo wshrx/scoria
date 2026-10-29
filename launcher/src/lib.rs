@@ -1,8 +1,10 @@
 //! The launcher's core, shared by the GUI, the CLI and the MCP server.
 pub mod account;
 pub mod agents;
+pub mod api;
 pub mod backend;
 pub mod browser;
+pub mod build_sources;
 pub mod datapacks;
 pub mod desktop;
 pub mod desktop_seams;
@@ -18,8 +20,10 @@ pub mod launch;
 pub mod modpacks;
 pub mod mojang;
 pub mod packs;
+pub mod piston;
 pub mod process;
 pub mod proxy;
+pub mod running;
 pub mod screenshots;
 pub mod server_list;
 pub mod servers;
