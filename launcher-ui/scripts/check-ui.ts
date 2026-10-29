@@ -1,7 +1,8 @@
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs"
 import { join } from "node:path"
+import { fileURLToPath } from "node:url"
 
-const root = new URL("..", import.meta.url).pathname
+const root = fileURLToPath(new URL("..", import.meta.url))
 const src = join(root, "src")
 const issues: string[] = []
 
