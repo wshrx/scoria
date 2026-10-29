@@ -90,6 +90,7 @@ export function App() {
           <Active
             data={data}
             onRefresh={refresh}
+            onPage={setPage}
             dark={dark}
             onToggleTheme={toggleTheme}
             onLanguage={(value) => {

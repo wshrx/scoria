@@ -11,46 +11,26 @@ export const gradient = (from: string, to: string, angle = 160): LinearGradientB
   ],
 })
 
-const NIGHT = "#0A0712"
-const VIOLET = "#8B5CF6"
-const BONE = "#F4EFFF"
-
-/** A painted world: sky, aurora, a square moon, blocky ridges, trees and a lake. */
+/** A SaaS mesh: graphite, a faint survey grid, soft light and slow dust. */
 export function Backdrop({ strong = true, dark = true }: { strong?: boolean; dark?: boolean }) {
   const p = dark
     ? {
-        skyTop: "#121A33",
-        skyBottom: "#07050D",
-        blobA: "#1D4038",
-        blobB: "#2A1A4D",
-        blobC: "#4A2E7A",
-        moon: "#F0E8D8",
-        halo: "#6D4AA0AA",
-        waterTop: "#16263A",
-        waterBottom: "#070A12",
-        auroraA: "#8B5CF633",
-        auroraB: "#2CD3A933",
-        body: ["#33204A", "#1C3E37", "#1D2438", "#251B36"],
-        top: ["#2D5D50", "#2E3A55", "#3A2B52"],
-        scrim: "#08060F",
-        glint: "#F0E8D8",
+        skyTop: "#0B0D13",
+        skyBottom: "#07080B",
+        line: "#FFFFFF",
+        glowA: "#8B5CF62E",
+        glowB: "#2CD3A922",
+        glowC: "#5B6CFF1A",
+        scrim: "#08090C",
       }
     : {
-        skyTop: "#F0E7F7",
-        skyBottom: "#D5E7EA",
-        blobA: "#BCDCCB",
-        blobB: "#D5C3EB",
-        blobC: "#E8D9F7",
-        moon: "#FFF2C9",
-        halo: "#F2C94C55",
-        waterTop: "#D3E6EC",
-        waterBottom: "#A8C7D2",
-        auroraA: "#8B5CF628",
-        auroraB: "#2CD3A928",
-        body: ["#C9B8E4", "#A9CDBD", "#B8C4DE", "#CBB9D8"],
-        top: ["#E2D6F0", "#C7E4D6", "#D8E0EE"],
-        scrim: "#F3ECF8",
-        glint: "#FFFFFF",
+        skyTop: "#F8F4FB",
+        skyBottom: "#EFEAF6",
+        line: "#2A1A44",
+        glowA: "#8B5CF624",
+        glowB: "#2CD3A91C",
+        glowC: "#5B6CFF14",
+        scrim: "#F4F1F7",
       }
 
   return (
@@ -68,79 +48,37 @@ export function Backdrop({ strong = true, dark = true }: { strong?: boolean; dar
       <div
         style={{
           position: "absolute",
-          left: -80,
-          top: 54,
-          width: 760,
-          height: 210,
-          borderRadius: 220,
-          background: gradient(p.auroraA, "#00000000", 100),
-          opacity: 0.85,
+          left: -220,
+          top: -240,
+          width: 820,
+          height: 660,
+          borderRadius: 340,
+          background: gradient("#00000000", p.glowA, 135),
+          opacity: 0.9,
         }}
       />
       <div
         style={{
           position: "absolute",
-          right: 90,
-          top: 140,
-          width: 640,
-          height: 180,
-          borderRadius: 220,
-          background: gradient(p.auroraB, "#00000000", 80),
+          right: -240,
+          top: -180,
+          width: 760,
+          height: 600,
+          borderRadius: 320,
+          background: gradient("#00000000", p.glowB, 225),
           opacity: 0.75,
         }}
       />
-
       <div
         style={{
           position: "absolute",
-          left: -140,
-          bottom: -260,
-          width: 900,
-          height: 700,
-          borderRadius: 450,
-          backgroundColor: p.blobA,
-          opacity: dark ? 0.55 : 0.7,
-          boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 180, spreadRadius: 40, color: p.blobA },
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          right: -160,
-          bottom: -240,
-          width: 820,
+          left: 260,
+          bottom: -320,
+          width: 980,
           height: 620,
-          borderRadius: 410,
-          backgroundColor: p.blobB,
-          opacity: dark ? 0.65 : 0.7,
-          boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 170, spreadRadius: 30, color: p.blobB },
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          right: 120,
-          top: 30,
-          width: 320,
-          height: 320,
-          borderRadius: 160,
-          backgroundColor: p.blobC,
-          opacity: 0.5,
-          boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 160, spreadRadius: 30, color: p.blobC },
-        }}
-      />
-
-      <div
-        style={{
-          position: "absolute",
-          right: 196,
-          top: 58,
-          width: 116,
-          height: 116,
-          borderRadius: 18,
-          backgroundColor: p.moon,
-          opacity: 0.95,
-          boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 80, spreadRadius: 12, color: p.halo },
+          borderRadius: 420,
+          background: gradient("#00000000", p.glowC, 90),
+          opacity: 0.7,
         }}
       />
 
@@ -149,102 +87,49 @@ export function Backdrop({ strong = true, dark = true }: { strong?: boolean; dar
           position: "absolute",
           left: 0,
           right: 0,
+          top: 0,
           bottom: 0,
-          height: "24%",
-          background: gradient(p.waterTop, p.waterBottom, 0),
-          opacity: 0.95,
-        }}
-      />
-      {[
-        [780, 28, 110, 0.16],
-        [940, 54, 70, 0.12],
-        [700, 82, 150, 0.1],
-        [1010, 104, 50, 0.14],
-      ].map(([left, bottom, width, opacity], index) => (
-        <div
-          key={index}
-          style={{
-            position: "absolute",
-            left,
-            bottom,
-            width,
-            height: 2,
-            borderRadius: 1,
-            backgroundColor: p.glint,
-            opacity,
-          }}
-        />
-      ))}
-
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: "42%",
           display: "flex",
           flexDirection: "row",
-          alignItems: "flex-end",
-          gap: 2,
-          opacity: 0.92,
+          opacity: dark ? 0.045 : 0.035,
         }}
       >
-        {[
-          44, 58, 52, 76, 64, 92, 80, 110, 96, 126, 112, 146, 132, 160, 142, 118, 136, 154, 170,
-          148, 126, 108, 94, 116, 98, 82, 68, 56, 46, 36,
-        ].map((height, index) => {
-          const body = p.body[index % p.body.length]
-          const top = p.top[index % p.top.length]
-          return (
-            <div
-              key={index}
-              style={{
-                flexGrow: 1 + (index % 4),
-                height: height * 0.86,
-                display: "flex",
-                flexDirection: "column",
-                borderRadius: 3,
-                overflow: "hidden",
-                boxShadow: {
-                  offsetX: 0,
-                  offsetY: 0,
-                  blurRadius: 26,
-                  spreadRadius: 3,
-                  color: body,
-                },
-              }}
-            >
-              <div style={{ height: 3, backgroundColor: top, opacity: 0.85 }} />
-              <div style={{ flexGrow: 1, backgroundColor: body }} />
-            </div>
-          )
-        })}
+        {Array.from({ length: 32 }, (_, index) => (
+          <div
+            key={index}
+            style={{
+              flexGrow: 1,
+              borderRightWidth: 1,
+              borderStyle: "solid",
+              borderColor: `${p.line}${index === 31 ? "00" : ""}`,
+            }}
+          />
+        ))}
       </div>
-
       <div
         style={{
           position: "absolute",
           left: 0,
           right: 0,
+          top: 0,
           bottom: 0,
-          height: 150,
-          background: gradient(`${p.scrim}00`, `${p.scrim}CC`, 0),
-          opacity: 0.55,
+          display: "flex",
+          flexDirection: "column",
+          opacity: dark ? 0.04 : 0.025,
         }}
-      />
-
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 150,
-          height: 80,
-          background: gradient("#8B5CF600", dark ? "#8B5CF624" : "#8B5CF612", 180),
-          opacity: 0.8,
-        }}
-      />
+      >
+        {Array.from({ length: 18 }, (_, index) => (
+          <div
+            key={index}
+            style={{
+              flexGrow: 1,
+              borderBottomWidth: 1,
+              borderStyle: "solid",
+              borderColor: `${p.line}${index === 17 ? "00" : ""}`,
+            }}
+          />
+        ))}
+      </div>
 
       {strong ? (
         <div
@@ -253,8 +138,9 @@ export function Backdrop({ strong = true, dark = true }: { strong?: boolean; dar
             left: 0,
             top: 0,
             bottom: 0,
-            width: "62%",
-            background: gradient(`${p.scrim}F2`, `${p.scrim}00`, 90),
+            width: "45%",
+            background: gradient(`${p.scrim}F0`, `${p.scrim}00`, 90),
+            opacity: 0.4,
           }}
         />
       ) : null}
@@ -424,6 +310,33 @@ export function Meter({ value, total, height = 6 }: { value: number; total: numb
   )
 }
 
+/** The one content surface: a hairline card on the mesh. */
+export function Panel({
+  children,
+  style,
+}: {
+  children?: ReactNode
+  style?: Record<string, unknown>
+}) {
+  const theme = useTheme()
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        borderRadius: 14,
+        borderWidth: 1,
+        borderStyle: "solid",
+        borderColor: theme.colors.border,
+        backgroundColor: theme.colors.card,
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
 /** A rounded page surface over the backdrop. */
 export function Sheet({
   children,
@@ -439,11 +352,11 @@ export function Sheet({
         display: "flex",
         flexDirection: "column",
         width: "100%",
-        borderRadius: theme.radius.xl,
+        borderRadius: 14,
         borderWidth: 1,
         borderStyle: "solid",
         borderColor: theme.colors.border,
-        backgroundColor: theme.appearance === "dark" ? "#110C1BE8" : theme.colors.card,
+        backgroundColor: theme.colors.card,
         ...style,
       }}
     >
@@ -452,7 +365,7 @@ export function Sheet({
   )
 }
 
-/** A small, soft illustration for an instance or a world. */
+/** A small painted world for a card: sky, a square sun, two soft ridges. */
 export function SceneThumb({
   seed = 0,
   width = 220,
@@ -462,13 +375,26 @@ export function SceneThumb({
   width?: number | string
   height?: number
 }) {
-  const skies = [
-    ["#2B2348", "#0B0814"],
-    ["#1E3A36", "#080D0C"],
-    ["#3A2438", "#0E080F"],
-    ["#3B2A1B", "#100B07"],
-  ]
+  const theme = useTheme()
+  const dark = theme.appearance === "dark"
+  const skies = dark
+    ? [
+        ["#2B2348", "#0B0814"],
+        ["#1E3A36", "#080D0C"],
+        ["#3A2438", "#0E080F"],
+        ["#3B2A1B", "#100B07"],
+      ]
+    : [
+        ["#E8DFF6", "#D3E8EC"],
+        ["#D8EFE6", "#C8DDE2"],
+        ["#F0DDEE", "#E0D5EA"],
+        ["#F2E4D2", "#E4DCD0"],
+      ]
   const [from, to] = skies[Math.abs(seed) % skies.length]
+  const moon = dark ? "#F0E8D8" : "#FFF4D2"
+  const hillA = dark ? "#2A5A4B" : "#A6CBB9"
+  const hillB = dark ? "#33204A" : "#C6B2DF"
+  const fade = dark ? "#0A0712" : "#F4F1F7"
   return (
     <div
       style={{
@@ -477,47 +403,44 @@ export function SceneThumb({
         flexShrink: 0,
         position: "relative",
         overflow: "hidden",
-        borderRadius: 16,
+        borderRadius: 12,
         background: gradient(from, to, 150),
       }}
     >
       <div
         style={{
           position: "absolute",
-          right: 22,
-          top: 18,
-          width: 26,
-          height: 26,
-          borderRadius: 13,
-          backgroundColor: "#F0E8D8",
-          opacity: 0.85,
-          boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 24, spreadRadius: 2, color: "#F0E8D844" },
+          right: 20,
+          top: 16,
+          width: 24,
+          height: 24,
+          borderRadius: 6,
+          backgroundColor: moon,
+          opacity: 0.9,
         }}
       />
       <div
         style={{
           position: "absolute",
-          left: -30,
-          bottom: -40,
-          width: "75%",
-          height: "70%",
-          borderRadius: 80,
-          backgroundColor: "#1E4038",
-          opacity: 0.7,
-          boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 40, spreadRadius: 8, color: "#1E403899" },
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          right: -40,
-          bottom: -30,
-          width: "68%",
-          height: "62%",
-          borderRadius: 70,
-          backgroundColor: "#2A1A45",
+          left: -40,
+          bottom: -70,
+          width: "85%",
+          height: "75%",
+          borderRadius: 200,
+          background: gradient(`${hillA}00`, `${hillA}AA`, 80),
           opacity: 0.8,
-          boxShadow: { offsetX: 0, offsetY: 0, blurRadius: 36, spreadRadius: 6, color: "#2A1A45AA" },
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          right: -60,
+          bottom: -90,
+          width: "80%",
+          height: "80%",
+          borderRadius: 200,
+          background: gradient(`${hillB}00`, `${hillB}CC`, 100),
+          opacity: 0.9,
         }}
       />
       <div
@@ -526,13 +449,10 @@ export function SceneThumb({
           left: 0,
           right: 0,
           bottom: 0,
-          height: "38%",
-          background: gradient("#0A071200", "#0A0712DD", 0),
+          height: "36%",
+          background: gradient(`${fade}00`, `${fade}DD`, 0),
         }}
       />
     </div>
   )
 }
-
-export const CHROME_MUTED = "#A49BB8"
-export { BONE, NIGHT, VIOLET }

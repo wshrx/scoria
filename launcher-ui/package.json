@@ -6,7 +6,8 @@
     "dev": "bun scripts/run.ts --hot",
     "start": "bun scripts/run.ts",
     "typecheck": "tsc --noEmit",
-    "build": "bun build --compile app.tsx --outfile dist/scoria-launcher-ui"
+    "build": "bun build --compile app.tsx --outfile dist/scoria-launcher-ui",
+    "check:ui": "bun scripts/check-ui.ts"
   },
   "dependencies": {
     "@gpuix/native": "0.11.0",

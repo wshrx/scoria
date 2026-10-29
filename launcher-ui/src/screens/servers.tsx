@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { addServer, play, removeServer, savedServers, type SavedServer } from "../api"
 import { useT } from "../i18n"
-import { Sheet } from "../visual"
+import { PageHeader } from "../components/layout/page-header"
+import { Panel } from "../visual"
 
 export function ServersPage() {
   const theme = useTheme()
@@ -29,29 +30,24 @@ export function ServersPage() {
   useEffect(refresh, [])
 
   return (
-    <Sheet style={{ padding: narrow ? 20 : 30, gap: 20, }}>
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-end", gap: 16 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, flexGrow: 1 }}>
-          <Text style={{ fontSize: narrow ? 30 : 38, lineHeight: 42, fontWeight: "700" }}>
-            {t("Servers")}
-          </Text>
-          <Text size="sm" tone="muted">
-            {t("Offline-mode servers, saved in this instance.")}
-          </Text>
-        </div>
-        <Button
-          variant={adding ? "ghost" : "secondary"}
-          onClick={() => {
-            setAdding((value) => !value)
-            setNote(null)
-          }}
-          style={{ borderRadius: 999, height: 36, paddingLeft: 16, paddingRight: 16 }}
-        >
-          <Icon name={adding ? "x" : "plus"} size={13} color={theme.colors.foreground} />
-          {adding ? t("Cancel") : t("Add server")}
-        </Button>
-      </div>
-
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <PageHeader
+        title={t("Servers")}
+        subtitle={t("Offline-mode servers, saved in this instance.")}
+        actions={
+          <Button
+            variant={adding ? "ghost" : "secondary"}
+            onClick={() => {
+              setAdding((value) => !value)
+              setNote(null)
+            }}
+            style={{ borderRadius: 999, height: 36, paddingLeft: 16, paddingRight: 16 }}
+          >
+            <Icon name={adding ? "x" : "plus"} size={13} color={theme.colors.foreground} />
+            {adding ? t("Cancel") : t("Add server")}
+          </Button>
+        }
+      />
       {adding ? (
         <div
           style={{
@@ -197,10 +193,11 @@ export function ServersPage() {
         </Text>
       ) : null}
 
-      <div style={{ flexGrow: 1 }} />
-      <Text size="xs" tone="muted">
-        {t("Online-mode servers need a Microsoft session. Scoria has none, so use offline-mode servers or LAN.")}
-      </Text>
-    </Sheet>
+      <Panel style={{ padding: 14 }}>
+        <Text size="xs" tone="muted">
+          {t("Online-mode servers need a Microsoft session. Scoria has none, so use offline-mode servers or LAN.")}
+        </Text>
+      </Panel>
+    </div>
   )
 }

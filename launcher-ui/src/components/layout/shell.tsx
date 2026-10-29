@@ -53,7 +53,7 @@ export function Shell({ page, onPage, data, frameless, children }: ShellProps) {
           position: "relative",
         }}
       >
-        <Rail page={page} onPage={onPage} />
+        <Rail page={page} onPage={onPage} data={data} />
 
         <div
           style={{

@@ -1,37 +1,34 @@
 import { useState } from "react"
 import { useWindowSize } from "@gpuix/react"
-import { Icon, Text, useTheme, type IconName } from "@/lib/flint"
+import { Icon, Text, useTheme } from "@/lib/flint"
 import { Button } from "@/components/ui/button"
-import type { DownloadProgress, Snapshot } from "../api"
+import type { DownloadProgress } from "../api"
 import { downloadMinecraft, play, prepare } from "../api"
 import { useT } from "../i18n"
 import { downloadStopped } from "../errors"
-import { Meter } from "../visual"
+import { PageHeader } from "../components/layout/page-header"
+import type { ScreenProps } from "./registry"
+import { Meter, Panel, SceneThumb } from "../visual"
 
 function megabytes(bytes: number): string {
   if (bytes >= 1_000_000_000) return `${(bytes / 1e9).toFixed(1)} GB`
   return `${Math.round(bytes / 1e6)} MB`
 }
 
-export function HomePage({
-  data,
-  onRefresh,
-}: {
-  data: Snapshot
-  onRefresh: () => void
-}) {
+export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
   const theme = useTheme()
   const t = useT()
   const { width } = useWindowSize()
-  const narrow = width < 1000
-  const [busy, setBusy] = useState<"play" | "download" | "prepare" | null>(null)
+  const narrow = width < 1060
+  const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
   const [progress, setProgress] = useState<DownloadProgress | null>(null)
 
   const files = data.minecraft
   const ready = files.installed && data.prepared
   const recent = data.worlds[0]
-  const instance = data.instances.find((entry) => entry.selected)?.name ?? "Scoria"
+  const selected = data.instances.find((instance) => instance.selected)
+  const instance = selected?.name ?? "Scoria"
 
   const summary = ready
     ? t("Ready to play. Your worlds and settings stay on this machine.")
@@ -40,18 +37,19 @@ export function HomePage({
       : t("The files are here. One more step prepares the resources.")
 
   const fail = (said: string) => setNote(said)
+  const percent = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0
 
   const playNow = (world?: string) => {
-    setBusy("play")
+    setBusy(true)
     setNote(null)
     void play(world ? { world } : {}).then((said) => {
       if (!said.startsWith("Started")) fail(said)
-      setBusy(null)
+      setBusy(false)
     })
   }
 
   const prepareAll = async () => {
-    setBusy("prepare")
+    setBusy(true)
     setNote(null)
     setProgress(null)
     try {
@@ -62,191 +60,221 @@ export function HomePage({
     } catch (error) {
       fail(downloadStopped(error, t))
     } finally {
-      setBusy(null)
+      setBusy(false)
       setProgress(null)
     }
   }
 
-  const action = !files.installed || !data.prepared ? prepareAll : () => playNow()
-  const actionLabel = !files.installed
-    ? t("Download and prepare")
-    : !data.prepared
-      ? t("Prepare")
-      : t("Play")
-  const actionIcon: IconName = !files.installed ? "download" : !data.prepared ? "refresh" : "play"
-  const percent = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0
+  const stats = [
+    { label: t("Worlds"), value: String(data.worlds.length), icon: "layers" as const },
+    { label: t("Instances"), value: String(data.instances.length), icon: "box" as const },
+    { label: t("Minecraft"), value: files.version, icon: "globe" as const },
+  ]
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        flexGrow: 1,
-        minHeight: narrow ? 500 : 520,
-        paddingTop: narrow ? 18 : 36,
-        paddingBottom: 10,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: narrow ? "column" : "row",
-          alignItems: narrow ? "flex-start" : "center",
-          gap: 24,
-          flexGrow: 1,
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 22, maxWidth: 720, flexGrow: 1 }}>
-          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <Text mono size="xs" style={{ color: theme.colors.mutedForeground }}>
-              {t("Minecraft Java Edition")}
-            </Text>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                height: 24,
-                paddingLeft: 10,
-                paddingRight: 10,
-                borderRadius: 999,
-                borderWidth: 1,
-                borderStyle: "solid",
-                borderColor: theme.colors.border,
-                backgroundColor: theme.colors.card,
-              }}
-            >
-              <Text mono size="xs" style={{ color: theme.colors.foreground }}>
-                {files.version}
-              </Text>
-            </div>
-          </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <PageHeader
+        title={t("Play")}
+        subtitle={t("Your worlds, mods and servers in one place.")}
+      />
 
-          <Text
-            style={{
-              fontFamily: theme.font.sans,
-              fontSize: narrow ? 44 : 68,
-              lineHeight: narrow ? 46 : 70,
-              fontWeight: "700",
-              color: theme.colors.foreground,
-              maxWidth: 760,
-              lineClamp: 2,
-            }}
-          >
+      <Panel style={{ overflow: "hidden", flexDirection: narrow ? "column" : "row", padding: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: narrow ? 18 : 24, flexGrow: 1, maxWidth: 720 }}>
+          <Text mono size="xs" tone="muted">
+            {t("Current instance").toUpperCase()}
+          </Text>
+          <Text size="2xl" weight="bold" truncate>
             {instance}
           </Text>
-
-          <Text size="sm" style={{ maxWidth: 480, color: theme.colors.mutedForeground, lineHeight: 22 }}>
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <Text size="xs" tone="muted">
+              {`Minecraft ${files.version}`}
+            </Text>
+            <Text size="xs" tone="muted">·</Text>
+            <Text size="xs" tone="muted">
+              {ready ? t("resources prepared") : t("resources not prepared")}
+            </Text>
+          </div>
+          <Text size="sm" tone="muted" style={{ maxWidth: 470, lineHeight: 20 }}>
             {summary}
           </Text>
 
-          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <Button
-              loading={busy !== null}
-              onClick={() => void action()}
-              style={{
-                height: 52,
-                paddingLeft: 26,
-                paddingRight: 26,
-                borderRadius: 999,
-                backgroundColor: theme.colors.primary,
-                color: theme.colors.primaryForeground,
-                hover: { backgroundColor: theme.colors.primaryHover },
-              }}
+              size="lg"
+              loading={busy}
+              onClick={() => void (ready ? playNow() : prepareAll())}
+              style={{ height: 44, paddingLeft: 20, paddingRight: 20, borderRadius: 999 }}
             >
-              <Icon name={actionIcon} size={16} color={theme.colors.primaryForeground} />
-              <Text style={{ color: theme.colors.primaryForeground, fontWeight: "600", fontSize: 15 }}>
-                {actionLabel}
-              </Text>
+              <Icon
+                name={ready ? "play" : files.installed ? "refresh" : "download"}
+                size={15}
+                color={theme.colors.primaryForeground}
+              />
+              {ready ? t("Play") : files.installed ? t("Prepare") : t("Download and prepare")}
             </Button>
-
             {ready && recent ? (
-              <div
-                role="button"
-                tabIndex={0}
+              <Button
+                variant="secondary"
                 onClick={() => playNow(recent.name)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 7,
-                  height: 36,
-                  paddingLeft: 12,
-                  paddingRight: 14,
-                  borderRadius: 999,
-                  cursor: "pointer",
-                  hover: { backgroundColor: theme.colors.accent },
-                }}
+                style={{ height: 44, paddingLeft: 16, paddingRight: 16, borderRadius: 999 }}
               >
-                <Icon name="chevronRight" size={13} color={theme.colors.mutedForeground} />
-                <Text size="xs" style={{ color: theme.colors.mutedForeground }}>
-                  {`${t("Continue")}: ${recent.name}`}
-                </Text>
-              </div>
+                <Icon name="chevronRight" size={14} color={theme.colors.foreground} />
+                {`${t("Continue")}: ${recent.name}`}
+              </Button>
             ) : null}
           </div>
 
-          {busy === "download" || busy === "prepare" ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, width: narrow ? "100%" : 340 }}>
-              <Meter value={progress ? progress.done : 1} total={progress ? progress.total : 1} />
+          {busy && progress ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxWidth: 360 }}>
+              <Meter value={progress.done} total={progress.total} height={4} />
               <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
-                <Text mono size="xs" style={{ color: theme.colors.mutedForeground }}>
-                  {progress ? t("Downloading…") : t("Working…")}
+                <Text mono size="xs" tone="muted">
+                  {t("Downloading…")}
                 </Text>
-                <Text mono size="xs" style={{ color: theme.colors.mutedForeground }}>
-                  {progress ? `${percent}%` : ""}
+                <Text mono size="xs" tone="muted">
+                  {`${percent}%`}
                 </Text>
               </div>
             </div>
           ) : !files.installed && files.missingBytes > 0 ? (
-            <Text mono size="xs" style={{ color: theme.colors.mutedForeground }}>
+            <Text mono size="xs" tone="muted">
               {`${megabytes(files.missingBytes)} ${t("to download")}`}
             </Text>
           ) : null}
 
           {note ? (
-            <div
-              style={{
-                display: "flex",
-                alignSelf: "flex-start",
-                maxWidth: 560,
-                paddingLeft: 12,
-                paddingRight: 12,
-                paddingTop: 7,
-                paddingBottom: 7,
-                borderRadius: 999,
-                backgroundColor: "#E5484D1A",
-                borderWidth: 1,
-                borderStyle: "solid",
-                borderColor: "#E5484D33",
-              }}
-            >
-              <Text size="xs" style={{ color: "#F5B5B8" }}>
-                {note}
-              </Text>
-            </div>
+            <Text size="xs" style={{ color: theme.colors.destructive }}>
+              {note}
+            </Text>
           ) : null}
         </div>
-      </div>
+
+        <div style={{ width: narrow ? "100%" : 360, flexShrink: 0, padding: narrow ? 16 : 10 }}>
+          <SceneThumb seed={data.instances.findIndex((entry) => entry.selected)} width="100%" height={narrow ? 170 : 220} />
+        </div>
+      </Panel>
 
       <div
         style={{
           display: "flex",
           flexDirection: "row",
-          alignItems: "center",
-          gap: 18,
-          paddingTop: 16,
-          borderTopWidth: 1,
+          borderRadius: 14,
+          borderWidth: 1,
           borderStyle: "solid",
-          borderColor: "#FFFFFF0F",
+          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.card,
         }}
       >
-        <Text mono size="xs" style={{ color: theme.colors.mutedForeground }}>
-          {`${t("Worlds")} · ${data.worlds.length}`}
-        </Text>
-        <Text mono size="xs" style={{ color: theme.colors.mutedForeground }}>
-          {`${t("Instances")} · ${data.instances.length}`}
-        </Text>
-        <div style={{ flexGrow: 1 }} />
+        {stats.map((stat, index) => (
+          <div
+            key={stat.label}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 5,
+              flexGrow: 1,
+              minWidth: 0,
+              paddingTop: 14,
+              paddingBottom: 14,
+              paddingLeft: 16,
+              paddingRight: 10,
+              borderLeftWidth: index === 0 ? 0 : 1,
+              borderStyle: "solid",
+              borderColor: theme.colors.border,
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Icon name={stat.icon} size={12} color={theme.colors.mutedForeground} />
+              <Text mono size="xs" tone="muted">
+                {stat.label}
+              </Text>
+            </div>
+            <Text size="md" weight="semibold" truncate>
+              {stat.value}
+            </Text>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", gap: 16, alignItems: "flex-start" }}>
+        <Panel style={{ flexGrow: 1, minWidth: 0, width: "100%" }}>
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, padding: 16, paddingBottom: 8 }}>
+            <Text size="md" weight="semibold" style={{ flexGrow: 1 }}>
+              {t("Worlds")}
+            </Text>
+            <Text mono size="xs" tone="muted">
+              {data.worlds.length}
+            </Text>
+          </div>
+          {data.worlds.length === 0 ? (
+            <Text size="sm" tone="muted" style={{ padding: 16, paddingTop: 6 }}>
+              {t("Play once, create a world, and it will appear here.")}
+            </Text>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", paddingLeft: 8, paddingRight: 8, paddingBottom: 8 }}>
+              {data.worlds.slice(0, 4).map((world, index) => (
+                <div
+                  key={world.name}
+                  onClick={() => playNow(world.name)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: 8,
+                    borderRadius: 10,
+                    cursor: "pointer",
+                    hover: { backgroundColor: theme.colors.accent },
+                  }}
+                >
+                  <SceneThumb seed={index + 2} width={64} height={40} />
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2, flexGrow: 1, minWidth: 0 }}>
+                    <Text size="sm" weight="medium" truncate>
+                      {world.name}
+                    </Text>
+                    <Text mono size="xs" tone="muted" truncate>
+                      {`${world.mode} · ${world.size} · ${world.lastPlayed}`}
+                    </Text>
+                  </div>
+                  <Icon name="play" size={13} color={theme.colors.mutedForeground} />
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, width: narrow ? "100%" : 320, flexShrink: 0 }}>
+          <Panel style={{ padding: 16, gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Icon name="box" size={15} color={theme.colors.primary} />
+              <Text size="sm" weight="semibold" style={{ flexGrow: 1 }}>
+                {t("Mods")}
+              </Text>
+            </div>
+            <Text size="xs" tone="muted">
+              {t("Modrinth mods and resource packs.")}
+            </Text>
+            <Button variant="secondary" size="sm" onClick={() => onPage("mods")} style={{ borderRadius: 999, height: 30 }}>
+              {t("Open Mods")}
+            </Button>
+          </Panel>
+
+          <Panel style={{ padding: 16, gap: 10 }}>
+            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Icon name="server" size={15} color={theme.colors.primary} />
+              <Text size="sm" weight="semibold" style={{ flexGrow: 1 }}>
+                {t("Servers")}
+              </Text>
+            </div>
+            <Text size="xs" tone="muted">
+              {t("Offline-mode servers and LAN.")}
+            </Text>
+            <Button variant="secondary" size="sm" onClick={() => onPage("servers")} style={{ borderRadius: 999, height: 30 }}>
+              {t("Open Servers")}
+            </Button>
+          </Panel>
+        </div>
       </div>
     </div>
   )

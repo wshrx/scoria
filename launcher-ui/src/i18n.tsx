@@ -35,6 +35,17 @@ const RU: Record<string, string> = {
   Partly: "Частично",
   "Doesn't run": "Не запустится",
   "Installed.": "Установлено.",
+  "Ready to play as {name}.": "Готово к игре: {name}.",
+  "Current instance": "Текущий инстанс",
+  "Your worlds, mods and servers in one place.":
+    "Ваши миры, моды и серверы в одном месте.",
+  "Profile, appearance, game files and builds in one place.":
+    "Профиль, оформление, файлы игры и сборки в одном месте.",
+  "Open Mods": "Открыть моды",
+  "Open Servers": "Открыть серверы",
+  results: "результатов",
+  "Modrinth mods and resource packs.": "Моды и ресурспаки с Modrinth.",
+  "Offline-mode servers and LAN.": "Offline-mode серверы и LAN.",
   General: "Общие",
   Builds: "Сборки",
   About: "О программе",

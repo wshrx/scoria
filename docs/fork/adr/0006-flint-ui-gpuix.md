@@ -16,7 +16,7 @@ offline names are the primary identity since P1.
 
 ## Decision
 
-1. **The launcher UI is `launcher-ui/`**, built with **gpuix 0.11.0** and **flint-ui 0.1.1**.
+1. **The launcher UI is `launcher-ui/`**, built with **gpuix 0.11.0** and **flint-ui 0.1.2**.
    flint's files are copied into `launcher-ui/src` and owned by this repository, as flint intends.
 2. **The engine stays Rust.** `launcher-ui` renders and calls the engine over JSON-RPC/CLI; it
    never touches the file system, keychain or processes directly.

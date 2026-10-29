@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react"
 import { useWindowSize } from "@gpuix/react"
 import { Icon, Text, useTheme } from "@/lib/flint"
 import { Button } from "@/components/ui/button"
+import { Field } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import type { DownloadProgress, Snapshot } from "../api"
 import {
@@ -17,6 +18,7 @@ import {
 } from "../api"
 import { useT } from "../i18n"
 import { downloadStopped } from "../errors"
+import { PageHeader } from "../components/layout/page-header"
 import { Avatar, Meter, Sheet } from "../visual"
 
 type Tab = "general" | "game" | "builds" | "about"
@@ -40,7 +42,7 @@ function megabytes(bytes: number): string {
   return `${Math.round(bytes / 1e6)} MB`
 }
 
-function Field({
+function SectionField({
   label,
   detail,
   children,
@@ -150,7 +152,12 @@ export function SettingsPage({
   }
 
   return (
-    <Sheet
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <PageHeader
+        title={t("Settings")}
+        subtitle={t("Profile, appearance, game files and builds in one place.")}
+      />
+      <Sheet
       style={{
         flexDirection: narrow ? "column" : "row",
         padding: 0,
@@ -174,9 +181,6 @@ export function SettingsPage({
           backgroundColor: theme.appearance === "dark" ? "#FFFFFF05" : theme.colors.muted,
         }}
       >
-        <Text size="lg" weight="semibold" style={{ marginBottom: 8 }}>
-          {t("Settings")}
-        </Text>
         {TABS.map((entry) => {
           const active = tab === entry.id
           return (
@@ -221,13 +225,13 @@ export function SettingsPage({
               </Text>
               <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", alignItems: narrow ? "stretch" : "flex-end", gap: 10 }}>
                 <Avatar name={name || data.offlineName} size={42} />
-                <div style={{ width: narrow ? "100%" : 280 }}>
+                <Field label={t("Player name")} style={{ width: narrow ? "100%" : 280 }}>
                   <Input
                     value={name}
                     placeholder="Builder_1"
                     onChange={(event) => setName(event.value ?? "")}
                   />
-                </div>
+                </Field>
                 <Button
                   variant="primary"
                   loading={busy === "save"}
@@ -253,7 +257,7 @@ export function SettingsPage({
 
             <div style={{ height: 1, backgroundColor: theme.colors.border }} />
 
-            <Field label={t("Appearance")} detail={t("Dark or light.")}>
+            <SectionField label={t("Appearance")} detail={t("Dark or light.")}>
               <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", gap: 10 }}>
                 {[
                   { key: "dark", label: t("Night"), detail: t("Indigo and iris"), colors: ["#151020", "#8B5CF6", "#F4EFFF"] },
@@ -304,9 +308,9 @@ export function SettingsPage({
                   )
                 })}
               </div>
-            </Field>
+            </SectionField>
 
-            <Field label={t("Language")}>
+            <SectionField label={t("Language")}>
               <div style={{ display: "flex", flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
                 {[
                   ["en", "English"],
@@ -324,9 +328,9 @@ export function SettingsPage({
                   </Button>
                 ))}
               </div>
-            </Field>
+            </SectionField>
 
-            <Field label={t("While playing")} detail={t("What this window does when the game starts.")}>
+            <SectionField label={t("While playing")} detail={t("What this window does when the game starts.")}>
               <div style={{ display: "flex", flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
                 {MODES.map((mode) => (
                   <Button
@@ -344,7 +348,7 @@ export function SettingsPage({
                   </Button>
                 ))}
               </div>
-            </Field>
+            </SectionField>
 
             {note ? (
               <Text size="xs" tone="muted">
@@ -653,6 +657,7 @@ export function SettingsPage({
           </>
         ) : null}
       </div>
-    </Sheet>
+      </Sheet>
+    </div>
   )
 }

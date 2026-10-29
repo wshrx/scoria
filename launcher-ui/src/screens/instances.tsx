@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input"
 import type { Snapshot } from "../api"
 import { createInstance, selectInstance } from "../api"
 import { useT } from "../i18n"
-import { SceneThumb, Sheet } from "../visual"
+import { PageHeader } from "../components/layout/page-header"
+import { SceneThumb } from "../visual"
 
 const KIND: Record<string, string> = {
   release: "release",
@@ -25,26 +26,21 @@ export function InstancesPage({ data, onRefresh }: { data: Snapshot; onRefresh: 
   const [busy, setBusy] = useState<string | null>(null)
 
   return (
-    <Sheet style={{ padding: narrow ? 20 : 30, gap: 22, }}>
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-end", gap: 16 }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, flexGrow: 1 }}>
-          <Text style={{ fontSize: narrow ? 30 : 38, lineHeight: 42, fontWeight: "700" }}>
-            {t("Instances")}
-          </Text>
-          <Text size="sm" tone="muted">
-            {t("Separate game folders, each with its own worlds, options and packs.")}
-          </Text>
-        </div>
-        <Button
-          variant={creating ? "ghost" : "secondary"}
-          onClick={() => setCreating((value) => !value)}
-          style={{ borderRadius: 999, height: 36, paddingLeft: 16, paddingRight: 16 }}
-        >
-          <Icon name={creating ? "x" : "plus"} size={13} color={theme.colors.foreground} />
-          {creating ? t("Cancel") : t("New instance")}
-        </Button>
-      </div>
-
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <PageHeader
+        title={t("Instances")}
+        subtitle={t("Separate game folders, each with its own worlds, options and packs.")}
+        actions={
+          <Button
+            variant={creating ? "ghost" : "secondary"}
+            onClick={() => setCreating((value) => !value)}
+            style={{ borderRadius: 999, height: 36, paddingLeft: 16, paddingRight: 16 }}
+          >
+            <Icon name={creating ? "x" : "plus"} size={13} color={theme.colors.foreground} />
+            {creating ? t("Cancel") : t("New instance")}
+          </Button>
+        }
+      />
       {creating ? (
         <div
           style={{
@@ -180,6 +176,6 @@ export function InstancesPage({ data, onRefresh }: { data: Snapshot; onRefresh: 
           )
         })}
       </div>
-    </Sheet>
+    </div>
   )
 }

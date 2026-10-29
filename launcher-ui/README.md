@@ -1,6 +1,6 @@
 # Scoria launcher UI
 
-The launcher's interface: React on **GPUIX 0.11.0** with **flint-ui 0.1.1** components copied in
+The launcher's interface: React on **GPUIX 0.11.0** with **flint-ui 0.1.2** components copied in
 (`src/lib/flint`, `src/components/ui`). It is a desktop window, not a web app. Everything is a pill
 or a soft rounded panel; the backdrop is a procedurally painted, blurred world, not game art.
 
@@ -42,6 +42,10 @@ SCORIA_UI_HEADLESS=1 bun app.tsx
 
 `SCORIA_UI_PAGE=instances|mods|servers|settings` opens one page; `SCORIA_UI_WIDTH` and
 `SCORIA_UI_HEIGHT` override the window size. The engine path is `SCORIA_LAUNCHER_BIN`.
+
+Design and regression rules live in [DESIGN.md](DESIGN.md): tokens, layout, the one-entry
+navigation rule, the black-corner/shape checklist and known GPUIX traps. Run
+`bun run check:ui` before shipping.
 
 ## Methods
 

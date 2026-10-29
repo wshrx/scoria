@@ -58,7 +58,7 @@ window. Set `SCORIA_UI_WAYLAND=1` to keep the native Wayland window and its nati
 
 - `crates/` — the Rust engine: client, world, protocol, assets, launcher preparation, servers.
 - `launcher/` — the Rust launcher engine and the JSON-lines API (`horizon-launcher api`).
-- `launcher-ui/` — the desktop UI: React on GPUIX with flint-ui 0.1.1.
+- `launcher-ui/` — the desktop UI: React on GPUIX with flint-ui 0.1.2.
   - `src/screens/` — one component per screen, listed in `src/screens/registry.tsx`.
   - `src/components/layout/` — rail, topbar, window controls, resize edges.
   - `src/api/` — the typed engine client, split by concern (`client`, `launcher`, `mods`).

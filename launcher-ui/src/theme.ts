@@ -9,21 +9,21 @@ import { flintDark, flintLight, type FlintTheme } from "@/lib/flint"
  * launcher's own procedural backdrop, never to a game screenshot.
  */
 const nightly = {
-  background: "#0A0712",
+  background: "#08090C",
   foreground: "#F4EFFF",
-  card: "#151020",
-  cardForeground: "#F4EFFF",
-  popover: "#1A1428",
+  card: "#101218",
+  cardForeground: "#F3F1F7",
+  popover: "#151821",
   popoverForeground: "#F4EFFF",
   primary: "#8B5CF6",
   primaryForeground: "#FFFFFF",
   primaryHover: "#A78BFA",
-  secondary: "#211A31",
+  secondary: "#1A1D26",
   secondaryForeground: "#EDE8F8",
-  secondaryHover: "#2B2240",
-  muted: "#120E1B",
-  mutedForeground: "#A49BB8",
-  accent: "#251D37",
+  secondaryHover: "#232735",
+  muted: "#0D0F14",
+  mutedForeground: "#9A96A6",
+  accent: "#1B1F2A",
   accentForeground: "#F8F5FF",
   destructive: "#E5484D",
   destructiveForeground: "#FFF4F5",
@@ -31,8 +31,8 @@ const nightly = {
   success: "#7FD8A4",
   successForeground: "#04160B",
   successBorder: "#2C6346",
-  border: "#2B2340",
-  input: "#6F6486",
+  border: "#242833",
+  input: "#5E6374",
   ring: "#A78BFA",
   overlay: "#07040ECC",
   selection: "#8B5CF644",
@@ -40,9 +40,9 @@ const nightly = {
 }
 
 const lilac = {
-  background: "#EEEAF6",
-  foreground: "#171020",
-  card: "#FAF7FF",
+  background: "#F4F1F7",
+  foreground: "#16141C",
+  card: "#FFFFFF",
   cardForeground: "#171020",
   popover: "#FFFFFF",
   popoverForeground: "#171020",
@@ -52,7 +52,7 @@ const lilac = {
   secondary: "#E4DDF2",
   secondaryForeground: "#171020",
   secondaryHover: "#D8CEEE",
-  muted: "#E9E3F4",
+  muted: "#EEEAF3",
   mutedForeground: "#6D647D",
   accent: "#E0D8EF",
   accentForeground: "#171020",
@@ -62,7 +62,7 @@ const lilac = {
   success: "#2C6E4F",
   successForeground: "#F4FFF8",
   successBorder: "#A5C8B4",
-  border: "#D4CBE6",
+  border: "#DED8E6",
   input: "#968AA9",
   ring: "#6D28D9",
   overlay: "#17102066",
@@ -70,8 +70,8 @@ const lilac = {
   caret: "#6D28D9",
 }
 
-const radius = { xs: 10, sm: 14, md: 18, lg: 22, xl: 28, full: 999 }
-const text = { xs: 10, sm: 11, base: 13, md: 14, lg: 17, xl: 22, "2xl": 30, "3xl": 48 }
+const radius = { xs: 6, sm: 8, md: 10, lg: 14, xl: 18, full: 999 }
+const text = { xs: 10, sm: 11, base: 13, md: 14, lg: 17, xl: 22, "2xl": 28, "3xl": 36 }
 const leading = { tight: 1.1, normal: 1.45, relaxed: 1.6 }
 
 export const scoriaDark: FlintTheme = {

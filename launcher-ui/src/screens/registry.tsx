@@ -11,6 +11,7 @@ import { SettingsPage } from "./settings"
 export interface ScreenProps {
   data: Snapshot
   onRefresh: () => void
+  onPage: (page: ScreenId) => void
   dark: boolean
   onToggleTheme: () => void
   onLanguage: (value: "en" | "ru" | "system") => void

@@ -7,7 +7,7 @@ describe the engine itself (1773 Rust files, ~800k lines, `horizon-client` being
 ## Layers
 
 ```
-launcher-ui/            flint-ui 0.1.1 on gpuix 0.11.0 (Bun/React) ← new, P3 started
+launcher-ui/            flint-ui 0.1.2 on gpuix 0.11.0 (Bun/React) ← new, P3 started
         │  JSON-RPC over a local socket
 launcher/               Rust: installs, preparation, processes, MCP  ← upstream, rebranded
         │
