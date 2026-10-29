@@ -106,7 +106,7 @@ jobs:
             echo "Set the release environment secret RELEASE_SIGNING_KEY (base64 PKCS#8 Ed25519)." >&2
             exit 1
           fi
-          sh tools/ci/sign_release.sh "${{ github.ref_name }}" dist/scoria-launcher-* dist/horizon-*
+          bash tools/ci/sign_release.sh "${{ github.ref_name }}" dist/scoria-launcher-* dist/horizon-*
       - name: Verify signatures
         run: cargo run --quiet -p horizon-release-sign -- verify --tag "${{ github.ref_name }}" dist
       - uses: softprops/action-gh-release@v2
