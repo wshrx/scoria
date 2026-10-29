@@ -24,6 +24,13 @@ no online-mode servers, no Minecraft assets.
   there; keep them on Entire or in a private tools repo. Push GitHub at milestones/tags, not WIP.
 - **Builds are release artifacts, not commits**: CI builds on a tag, attaches the tarball plus a
   SHA-256 file to the GitHub Release, and never stores the 100 MB binary in git.
+- **First public beta**: GitHub release `v0.2.98` (game tag) carries Linux/Windows launchers and
+  game bundles, `SHA256SUMS` and a valid `SHA256SUMS.sig` (Scoria key). Fresh-home
+  `install_latest` accepted the signature and installed `v0.2.98`; Linux prepare + game start
+  were verified. Tags `v0.2.94`–`v0.2.97` were retries and were deleted; only `v0.2.98` remains.
+- **Online-mode message**: Scoria cannot join online-mode servers (no Microsoft session). The
+  disconnect text now says Scoria and points to offline-mode/LAN; the `v0.2.98` binary still has
+  the old Horizon wording until the next game build.
 - **Linux game bundle proven**: `tools/package_game.sh` builds `horizon-linux-x86_64.tar.gz`
   (26 MB, no Mojang assets). On a fresh `HORIZON_LAUNCHER_HOME` it was recognised as `v0.2.94`,
   downloaded 26.3 from piston, prepared 1.4 GB of resources locally, and launched the client.
