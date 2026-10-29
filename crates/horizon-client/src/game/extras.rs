@@ -119,7 +119,7 @@ impl Game<'_> {
         }
     }
     /// Auto-reconnect: connect again once the countdown is over. An
-    /// online-mode server gets the signed-in account again: `connect_server`
+    /// online-mode server is refused (Scoria has no account): `connect_server`
     /// takes it from `auth::current()`, held in memory for the whole run
     /// (the launcher's session file is gone after the first read).
     pub(super) fn extras_retry(&mut self) -> horizon_client::Result<()> {

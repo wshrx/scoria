@@ -41,7 +41,7 @@ fn names_are_kept_once_in_any_case_and_removed_cleanly() {
 }
 
 #[test]
-fn accounts_json_from_the_microsoft_era_still_loads_offline_names() {
+fn accounts_json_from_the_old_launcher_still_loads_offline_names() {
     let old =
         r#"{"accounts":[],"selected":null,"offline":["Builder_1"],"offline_selected":"Builder_1"}"#;
     let accounts: Accounts = serde_json::from_str(old).unwrap();

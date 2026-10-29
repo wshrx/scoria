@@ -7,7 +7,7 @@
 ## Context
 
 Horizon decides on 2026-10-27 to gate Play behind an account that owns Minecraft: Java Edition
-(`docs/microsoft-account.md`, "The owner gate"). The gate lives in `launcher/src/account.rs`
+(ADR-0007). The removal lives in `launcher/src/account.rs`
 (`launch` → `NoOwner`, `has_owner`, `play_as` → `OFFLINE_NEEDS_OWNER`, `session_for_game`), with UI
 in `owner_page.rs` and refusals in `main.rs:656`, `main.rs:2357`, `cli.rs:1356`, `mcp.rs:203`.
 

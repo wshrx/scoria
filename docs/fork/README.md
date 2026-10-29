@@ -25,7 +25,7 @@ written in Rust, with a launcher that plays without a Microsoft account.
 The scene is unchanged: Scoria is Horizon's engine, parity harnesses and world format. Scoria does
 not patch the game to accept unauthenticated sessions on online-mode servers. Offline play is
 local: single player, LAN and offline-mode servers, exactly as Horizon already supports without a
-session file (`docs/microsoft-account.md`, "Handing the session to the game").
+session file: there is no account service left in the fork.
 
 ## Documents
 
