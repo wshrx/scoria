@@ -99,9 +99,17 @@ once and Scoria prepares 26.3 locally from your own files or Mojang's servers.
 ## Release channels
 
 There is no `nightly` branch. A branch is not a distribution channel: releases are **tags** on
-`dev`, built by CI and attached to GitHub Releases. `v0.1.0-beta.N` is the beta channel. If a
-nightly channel is added, it will be a rolling pre-release tag built from `dev` on a schedule —
-not a separate branch with a different history.
+`dev`, built by CI and attached to GitHub Releases. Tags are plain pointers to commits; the notes
+live in [CHANGELOG.md](CHANGELOG.md) and are copied into the release body.
+
+| Tag | Meaning |
+|---|---|
+| `v0.1.0-beta.N` | public beta; `N` grows by one for every published build (never reused) |
+| `v0.1.0` | first stable release, once the betas are clean |
+| `v0.1.1`, ... | fixes after that |
+
+Work that is not published is not tagged: it lives in the history of `dev`. A CI run without a tag
+is a build, not a release.
 
 ## Build from source
 
