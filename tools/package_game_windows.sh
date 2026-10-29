@@ -16,6 +16,10 @@ for binary in horizon-client horizon-ctl horizon-prepare horizon-server; do
 done
 cp "$root/research-lock.json" "$root/LICENSE" "$root/THIRD_PARTY_NOTICES.md" "$root/packaging/PLAY.txt" "$stage/"
 cp -a "$root/packaging/exporters" "$stage/exporters"
+# The exporters' key hashes the clean-room Java oracles; keep them so a new Java runtime can
+# rebuild the classes and `available()` can verify the shipped bundle.
+mkdir -p "$stage/mods"
+cp -a "$root/mods/horizon" "$stage/mods/horizon"
 
 if command -v 7z >/dev/null 2>&1; then
   (cd "$out" && 7z a -tzip -mx=9 "$root/dist/horizon-windows-x64.zip" ./horizon-windows-x64 >/dev/null)

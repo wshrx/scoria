@@ -18,6 +18,10 @@ for binary in horizon-client horizon-ctl horizon-prepare horizon-server; do
 done
 cp "$root/research-lock.json" "$root/LICENSE" "$root/THIRD_PARTY_NOTICES.md" "$root/packaging/PLAY.txt" "$stage/"
 cp -a "$root/packaging/exporters" "$stage/exporters"
+# The exporters' key hashes the clean-room Java oracles; keep them so a new Java runtime can
+# rebuild the classes and `available()` can verify the shipped bundle.
+mkdir -p "$stage/mods"
+cp -a "$root/mods/horizon" "$stage/mods/horizon"
 
 (cd "$out" && tar -czf "$root/dist/horizon-linux-x86_64.tar.gz" horizon-linux-x86_64)
 echo "Wrote $root/dist/horizon-linux-x86_64.tar.gz"

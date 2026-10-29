@@ -18,8 +18,8 @@ copy() {
 # Product sources and build files. docs/media is game art and old launcher screenshots: it stays
 # out. launcher/docs is the same. The public README carries only UI screenshots.
 copy crates launcher launcher-ui docs packaging mods third_party xtask
-# mods/horizon holds the Java parity oracles: not workspace members and not publishable.
-rm -rf "$out/mods/horizon"
+# mods/horizon holds the clean-room Java oracles the preparer compiles; they ship in the game
+# bundle and are allowed by check_public_tree.py (original code, no Mojang sources).
 cp "$root/Cargo.toml" "$root/Cargo.lock" "$out/"
 rm -rf "$out/docs/media" "$out/docs/public" "$out/docs/agents" "$out/docs/fork" \
        "$out/launcher/docs" "$out/packaging/macos/background.png" "$out/packaging/macos/background@2x.png"
