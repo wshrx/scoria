@@ -18,22 +18,22 @@ export const gradient = (from: string, to: string, angle = 160): LinearGradientB
 export function Backdrop({ strong = true, dark = true }: { strong?: boolean; dark?: boolean }) {
   const p = dark
     ? {
-        skyTop: "#0B0D13",
-        skyBottom: "#07080B",
+        skyTop: "#0C0908",
+        skyBottom: "#070506",
         line: "#FFFFFF",
-        glowA: "#8B5CF62E",
-        glowB: "#2CD3A922",
-        glowC: "#5B6CFF1A",
-        scrim: "#08090C",
+        glowA: "#FF8A4C2E",
+        glowB: "#FF6B2C1C",
+        glowC: "#FFD9A814",
+        scrim: "#09080A",
       }
     : {
-        skyTop: "#F8F4FB",
-        skyBottom: "#EFEAF6",
-        line: "#2A1A44",
-        glowA: "#8B5CF624",
-        glowB: "#2CD3A91C",
-        glowC: "#5B6CFF14",
-        scrim: "#F4F1F7",
+        skyTop: "#FBF5EE",
+        skyBottom: "#F3E6D8",
+        line: "#3A2114",
+        glowA: "#FF8A4C24",
+        glowB: "#FF6B2C14",
+        glowC: "#FFD9A81C",
+        scrim: "#FBF5EE",
       }
 
   return (
@@ -158,7 +158,7 @@ const DUST = Array.from({ length: 28 }, (_, index) => ({
   speed: 0.0009 + ((index * 11) % 7) * 0.00025,
   drift: 8 + ((index * 5) % 9),
   phase: index * 1.7,
-  tone: index % 5 === 0 ? "#8FD8B4" : index % 3 === 0 ? "#FFFFFF" : "#B9A7FF",
+  tone: index % 5 === 0 ? "#FFD9A8" : index % 3 === 0 ? "#FFFFFF" : "#FF9A5E",
 }))
 
 /** Slow dust over the scene: the one looping ambient animation, 20 frames a second. */
@@ -191,7 +191,7 @@ export function ParticleField({ dark = true }: { dark?: boolean }) {
         const x = dust.x * size.width + Math.sin((tick + dust.phase) / 42) * dust.drift
         const twinkle = (dark ? 0.12 : 0.08) + (dark ? 0.58 : 0.32) * (0.5 + 0.5 * Math.sin((tick + dust.phase) / 19))
         const s = dust.size
-        const tone = dark ? dust.tone : dust.tone === "#FFFFFF" ? "#6D647D" : dust.tone === "#8FD8B4" ? "#2C6E4F" : "#5B3E9A"
+        const tone = dark ? dust.tone : dust.tone === "#FFFFFF" ? "#756456" : dust.tone === "#FFD9A8" ? "#B7410E" : "#C2560F"
         return (
           <div
             key={index}
@@ -225,7 +225,7 @@ export function ParticleField({ dark = true }: { dark?: boolean }) {
   )
 }
 
-/** The wordmark: a soft violet tile with an S, deliberately not a game logo. */
+/** The Scoria mark, shipped as a PNG so gradients and the ember survive. */
 export function Mark({ size = 40 }: { size?: number }) {
   return (
     <img
@@ -260,7 +260,7 @@ export function Avatar({
         width: size,
         height: size,
         borderRadius: Math.round(size * 0.32),
-        background: gradient("#C4B5FD", "#7C3AED", 150),
+        background: gradient("#FFD9A8", "#B7410E", 150),
         ...style,
       }}
     >
@@ -379,22 +379,22 @@ export function SceneThumb({
   const dark = theme.appearance === "dark"
   const skies = dark
     ? [
-        ["#2B2348", "#0B0814"],
-        ["#1E3A36", "#080D0C"],
-        ["#3A2438", "#0E080F"],
-        ["#3B2A1B", "#100B07"],
+        ["#3A1B0F", "#0B0706"],
+        ["#2A1A12", "#0B0807"],
+        ["#3B2415", "#0D0806"],
+        ["#1C1A22", "#08070A"],
       ]
     : [
-        ["#E8DFF6", "#D3E8EC"],
-        ["#D8EFE6", "#C8DDE2"],
-        ["#F0DDEE", "#E0D5EA"],
+        ["#F6D9C2", "#F2E4D2"],
+        ["#F3E0CC", "#E8D3BC"],
         ["#F2E4D2", "#E4DCD0"],
+        ["#EFE3D6", "#E2D3C2"],
       ]
   const [from, to] = skies[Math.abs(seed) % skies.length]
   const moon = dark ? "#F0E8D8" : "#FFF4D2"
-  const hillA = dark ? "#2A5A4B" : "#A6CBB9"
-  const hillB = dark ? "#33204A" : "#C6B2DF"
-  const fade = dark ? "#0A0712" : "#F4F1F7"
+  const hillA = dark ? "#5A2A16" : "#D9A97F"
+  const hillB = dark ? "#3A2018" : "#C98A5E"
+  const fade = dark ? "#0A0706" : "#FBF5EE"
   return (
     <div
       style={{

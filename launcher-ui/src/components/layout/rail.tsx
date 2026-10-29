@@ -48,7 +48,7 @@ export function Rail({
           paddingRight: 10,
           flexShrink: 0,
           borderRadius: 10,
-          background: active ? gradient("#8B5CF624", "#8B5CF60A", 120) : undefined,
+          background: active ? gradient("#FF8A4C24", "#FF8A4C0A", 120) : undefined,
           cursor: "pointer",
           hover: active ? {} : { backgroundColor: theme.colors.accent },
           focusVisible: { outlineWidth: 2, outlineColor: theme.colors.ring, outlineOffset: -2 },

@@ -110,7 +110,7 @@ export function InstancesPage({ data, onRefresh }: { data: Snapshot; onRefresh: 
                 borderWidth: 1,
                 borderStyle: "solid",
                 borderColor: selected ? theme.colors.primary : theme.colors.border,
-                backgroundColor: selected ? "#8B5CF614" : theme.colors.muted,
+                backgroundColor: selected ? "#FF8A4C14" : theme.colors.muted,
                 cursor: selected ? "default" : "pointer",
                 hover: selected ? {} : { borderColor: theme.colors.input },
               }}

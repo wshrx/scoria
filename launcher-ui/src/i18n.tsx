@@ -134,7 +134,10 @@ export const RU: Record<string, string> = {
   "Files come from Mojang only when you ask for them.": "Файлы скачиваются с Mojang только когда вы об этом просите.",
   Night: "Ночь",
   Lilac: "Сирень",
+  Ember: "Янтарь",
   "Indigo and iris": "Индиго и ирис",
+  "Ember and basalt": "Янтарь и базальт",
+  "Warm paper, ember ink": "Тёплая бумага, янтарные чернила",
   "Versions of Scoria installed on this machine.": "Установленные на этой машине версии Scoria.",
   "A local-first launcher: no account, no session, no telemetry.":
     "Лаунчер, который живёт локально: без аккаунта, сессии и телеметрии.",

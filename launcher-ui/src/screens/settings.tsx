@@ -215,8 +215,8 @@ export function SettingsPage({
                 paddingRight: 12,
                 borderRadius: 12,
                 cursor: "pointer",
-                backgroundColor: active ? "#8B5CF624" : "transparent",
-                hover: { backgroundColor: active ? "#8B5CF62E" : theme.colors.accent },
+                backgroundColor: active ? "#FF8A4C24" : "transparent",
+                hover: { backgroundColor: active ? "#FF8A4C2E" : theme.colors.accent },
               }}
             >
               <Icon
@@ -296,8 +296,8 @@ export function SettingsPage({
             <SectionField label={t("Appearance")} detail={t("Dark or light.")}>
               <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", gap: 10 }}>
                 {[
-                  { key: "dark", label: t("Night"), detail: t("Indigo and iris"), colors: ["#151020", "#8B5CF6", "#F4EFFF"] },
-                  { key: "light", label: t("Lilac"), detail: t("Warm paper, ink"), colors: ["#EEEAF6", "#6D28D9", "#171020"] },
+                  { key: "dark", label: t("Night"), detail: t("Ember and basalt"), colors: ["#09080A", "#FF8A4C", "#F7EFE7"] },
+                  { key: "light", label: t("Ember"), detail: t("Warm paper, ember ink"), colors: ["#FBF5EE", "#B7410E", "#1D1510"] },
                 ].map((option) => {
                   const active = (option.key === "dark") === dark
                   return (
@@ -317,7 +317,7 @@ export function SettingsPage({
                         borderWidth: 1,
                         borderStyle: "solid",
                         borderColor: active ? theme.colors.primary : theme.colors.border,
-                        backgroundColor: active ? "#8B5CF614" : "transparent",
+                        backgroundColor: active ? "#FF8A4C14" : "transparent",
                         cursor: active ? "default" : "pointer",
                         hover: active ? {} : { borderColor: theme.colors.input },
                       }}

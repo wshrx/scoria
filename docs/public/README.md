@@ -19,7 +19,7 @@
 </p>
 
 <p align="center">
-  <img alt="License" src="https://img.shields.io/badge/license-MIT-8B5CF6">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-FF8A4C">
   <img alt="Platforms" src="https://img.shields.io/badge/platform-Linux%20·%20macOS%20·%20Windows-1f2937">
   <img alt="Status" src="https://img.shields.io/badge/status-beta-D8B26A">
   <img alt="No assets" src="https://img.shields.io/badge/ships%20no%20Minecraft%20assets-2f855a">
