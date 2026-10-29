@@ -23,6 +23,9 @@ move modules: those turn every merge into a conflict.
 
 ## Launcher (`launcher/`) — 44 files, +2168/−4210
 
+The legacy GPUI window was removed on 2026-10-29: 33 GUI modules and `gpui` are gone, so this delta
+is now the engine/CLI/API only. That removes 33 files from every future merge.
+
 This is the real fork and the source of most conflicts:
 
 - Microsoft accounts and sessions removed; offline names (Unicode) in `account.rs`.

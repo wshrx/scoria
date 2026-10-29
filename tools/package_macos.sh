@@ -18,6 +18,7 @@ echo "Building the UI…"
 (cd "$root/launcher-ui" && bun build --compile app.tsx --outfile "$app/Contents/MacOS/scoria-ui")
 
 cp "$root/launcher/target/release/horizon-launcher" "$app/Contents/MacOS/"
+cp "$root/packaging/icons/horizon.icns" "$app/Contents/Resources/scoria.icns"
 mkdir -p "$app/Contents/MacOS/fonts"
 cp "$root"/launcher-ui/src/lib/fonts/*.ttf "$app/Contents/MacOS/fonts/"
 
@@ -46,6 +47,7 @@ cat > "$app/Contents/Info.plist" <<PLIST
   <key>CFBundleShortVersionString</key><string>${version:-0.1.0}</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleExecutable</key><string>Scoria</string>
+  <key>CFBundleIconFile</key><string>scoria.icns</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>NSHighResolutionCapable</key><true/>
 </dict>

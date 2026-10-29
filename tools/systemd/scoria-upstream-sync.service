@@ -1,0 +1,11 @@
+[Unit]
+Description=Scoria: check Horizon upstream, test the merge, publish a sync branch
+Documentation=file://%h/dev/scoria/docs/fork/patches.md
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/dev/scoria
+ExecStart=/bin/sh -lc 'cd %h/dev/scoria && sh tools/auto_upstream.sh'
+TimeoutStartSec=3h
+Nice=10
+IOSchedulingClass=idle
