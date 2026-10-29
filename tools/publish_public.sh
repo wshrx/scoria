@@ -41,7 +41,10 @@ if git diff --cached --quiet; then
   exit 0
 fi
 source=$(git -C "$root" rev-parse --short HEAD)
-git -c user.name="${GIT_AUTHOR_NAME:-Scoria}" -c user.email="${GIT_AUTHOR_EMAIL:-scoria@users.noreply.github.com}" \
+# Never author snapshots as the "Scoria" GitHub account: the noreply address would link the
+# commits to it and put it in the contributors graph.
+git -c user.name="${SCORIA_PUBLIC_AUTHOR:-wshrx}" \
+    -c user.email="${SCORIA_PUBLIC_EMAIL:-wshrx@users.noreply.github.com}" \
   commit -q -m "snapshot: Scoria $source"
 git push origin staging
 echo "Pushed staging from $source. CI runs there; merge to main only after it is green."
