@@ -33,8 +33,9 @@ no online-mode servers, no Minecraft assets.
   There is no way to hand the game a Microsoft session; online-mode servers are refused with a
   Scoria-specific message. The engine's dormant online-mode/auth module stays for server parity
   but is unreachable without a session.
-- **Entire tidy**: `main` fast-forwarded to `dev`, `nightly` pushed to its remote; only the old
-  `lab` and `feat/launcher-ui` branches remain as history.
+- **Entire tidy**: `main` fast-forwarded to `dev`; `lab`, `feat/launcher-ui` and `nightly` are
+  deleted (local and remote). The old nightly UI line is kept as the tag
+  `archive/nightly-ui` (`6433f621b`). Arch/remote now has only `main`, `dev`, `test/instances`.
 - **Online-mode message**: Scoria cannot join online-mode servers (no Microsoft session). The
   disconnect text now says Scoria and points to offline-mode/LAN; the `v0.2.98` binary still has
   the old Horizon wording until the next game build.
@@ -63,9 +64,8 @@ no online-mode servers, no Minecraft assets.
   ahead** (`9c15e18c6`, 2026-10-29): a large sync is due, engine patch re-applied after taking
   upstream. The launcher is the real fork.
 - **Branches**: `main` = public stable (release = merge `dev`, then tag on `main`); `dev` =
-  integration/beta; `test/instances` = unpublished. `nightly` is upstream Horizon's branch, never
-  ours: do not push or release from it. Nightly builds, if added, are a rolling pre-release tag
-  built from `dev`.
+  integration/beta; `test/instances` = unpublished. There is no `nightly` branch: nightly builds, if
+  added, are a rolling pre-release tag built from `dev`.
 
 ## Product decisions
 
