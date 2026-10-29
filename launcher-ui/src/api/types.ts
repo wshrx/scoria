@@ -4,6 +4,8 @@ export interface World {
   name: string
   mode: string
   lastPlayed: string
+  /** When the game last saved it, Unix milliseconds; 0 when unknown. */
+  lastPlayedAt: number
   size: string
 }
 

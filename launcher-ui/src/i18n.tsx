@@ -6,7 +6,7 @@ export type Lang = "en" | "ru"
  * The UI's own strings. Engine data (world names, modes, errors) is shown as it comes.
  * English is the key: a missing translation falls back to it instead of showing a key.
  */
-const RU: Record<string, string> = {
+export const RU: Record<string, string> = {
   Play: "Играть",
   Instances: "Инстансы",
   "Game files": "Файлы игры",
@@ -46,6 +46,11 @@ const RU: Record<string, string> = {
   results: "результатов",
   "Modrinth mods and resource packs.": "Моды и ресурспаки с Modrinth.",
   "Offline-mode servers and LAN.": "Offline-mode серверы и LAN.",
+  "Player name": "Имя игрока",
+  "A name needs 3 to 16 letters, digits or _.":
+    "Имя — от 3 до 16 букв, цифр или _.",
+  beta: "бета",
+  "Removed.": "Удалено.",
   Status: "Статус",
   General: "Общие",
   Builds: "Сборки",
@@ -132,6 +137,11 @@ const RU: Record<string, string> = {
   "Versions and files from piston-meta.mojang.com": "Версии и файлы с piston-meta.mojang.com",
   "Verify and prepare": "Проверить и подготовить",
   Profile: "Профиль",
+  Survival: "Выживание",
+  Creative: "Творческий",
+  Adventure: "Приключение",
+  Spectator: "Наблюдатель",
+  Hardcore: "Хардкор",
   Save: "Сохранить",
   Engine: "Движок",
   release: "релиз",

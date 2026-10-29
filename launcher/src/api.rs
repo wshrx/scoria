@@ -14,7 +14,7 @@ use crate::browser::{self, Kind, Query, SourceId};
 use serde_json::{json, Value};
 use std::io::{BufRead, Write};
 use std::sync::{Arc, Mutex};
-use std::time::SystemTime;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn serve() -> Result<(), String> {
     let stdin = std::io::stdin();
@@ -126,6 +126,11 @@ fn state() -> Result<Value, String> {
                 "name": w.name,
                 "mode": w.mode,
                 "lastPlayed": ago(w.last_played),
+                "lastPlayedAt": w
+                    .last_played
+                    .duration_since(UNIX_EPOCH)
+                    .map(|d| d.as_millis() as u64)
+                    .unwrap_or(0),
                 "size": mb(w.size),
             })
         })

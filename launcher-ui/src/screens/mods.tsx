@@ -35,13 +35,13 @@ export function ModsPage() {
   const [searching, setSearching] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [progress, setProgress] = useState<{ label: string; value: number } | null>(null)
-  const [note, setNote] = useState<string | null>(null)
+  const [note, setNote] = useState<{ text: string; error: boolean } | null>(null)
   const [confirming, setConfirming] = useState<string | null>(null)
 
   const loadInstalled = () => {
     void installedMods()
       .then((state) => setEntries(state.entries))
-      .catch((error: Error) => setNote(error.message))
+      .catch((error: Error) => setNote({ text: error.message, error: true }))
   }
 
   useEffect(loadInstalled, [])
@@ -51,7 +51,7 @@ export function ModsPage() {
     setNote(null)
     void searchMods(text, kind)
       .then(setResults)
-      .catch((error: Error) => setNote(error.message))
+      .catch((error: Error) => setNote({ text: error.message, error: true }))
       .finally(() => setSearching(false))
   }
 
@@ -64,9 +64,9 @@ export function ModsPage() {
     void installMod(project.id, (label, value) => setProgress({ label, value }))
       .then(() => {
         loadInstalled()
-        setNote(t("Installed."))
+        setNote({ text: t("Installed."), error: false })
       })
-      .catch((error: Error) => setNote(error.message))
+      .catch((error: Error) => setNote({ text: error.message, error: true }))
       .finally(() => {
         setBusy(null)
         setProgress(null)
@@ -122,19 +122,25 @@ export function ModsPage() {
             {t("Search")}
           </Button>
         </div>
-        {progress ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 5, paddingTop: 10 }}>
-            <Meter value={progress.value} total={1} height={4} />
-            <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
-              <Text mono size="xs" tone="muted">
-                {t("Installing…")}
-              </Text>
-              <Text mono size="xs" tone="muted">
-                {`${percent}%`}
-              </Text>
+        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", minHeight: 30, paddingTop: 6 }}>
+          {progress ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <Meter value={progress.value} total={1} height={4} />
+              <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <Text mono size="xs" tone="muted" truncate style={{ flexGrow: 1, minWidth: 0 }}>
+                  {progress.label ? `${t("Installing…")} ${progress.label}` : t("Installing…")}
+                </Text>
+                <Text mono size="xs" tone="muted">
+                  {`${percent}%`}
+                </Text>
+              </div>
             </div>
-          </div>
-        ) : null}
+          ) : note ? (
+            <Text size="xs" style={{ color: note.error ? theme.colors.destructive : theme.colors.success }}>
+              {note.text}
+            </Text>
+          ) : null}
+        </div>
       </Panel>
 
       <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", gap: 16, alignItems: "flex-start" }}>
@@ -292,10 +298,13 @@ export function ModsPage() {
                     }
                     setConfirming(null)
                     void removeMod(entry.project)
-                      .then(setEntries)
-                      .catch((error: Error) => setNote(error.message))
+                      .then((state) => {
+                        setEntries(state)
+                        setNote({ text: t("Removed."), error: false })
+                      })
+                      .catch((error: Error) => setNote({ text: error.message, error: true }))
                   }}
-                  style={{ borderRadius: 999, height: 26, paddingLeft: 10, paddingRight: 10, alignSelf: "flex-start" }}
+                  style={{ borderRadius: 999, height: 26, minWidth: 88, paddingLeft: 10, paddingRight: 10, alignSelf: "flex-start" }}
                 >
                   {confirming === entry.project ? t("Confirm") : t("Remove")}
                 </Button>
@@ -304,12 +313,6 @@ export function ModsPage() {
           )}
         </Panel>
       </div>
-
-      {note ? (
-        <Text size="xs" tone="muted">
-          {note}
-        </Text>
-      ) : null}
     </div>
   )
 }

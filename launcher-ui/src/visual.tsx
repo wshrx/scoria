@@ -250,7 +250,15 @@ export function Mark({ size = 40 }: { size?: number }) {
   )
 }
 
-export function Avatar({ name, size = 30 }: { name: string; size?: number }) {
+export function Avatar({
+  name,
+  size = 30,
+  style,
+}: {
+  name: string
+  size?: number
+  style?: Record<string, unknown>
+}) {
   const initial = name.trim().slice(0, 1).toUpperCase() || "S"
   return (
     <div
@@ -262,6 +270,7 @@ export function Avatar({ name, size = 30 }: { name: string; size?: number }) {
         height: size,
         borderRadius: Math.round(size * 0.32),
         background: gradient("#C4B5FD", "#7C3AED", 150),
+        ...style,
       }}
     >
       <Text

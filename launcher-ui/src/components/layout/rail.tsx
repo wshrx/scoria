@@ -3,6 +3,7 @@ import { Icon, Text, useTheme, type IconName } from "@/lib/flint"
 import type { Snapshot } from "../../api"
 import { useT } from "../../i18n"
 import { SCREENS, type ScreenId } from "../../screens/registry"
+import { LAUNCHER_CHANNEL, LAUNCHER_VERSION } from "../../version"
 import { Avatar, Mark, gradient } from "../../visual"
 
 /** The labelled sidebar: the only page navigation in the launcher. */
@@ -96,9 +97,33 @@ export function Rail({
       >
         <Mark size={30} />
         {compact ? null : (
-          <Text size="sm" weight="semibold">
-            Scoria
-          </Text>
+          <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Text size="sm" weight="semibold">
+                Scoria
+              </Text>
+              <Text
+                mono
+                size="xs"
+                style={{
+                  color: theme.colors.primary,
+                  borderWidth: 1,
+                  borderStyle: "solid",
+                  borderColor: theme.colors.primary + "55",
+                  borderRadius: 999,
+                  paddingLeft: 6,
+                  paddingRight: 6,
+                  paddingTop: 1,
+                  paddingBottom: 1,
+                }}
+              >
+                {LAUNCHER_CHANNEL}
+              </Text>
+            </div>
+            <Text mono size="xs" tone="muted">
+              {LAUNCHER_VERSION}
+            </Text>
+          </div>
         )}
       </div>
 

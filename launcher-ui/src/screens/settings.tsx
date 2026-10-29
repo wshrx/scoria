@@ -17,6 +17,7 @@ import {
   type VersionInfo,
 } from "../api"
 import { useT } from "../i18n"
+import { LAUNCHER_CHANNEL, LAUNCHER_VERSION } from "../version"
 import { downloadStopped } from "../errors"
 import { PageHeader } from "../components/layout/page-header"
 import { Avatar, Meter, Sheet } from "../visual"
@@ -85,8 +86,13 @@ export function SettingsPage({
   const narrow = width < 1000
   const files = data.minecraft
 
-  const [tab, setTab] = useState<Tab>("general")
+  const [tab, setTab] = useState<Tab>(() => {
+    const requested = process.env.SCORIA_UI_SETTINGS_TAB
+    return TABS.some((entry) => entry.id === requested) ? (requested as Tab) : "general"
+  })
   const [name, setName] = useState(data.offlineName)
+  const [nameError, setNameError] = useState<string | null>(null)
+  const [nameHint, setNameHint] = useState<string | null>(null)
   const [note, setNote] = useState<string | null>(null)
   const [busy, setBusy] = useState<"save" | "download" | "prepare" | null>(null)
   const [progress, setProgress] = useState<DownloadProgress | null>(null)
@@ -223,36 +229,50 @@ export function SettingsPage({
               <Text size="xl" weight="semibold">
                 {t("Profile")}
               </Text>
-              <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", alignItems: narrow ? "stretch" : "flex-end", gap: 10 }}>
-                <Avatar name={name || data.offlineName} size={42} />
-                <Field label={t("Player name")} style={{ width: narrow ? "100%" : 280 }}>
+              <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", alignItems: narrow ? "stretch" : "flex-start", gap: 10 }}>
+                <Avatar name={name || data.offlineName} size={42} style={{ marginTop: 20 }} />
+                <Field
+                  label={t("Player name")}
+                  hint={nameHint ?? t("The name the game shows in single player and on LAN.")}
+                  error={nameError ?? undefined}
+                  style={{ width: narrow ? "100%" : 280 }}
+                >
                   <Input
                     value={name}
                     placeholder="Builder_1"
-                    onChange={(event) => setName(event.value ?? "")}
+                    invalid={nameError !== null}
+                    onChange={(event) => {
+                      setName(event.value ?? "")
+                      setNameError(null)
+                      setNameHint(null)
+                    }}
                   />
                 </Field>
                 <Button
                   variant="primary"
                   loading={busy === "save"}
                   onClick={() => {
+                    const trimmed = name.trim()
+                    if (!/^[\p{L}\p{N}_]{3,16}$/u.test(trimmed)) {
+                      setNameHint(null)
+                      setNameError(t("A name needs 3 to 16 letters, digits or _."))
+                      return
+                    }
                     setBusy("save")
-                    void setOfflineName(name.trim())
+                    void setOfflineName(trimmed)
                       .then(() => {
-                        setNote(t("Saved."))
+                        setNameError(null)
+                        setNameHint(t("Saved."))
                         onRefresh()
                       })
-                      .catch((error: Error) => setNote(error.message))
+                      .catch((error: Error) => setNameError(error.message))
                       .finally(() => setBusy(null))
                   }}
-                  style={{ borderRadius: 999, height: 38, paddingLeft: 18, paddingRight: 18 }}
+                  style={{ borderRadius: 999, height: 38, marginTop: 20, paddingLeft: 18, paddingRight: 18 }}
                 >
                   {t("Save")}
                 </Button>
               </div>
-              <Text size="xs" tone="muted">
-                {t("The name the game shows in single player and on LAN.")}
-              </Text>
             </div>
 
             <div style={{ height: 1, backgroundColor: theme.colors.border }} />
@@ -622,7 +642,8 @@ export function SettingsPage({
             </div>
             <div style={{ display: "flex", flexDirection: "column", borderRadius: 16, overflow: "hidden", borderWidth: 1, borderStyle: "solid", borderColor: theme.colors.border }}>
               {[
-                [t("Launcher"), data.version],
+                [t("Launcher"), `${LAUNCHER_VERSION} · ${t(LAUNCHER_CHANNEL)}`],
+                [t("Engine"), data.version],
                 [t("Minecraft"), data.minecraft.version],
                 [t("Profile"), data.offlineName],
               ].map(([label, value], index) => (

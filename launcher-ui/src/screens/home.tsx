@@ -4,7 +4,8 @@ import { Icon, Text, useTheme } from "@/lib/flint"
 import { Button } from "@/components/ui/button"
 import type { DownloadProgress } from "../api"
 import { downloadMinecraft, play, prepare } from "../api"
-import { useT } from "../i18n"
+import { useT, useLang } from "../i18n"
+import { ago } from "../lib/time"
 import { downloadStopped } from "../errors"
 import { PageHeader } from "../components/layout/page-header"
 import type { ScreenProps } from "./registry"
@@ -18,6 +19,7 @@ function megabytes(bytes: number): string {
 export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
   const theme = useTheme()
   const t = useT()
+  const lang = useLang()
   const { width } = useWindowSize()
   const narrow = width < 1060
   const [busy, setBusy] = useState(false)
@@ -232,7 +234,7 @@ export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
                       {world.name}
                     </Text>
                     <Text mono size="xs" tone="muted" truncate>
-                      {`${world.mode} · ${world.size} · ${world.lastPlayed}`}
+                      {`${t(world.mode)} · ${world.size} · ${ago(world.lastPlayedAt, lang) || world.lastPlayed}`}
                     </Text>
                   </div>
                   <Icon name="play" size={13} color={theme.colors.mutedForeground} />
