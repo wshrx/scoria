@@ -21,8 +21,13 @@ cp "$root"/launcher-ui/src/lib/fonts/*.ttf "$out/fonts/"
 cp "$root"/launcher-ui/src/assets/*.png "$out/brand/"
 
 addon="$root/launcher-ui/node_modules/@gpuix/native-win32-x64-msvc/gpuix-native.win32-x64-msvc.node"
-[ -f "$addon" ] || { echo "missing $addon: bun install must run on Windows" >&2; exit 1; }
-cp "$addon" "$out/gpuix-native.node"
+if [ "${SCORIA_GPUIX_FROM_SOURCE:-0}" = 1 ] &&
+   sh "$root/tools/build_gpuix_native.sh" "$out/gpuix-native.node"; then
+  echo "Using the self-built GPUIX addon (static C runtime)."
+else
+  [ -f "$addon" ] || { echo "missing $addon: bun install must run on Windows" >&2; exit 1; }
+  cp "$addon" "$out/gpuix-native.node"
+fi
 sh "$root/tools/windows_runtime.sh" "$out"
 
 # Batch files need CRLF; a shell here-string would write LF and cmd.exe can misread it.

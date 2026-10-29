@@ -25,6 +25,8 @@ WINDOWS_SYSTEM = {
     "ole32.dll", "oleaut32.dll", "opengl32.dll", "propsys.dll", "secur32.dll", "setupapi.dll",
     "shcore.dll", "shell32.dll", "shlwapi.dll", "ucrtbase.dll", "user32.dll", "userenv.dll",
     "uxtheme.dll", "version.dll", "winmm.dll", "ws2_32.dll", "xinput1_4.dll",
+    # Shipped with Windows 10 and 11, imported by the Bun runtime and the GPUIX addon.
+    "uiautomationcore.dll", "wsock32.dll",
 }
 LINUX_LOADER = "/lib64/ld-linux-x86-64.so.2"
 LINUX_SYSTEM = {

@@ -5,7 +5,7 @@ attaches the archives with a SHA-256 file:
 
 | Target | Runner | Archive |
 |---|---|---|
-| Linux x86_64 (Wayland) | `ubuntu-latest` | `scoria-launcher-linux-x86_64.tar.gz` |
+| Linux x86_64 (Wayland) | `ubuntu-latest` | `scoria-launcher-linux-x86_64.tar.gz` (plus a `.tar.zst` twin) |
 | macOS 14+, Apple silicon | `macos-14` | `scoria-launcher-macos-arm64.zip` |
 | Windows 10/11 x64 | `windows-latest` | `scoria-launcher-windows-x64.zip` |
 
@@ -23,12 +23,15 @@ decompiled Java in the public tree.
 ## What a launcher archive contains
 
 `scoria-ui` (the Bun-compiled UI), `horizon-launcher` (the Rust engine), `gpuix-native.node`, and
-`fonts/`. Linux adds a `scoria-launcher-ui` wrapper; macOS ships `Scoria.app` with a shell shim that
+`fonts/`. Both Rust binaries on Windows are built with `+crt-static`, and the GPUIX addon is built
+from source the same way (`tools/build_gpuix_native.sh`), so no Visual C++ redistributable is
+needed; `tools/windows_runtime.sh` still ships `vcruntime140.dll` if a binary ever imports it. Linux adds a `scoria-launcher-ui` wrapper; macOS ships `Scoria.app` with a shell shim that
 sets `NAPI_RS_NATIVE_LIBRARY_PATH`; Windows ships `Scoria.cmd` for the same reason.
 
 ## The game client is not in these archives
 
-A fresh launcher installs a **game version** from a release asset (`horizon-linux-x86_64.tar.gz`,
+A fresh launcher installs a **game version** from a release asset (`horizon-linux-x86_64.tar.gz`
+or its smaller `.tar.zst` twin,
 `horizon-macos-arm64.zip`, `horizon-windows-x64.zip`) and prepares Mojang resources locally. Scoria
 must therefore publish its own client bundles before the downloads above can play on a clean
 machine:

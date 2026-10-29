@@ -260,14 +260,24 @@ pub(crate) fn parse_releases(
         if r["draft"].as_bool().unwrap_or(false) || !keep(tag) {
             continue;
         }
-        let found = r["assets"].as_array().into_iter().flatten().find_map(|a| {
-            (Some(a["name"].as_str()?) == asset).then(|| {
-                Some((
-                    a["browser_download_url"].as_str()?.to_string(),
-                    a["size"].as_u64()?,
-                ))
-            })?
-        });
+        let found = {
+            // A Linux release ships .tar.zst beside the .tar.gz the older launchers know:
+            // prefer the smaller one when it is there.
+            let zstd_name = asset
+                .and_then(|name| name.strip_suffix(".tar.gz"))
+                .map(|stem| format!("{stem}.tar.zst"));
+            let names = zstd_name.as_deref().into_iter().chain(asset);
+            names.into_iter().find_map(|name| {
+                r["assets"].as_array().into_iter().flatten().find_map(|a| {
+                    (a["name"].as_str() == Some(name)).then(|| {
+                        Some((
+                            a["browser_download_url"].as_str()?.to_string(),
+                            a["size"].as_u64()?,
+                        ))
+                    })?
+                })
+            })
+        };
         out.push(Release {
             tag: tag.into(),
             name: r["name"].as_str().unwrap_or_default().into(),
@@ -550,6 +560,11 @@ fn unpack(archive: &Path, url: &str, to: &Path) -> Result<(), String> {
     let file = fs::File::open(archive).map_err(|e| e.to_string())?;
     if url.ends_with(".tar.gz") {
         tar::Archive::new(flate2::read::GzDecoder::new(file))
+            .unpack(to)
+            .map_err(|e| e.to_string())
+    } else if url.ends_with(".tar.zst") {
+        let decoder = ruzstd::decoding::StreamingDecoder::new(file).map_err(|e| e.to_string())?;
+        tar::Archive::new(decoder)
             .unpack(to)
             .map_err(|e| e.to_string())
     } else {
@@ -2935,6 +2950,31 @@ mod tests {
             .map(|r| r.tag)
             .collect();
         assert_eq!(launcher, ["launcher-v9.0.0"]);
+    }
+
+    /// A Linux release ships the smaller .tar.zst beside the .tar.gz older launchers know; the
+    /// zstd one wins when both are there, and a release with only the gzip one still installs.
+    #[test]
+    fn zstd_twin_is_preferred_when_the_release_ships_it() {
+        let list = serde_json::json!([
+            {"tag_name": "v2026.10.20", "assets": [
+                {"name": "horizon-linux-x86_64.tar.gz", "browser_download_url": "gz", "size": 9},
+                {"name": "horizon-linux-x86_64.tar.zst", "browser_download_url": "zst", "size": 7},
+            ]},
+            {"tag_name": "v2026.10.19", "assets": [
+                {"name": "horizon-linux-x86_64.tar.gz", "browser_download_url": "only-gz", "size": 9},
+            ]},
+        ]);
+        let releases = parse_releases(&list, ASSET, is_game_tag);
+        let asset = |tag: &str| {
+            releases
+                .iter()
+                .find(|r| r.tag == tag)
+                .and_then(|r| r.asset.as_ref())
+                .map(|(url, size)| (url.as_str(), *size))
+        };
+        assert_eq!(asset("v2026.10.20"), Some(("zst", 7)));
+        assert_eq!(asset("v2026.10.19"), Some(("only-gz", 9)));
     }
 
     /// Rolling a release back (`gh release edit <tag> --draft`, docs/release-flow.md) makes the

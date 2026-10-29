@@ -1,6 +1,6 @@
 [package]
 name = "horizon-launcher"
-version = "0.2.0"
+version = "0.1.0"
 edition = "2021"
 license = "MIT"
 description = "Downloads, prepares and starts Scoria builds"
@@ -17,6 +17,9 @@ sha1 = "0.10"
 sha2 = "0.10"
 pulldown-cmark = { version = "0.12", default-features = false }
 flate2 = "1"
+# The Linux archives ship as .tar.zst beside the .tar.gz twin: zstd is ~22% smaller and
+# decodes faster. Pure Rust on purpose, so the Windows build keeps its static C runtime.
+ruzstd = "0.9"
 tar = { version = "0.4", default-features = false }
 toml = "1.1"
 zip = { version = "2", default-features = false, features = ["deflate"] }

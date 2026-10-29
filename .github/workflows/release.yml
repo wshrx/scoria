@@ -27,10 +27,14 @@ jobs:
             # The C runtime linked in: without it horizon-launcher.exe asks for
             # VCRUNTIME140.dll, which only the Visual C++ redistributable installs.
             rustflags: -C target-feature=+crt-static
+            # Build the GPUIX addon from source with the same flag instead of the
+            # npm binary, which links the DLL CRT.
+            gpuix_from_source: 1
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       RUSTFLAGS: ${{ matrix.rustflags }}
+      SCORIA_GPUIX_FROM_SOURCE: ${{ matrix.gpuix_from_source }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -46,16 +50,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libxkbcommon-dev libwayland-dev libx11-xcb-dev libfontconfig-dev \
-            libvulkan-dev libasound2-dev libudev-dev
+            libvulkan-dev libasound2-dev libudev-dev zstd
+      - name: Version from the tag
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: echo "HORIZON_LAUNCHER_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
       - name: Package
         run: ${{ matrix.script }}
-      - name: Check the Rust binaries' imports
+      - name: Check the Windows binaries' imports
         if: runner.os == 'Windows'
         run: |
-          # Only our Rust exe: scoria-ui.exe (Bun) and gpuix-native.node (prebuilt
-          # GPUIX addon) are third-party binaries that need the shipped
-          # vcruntime140.dll; they cannot be rebuilt with a static C runtime.
-          python tools/check_imports.py dist/windows/horizon-launcher.exe
+          # Everything in the folder must run on a clean Windows: the Rust launcher
+          # is +crt-static and the GPUIX addon is built from source the same way.
+          python tools/check_imports.py \
+            dist/windows/horizon-launcher.exe \
+            dist/windows/scoria-ui.exe \
+            dist/windows/gpuix-native.node
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}
@@ -93,7 +103,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libxkbcommon-dev libwayland-dev libx11-xcb-dev libfontconfig-dev \
-            libvulkan-dev libasound2-dev libudev-dev
+            libvulkan-dev libasound2-dev libudev-dev zstd
       - name: Package
         run: ${{ matrix.script }}
       - name: Check the game binaries' imports
@@ -138,8 +148,10 @@ jobs:
         with:
           files: |
             dist/scoria-launcher-*.tar.gz
+            dist/scoria-launcher-*.tar.zst
             dist/scoria-launcher-*.zip
             dist/horizon-*.tar.gz
+            dist/horizon-*.tar.zst
             dist/horizon-*.zip
             dist/SHA256SUMS
             dist/SHA256SUMS.sig

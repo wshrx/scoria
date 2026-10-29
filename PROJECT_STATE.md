@@ -61,6 +61,14 @@ no online-mode servers, no Minecraft assets.
 - **Engine patch queue**: `docs/fork/engine-patches/*.patch` (7 commits touching `crates/`);
   `tools/check_fork_surfaces.sh` fails if the input fallback, no-session rule, offline-only
   server, release key or icon disappears after a sync.
+- **Versioning**: Scoria is its own product, so releases are `v0.1.0-beta.N` (pre-release) and the
+  launcher reports the tag (`HORIZON_LAUNCHER_VERSION`); Horizon's 0.2.x numbers apply to upstream
+  only. `v0.2.98`/`v0.2.99` were Horizon-numbered previews and are removed once the beta is out.
+- **Windows runtime**: the Rust exes and the GPUIX addon are built with `+crt-static`
+  (`tools/build_gpuix_native.sh`); `tools/windows_runtime.sh` ships `vcruntime140.dll` only if
+  `tools/check_imports.py` would see it, and release CI runs that check on the Windows folder.
+- **Archives**: Linux ships `.tar.gz` and a `.tar.zst` twin (22-25% smaller, faster to unpack); the
+  launcher prefers the zstd one and still installs gzip-only releases.
 - **Upstream sync**: `docs/fork/patches.md` lists every fork patch; `tools/sync_upstream.sh`
   fetches Horizon, merges on a throwaway branch and runs the gates. Engine delta is 9 files
   (+87/−26, only the typed-text fallback) on top of `b6c936f82`, but upstream is **781 commits
