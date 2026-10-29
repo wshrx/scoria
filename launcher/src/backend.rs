@@ -517,6 +517,17 @@ pub(crate) fn fetch_small(url: &str) -> Result<Option<Vec<u8>>, String> {
 }
 
 /// The SHA-256 the release's signed checksums give for `asset`, or why it must not be installed.
+/// The file name of the archive a release offers for this platform: the .tar.zst twin when the
+/// release ships one, else the .tar.gz/.zip in [`ASSET`].
+fn asset_name(release: &Release) -> String {
+    release
+        .asset
+        .as_ref()
+        .and_then(|(url, _)| url.rsplit('/').next())
+        .unwrap_or_default()
+        .to_owned()
+}
+
 fn signed_digest(tag: &str, asset: &str) -> Result<String, String> {
     crate::signed::digest(
         tag,
@@ -581,7 +592,9 @@ pub fn install(release: &Release, progress: impl Fn(f32)) -> Result<(), String> 
     if !is_game_tag(tag) {
         return Err(format!("{tag} is not a Scoria release."));
     }
-    let sha256 = signed_digest(tag, ASSET.unwrap_or_default())?;
+    // The checksum must be the one of the archive actually offered: a release that ships both
+    // .tar.zst and .tar.gz has a different digest for each.
+    let sha256 = signed_digest(tag, &asset_name(release))?;
     install_as(release, tag, &sha256, progress)
 }
 
@@ -2317,7 +2330,7 @@ pub fn self_update(release: &Release, progress: impl Fn(f32)) -> Result<(), Stri
         progress(1.0);
         return Ok(());
     }
-    let sha256 = signed_digest(&release.tag, LAUNCHER_ASSET.unwrap_or_default())?;
+    let sha256 = signed_digest(&release.tag, &asset_name(&release))?;
     let work = data_dir().join(".launcher-update");
     let _ = fs::remove_dir_all(&work);
     fs::create_dir_all(&work).map_err(|e| e.to_string())?;
@@ -2958,11 +2971,11 @@ mod tests {
     fn zstd_twin_is_preferred_when_the_release_ships_it() {
         let list = serde_json::json!([
             {"tag_name": "v2026.10.20", "assets": [
-                {"name": "horizon-linux-x86_64.tar.gz", "browser_download_url": "gz", "size": 9},
-                {"name": "horizon-linux-x86_64.tar.zst", "browser_download_url": "zst", "size": 7},
+                {"name": "horizon-linux-x86_64.tar.gz", "browser_download_url": "https://e/horizon-linux-x86_64.tar.gz", "size": 9},
+                {"name": "horizon-linux-x86_64.tar.zst", "browser_download_url": "https://e/horizon-linux-x86_64.tar.zst", "size": 7},
             ]},
             {"tag_name": "v2026.10.19", "assets": [
-                {"name": "horizon-linux-x86_64.tar.gz", "browser_download_url": "only-gz", "size": 9},
+                {"name": "horizon-linux-x86_64.tar.gz", "browser_download_url": "https://e/horizon-linux-x86_64.tar.gz", "size": 9},
             ]},
         ]);
         let releases = parse_releases(&list, ASSET, is_game_tag);
@@ -2973,8 +2986,14 @@ mod tests {
                 .and_then(|r| r.asset.as_ref())
                 .map(|(url, size)| (url.as_str(), *size))
         };
-        assert_eq!(asset("v2026.10.20"), Some(("zst", 7)));
-        assert_eq!(asset("v2026.10.19"), Some(("only-gz", 9)));
+        assert_eq!(asset("v2026.10.20"), Some(("https://e/horizon-linux-x86_64.tar.zst", 7)));
+        assert_eq!(asset("v2026.10.19"), Some(("https://e/horizon-linux-x86_64.tar.gz", 9)));
+        // The signature check looks the digest up by this name, so it must follow the chosen file.
+        let names: Vec<_> = releases.iter().map(asset_name).collect();
+        assert_eq!(
+            names,
+            ["horizon-linux-x86_64.tar.zst", "horizon-linux-x86_64.tar.gz"]
+        );
     }
 
     /// Rolling a release back (`gh release edit <tag> --draft`, docs/release-flow.md) makes the
