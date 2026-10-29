@@ -16,6 +16,7 @@ for binary in horizon-client horizon-ctl horizon-prepare horizon-server; do
 done
 cp "$root/research-lock.json" "$root/LICENSE" "$root/THIRD_PARTY_NOTICES.md" "$root/packaging/PLAY.txt" "$stage/"
 cp -a "$root/packaging/exporters" "$stage/exporters"
+sh "$root/tools/windows_runtime.sh" "$stage"
 # The exporters' key hashes the clean-room Java oracles; keep them so a new Java runtime can
 # rebuild the classes and `available()` can verify the shipped bundle.
 mkdir -p "$stage/mods"
