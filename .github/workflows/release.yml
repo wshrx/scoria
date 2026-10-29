@@ -146,8 +146,26 @@ jobs:
           bash tools/ci/sign_release.sh "${{ github.ref_name }}" dist/scoria-launcher-* dist/horizon-*
       - name: Verify signatures
         run: cargo run --quiet -p horizon-release-sign -- verify --tag "${{ github.ref_name }}" dist
+      - name: Release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v want="$version" '
+            /^## \[/ {
+              section = $0
+              gsub(/^## \[|\].*$/, "", section)
+              printing = (section == want)
+              if (printing) next
+            }
+            printing' CHANGELOG.md | sed '/./,$!d' > dist/release-notes.md
+          if [ ! -s dist/release-notes.md ]; then
+            echo "No CHANGELOG.md section for $version; the release body will say so." >&2
+            echo "See CHANGELOG.md in the repository for the full history." > dist/release-notes.md
+          fi
+          head -20 dist/release-notes.md
       - uses: softprops/action-gh-release@v2
         with:
+          body_path: dist/release-notes.md
+          generate_release_notes: false
           files: |
             dist/scoria-launcher-*.tar.gz
             dist/scoria-launcher-*.tar.zst
