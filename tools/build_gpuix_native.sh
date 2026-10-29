@@ -7,7 +7,9 @@ set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 dest=${1:?usage: build_gpuix_native.sh <output .node>}
 ref=${GPUIX_REF:-@gpuix/native@0.11.0}
-work=${GPUIX_SRC:-$root/target/gpuix}
+# Outside the workspace: cargo would otherwise take the addon for a member of our
+# tree and refuse to build ("believes it's in a workspace when it's not").
+work=${GPUIX_SRC:-$HOME/.cache/scoria-gpuix}
 
 case "$(uname -s)" in
   MINGW*|MSYS*|CYGWIN*) ;;

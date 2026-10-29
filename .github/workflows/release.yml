@@ -59,6 +59,7 @@ jobs:
         run: ${{ matrix.script }}
       - name: Check the Windows binaries' imports
         if: runner.os == 'Windows'
+        shell: bash
         run: |
           # Everything in the folder must run on a clean Windows: the Rust launcher
           # is +crt-static and the GPUIX addon is built from source the same way.
@@ -108,6 +109,7 @@ jobs:
         run: ${{ matrix.script }}
       - name: Check the game binaries' imports
         if: runner.os == 'Windows'
+        shell: bash
         run: |
           python tools/check_imports.py \
             dist/game-windows-x64/horizon-windows-x64/horizon-client.exe \

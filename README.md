@@ -27,18 +27,16 @@
 
 ## Builds
 
-**Public beta builds are not published yet.** The first Linux, macOS and Windows archives will be
-attached to [Releases](https://github.com/wshrx/scoria/releases) together with a game client bundle
-and `SHA256SUMS`. Until then the repository is source only: see [BUILDING.md](BUILDING.md).
-
-A launcher archive alone cannot play: it needs a game version bundle, which is the remaining
-release-engineering task (signed client bundles, no Minecraft assets inside).
+**The first beta is out:** [v0.1.0-beta.1](https://github.com/wshrx/scoria/releases/tag/v0.1.0-beta.1).
+Linux and Windows archives are attached with a game client bundle, `SHA256SUMS` and its signature.
+A launcher archive alone cannot play: it installs the matching game bundle on first run and prepares
+26.3 locally from your own files or Mojang's servers. No Minecraft assets are shipped.
 
 | Platform | Status |
 |---|---|
-| Linux x86_64 (Wayland, Vulkan) | first beta, not published |
-| macOS 14+, Apple silicon | first beta, not published |
-| Windows 10/11 x64 (Vulkan) | first beta, not published |
+| Linux x86_64 (Wayland, Vulkan) | `v0.1.0-beta.1` |
+| Windows 10/11 x64 (Vulkan) | `v0.1.0-beta.1` |
+| macOS 14+, Apple silicon | deferred until signing and notarization |
 
 ## What it is
 
@@ -57,7 +55,7 @@ and is not approved by or associated with Mojang or Microsoft.
   no game data and never redistributes it.
 - **Modrinth, labelled.** Mods and resource packs show **Works**, **Partly** or **Doesn't run**
   before you install. Java mods are ported to Scoria's runtime; Java itself is not run.
-- **A real desktop app.** 1280×720, Night and Lilac themes, keyboard navigation, toasts and
+- **A real desktop app.** 1280×720, dark and light Ember themes, keyboard navigation, toasts and
   confirmations. Linux is Wayland-native; macOS and Windows use the native frame.
 
 ## Assets and ownership
@@ -84,7 +82,7 @@ If you redistribute Scoria, keep the MIT notice and do not add game assets to th
 | ✅ LAN and offline-mode servers | ❌ CurseForge |
 | ✅ Modrinth mods and resource packs, with support labels | ❌ Modpack browser in the launcher (the engine can import and port) |
 | ✅ World backups, screenshots, options, resource packs | ❌ OptiFine/Java shader packs; Scoria's `.hshader` source is not published yet |
-| ✅ Night / Lilac themes, Russian and English | ❌ Windows on ARM, Intel Macs |
+| ✅ Dark / light Ember themes, Russian and English | ❌ Windows on ARM, Intel Macs |
 | ✅ Linux (Wayland), macOS (Apple silicon), Windows (x64) | ❌ Code signing / notarization (beta) |
 
 ## Screenshots
@@ -92,11 +90,10 @@ If you redistribute Scoria, keep the MIT notice and do not add game assets to th
 UI captures will be added with the first beta. This page will not show game content: Scoria ships
 no Minecraft assets.
 
-## Install (when the first beta is out)
+## Install
 
-Linux: unpack the tarball and run `scoria-launcher-ui`. macOS: unzip, move `Scoria.app` to
-Applications, right-click → Open once (not notarized). Windows: unzip and run `Scoria.cmd`
-(SmartScreen warns until signed). The first launch asks for nothing; press **Download and prepare**
+Linux: unpack the tarball and run `scoria-launcher-ui`. Windows: unzip and run `Scoria.cmd`
+(SmartScreen warns until signed). macOS is deferred: there is no archive yet. The first launch asks for nothing; press **Download and prepare**
 once and Scoria prepares 26.3 locally from your own files or Mojang's servers.
 
 ## Release channels
