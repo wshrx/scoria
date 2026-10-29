@@ -141,3 +141,54 @@ fn java_runtime_lays_out_mojangs_runtime_with_its_executables_and_links() {
     .is_err());
     fs::remove_dir_all(&dir).unwrap();
 }
+
+#[test]
+fn a_file_that_fails_once_is_tried_again() {
+    let dir = scratch("retry");
+    fs::create_dir_all(&dir).unwrap();
+    let body = b"a fake asset";
+    let path = dir.join("asset");
+    let calls = AtomicUsize::new(0);
+    let fetch = |url: &str| {
+        let attempt = calls.fetch_add(1, Relaxed);
+        if attempt == 0 {
+            Err(format!("{url} is unreachable"))
+        } else {
+            Ok(body.to_vec())
+        }
+    };
+    let file = File {
+        url: "https://resources.download.minecraft.net/aa/aa".into(),
+        sha1: sha1_hex(body),
+        size: Some(body.len() as u64),
+        path: path.clone(),
+    };
+    let cancel = AtomicBool::new(false);
+    let result = fetch_all_with(&[file], 1, &fetch, &cancel, &|_| {}, &|_, _| {});
+    assert!(result.is_ok(), "{result:?}");
+    assert_eq!(fs::read(&path).unwrap(), body);
+    assert_eq!(calls.load(Relaxed), 2);
+    let _ = fs::remove_dir_all(dir);
+}
+
+#[test]
+fn a_file_that_keeps_failing_is_reported_but_stops_after_a_few_tries() {
+    let dir = scratch("dead");
+    fs::create_dir_all(&dir).unwrap();
+    let calls = AtomicUsize::new(0);
+    let fetch = |url: &str| {
+        calls.fetch_add(1, Relaxed);
+        Err(format!("{url}: Network is unreachable"))
+    };
+    let file = File {
+        url: "https://resources.download.minecraft.net/bb/bb".into(),
+        sha1: "0".repeat(40),
+        size: None,
+        path: dir.join("dead"),
+    };
+    let cancel = AtomicBool::new(false);
+    let error = fetch_all_with(&[file], 1, &fetch, &cancel, &|_| {}, &|_, _| {}).unwrap_err();
+    assert!(error.contains("could not be downloaded"), "{error}");
+    assert_eq!(calls.load(Relaxed), ATTEMPTS);
+    let _ = fs::remove_dir_all(dir);
+}

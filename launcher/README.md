@@ -4,10 +4,11 @@ A small desktop app that installs Scoria builds, prepares them from your own cop
 Minecraft, and starts the client or a dedicated server. Built with [GPUI](https://www.gpui.rs),
 Zed's UI framework; it has its own Cargo workspace and is not part of the game's builds.
 
-> **Scoria fork:** Play no longer needs a Microsoft account; offline names are first-class, the
-> Mojang game download is removed (preparation reads Freesm/Prism/official installs), and the
-> launcher does not update itself from Horizon's releases. See [docs/fork/README.md](../docs/fork/README.md). The GPUIX React UI (ADR-0002) is
-> not in this tree yet; this is the upstream GPUI launcher, rebranded.
+> **Scoria fork:** Microsoft accounts are removed entirely (ADR-0007): offline names only, no
+> sign-in, no session, no online-mode. The Mojang game download is removed too (preparation reads
+> Freesm/Prism/official installs), and the launcher does not update itself from Horizon's
+> releases. The flint-ui launcher lives in `launcher-ui/` (ADR-0006); this GPUI launcher is still
+> the one that ships. See [docs/fork/README.md](../docs/fork/README.md).
 
 ![Play](docs/play.png)
 
@@ -29,15 +30,14 @@ The opening, then Play ([clip](docs/opening.webm)):
   preparation reuses checksum-verified game jars and libraries from the current
   or another installed Horizon version, so the original Minecraft install is
   only required when no valid imported copy exists.
-- **Download and prepare**: for a signed-in account that owns the game (asked again first),
-  the launcher downloads the pinned version from Mojang itself (piston-meta, piston-data,
+- **Download and prepare**: when no launcher on the machine has Minecraft 26.3, preparation
+  downloads the pinned version from Mojang itself (piston-meta, piston-data,
   libraries.minecraft.net, resources.download.minecraft.net; never a mirror) into `minecraft/`
   in its data folder, in the official launcher's layout: the version file, the client jar, this
   system's libraries, the asset index and the assets. Every file must have the size and sha1
-  Mojang lists. The Play page shows how far it is and has Cancel; files already whole are kept,
-  so the next try goes on from there. **From my install** prepares from the player's own launcher
-  instead, and an install that lacks the version falls back to the download. Without an owner,
-  the Play page asks to sign in first. `horizon-launcher prepare --download`.
+  Mojang lists; files already whole are kept, so a stopped download goes on from there. The
+  launcher UI shows the same files on its **Game files** page (`minecraft` and
+  `download_minecraft` in the API). No account is involved.
 - **Mods**: search Modrinth (CurseForge support is coming soon) for resource
   packs and modpacks, each marked Works, Partly or Doesn't run in
   Horizon; Java mod jars are never offered. Install puts a pack and what it needs in

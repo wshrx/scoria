@@ -1,7 +1,7 @@
 //! Everything that is not UI: GitHub, installs, resource preparation, the game's processes and
 //! updates. The GUI, the CLI and the MCP server all go through this module. Functions here
 //! block; the GUI runs them on threads and reads their messages.
-use crate::{account, mojang, sources};
+use crate::{mojang, sources};
 use std::fs;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
@@ -9,8 +9,7 @@ use std::process::{Child, ChildStdin, Command, Stdio};
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 
-pub const REPO: &str = "horizon-rust/horizon";
-pub const README_URL: &str = "https://github.com/horizon-rust/horizon/blob/main/launcher/README.md";
+pub const README_URL: &str = "https://github.com/wshrx/scoria/blob/main/docs/fork/README.md";
 /// The players' page on connecting an AI agent (the website's docs/agents.md).
 pub const AGENT_DOCS_URL: &str = "https://playhorizon.dev/docs/agents";
 /// This launcher's version: the release workflow sets `HORIZON_LAUNCHER_VERSION` from the
@@ -84,7 +83,16 @@ const CLIENT: &str = if cfg!(windows) {
 /// one is set (`proxy`).
 fn agent(url: &str) -> ureq::Agent {
     crate::proxy::agent(
-        ureq::AgentBuilder::new().user_agent(&format!("horizon-launcher/{VERSION}")),
+        ureq::AgentBuilder::new()
+            .user_agent(&format!("horizon-launcher/{VERSION}"))
+            // Try IPv4 first: on a machine with a broken IPv6 route, DNS may list AAAA
+            // addresses that make every asset host look unreachable.
+            .resolver(|netloc: &str| {
+                use std::net::ToSocketAddrs;
+                let mut addrs: Vec<std::net::SocketAddr> = netloc.to_socket_addrs()?.collect();
+                addrs.sort_by_key(|addr| if addr.is_ipv4() { 0 } else { 1 });
+                Ok(addrs)
+            }),
         url,
     )
     .build()
@@ -234,7 +242,7 @@ pub fn compare_versions(a: &str, b: &str) -> std::cmp::Ordering {
 
 /// Every published release of the repository, both kinds, as GitHub's JSON.
 fn release_list() -> Result<serde_json::Value, String> {
-    let url = format!("https://api.github.com/repos/{REPO}/releases?per_page=100");
+    let url = crate::build_sources::releases_url();
     get(&url)?.into_json().map_err(|e| e.to_string())
 }
 
@@ -304,7 +312,10 @@ fn launcher_releases_in_with(
     if found.iter().any(|r| r.asset.is_some()) {
         return found;
     }
-    let api = format!("https://api.github.com/repos/{REPO}");
+    let api = format!(
+        "https://api.github.com/repos/{}",
+        crate::build_sources::repo()
+    );
     let mut tags = Vec::new();
     for prefix in [LAUNCHER_TAG_PREFIX, OLD_LAUNCHER_TAG_PREFIX] {
         // Every `launcher@` tag is newer than every `launcher-v` one: those only when there is none.
@@ -399,7 +410,10 @@ impl Links {
 
 /// The links from main, or the built-in ones when offline.
 pub fn links() -> Links {
-    let url = format!("https://raw.githubusercontent.com/{REPO}/main/launcher/links.json");
+    let url = format!(
+        "https://raw.githubusercontent.com/{}/main/launcher/links.json",
+        crate::build_sources::repo()
+    );
     get(&url)
         .ok()
         .and_then(|r| r.into_string().ok())
@@ -1328,12 +1342,14 @@ pub fn preparer(
             .and_then(|lock| sources::Pins::read(&lock))
             .ok_or("The version's research-lock.json doesn't pin the Minecraft files")?;
         let own = data_dir().join("minecraft");
+        // Scoria downloads 26.3 from Mojang into its own folder. It does not scan other
+        // launchers: a first prepare always gets the pinned files from piston, and later runs
+        // reuse what Scoria already downloaded. `chosen` is only used when the player picked a
+        // folder explicitly in Settings.
         let mut known = vec![("Scoria's own folder", own.clone())];
-        known.extend(
-            sources::Folders::current()
-                .map(|f| sources::known_folders(sources::Os::current(), &f))
-                .unwrap_or_default(),
-        );
+        if chosen != own {
+            known.push(("The folder chosen in Settings", chosen.clone()));
+        }
         let fetch = |url: &str| -> Result<Vec<u8>, String> {
             let mut body = Vec::new();
             get(url)?
@@ -1343,8 +1359,7 @@ pub fn preparer(
             Ok(body)
         };
         let linked = data_dir().join("linked-minecraft");
-        // Scoria never downloads the game: the files come from an install the player already
-        // has, or preparation stops with the list of folders that were checked.
+        // Scoria downloads the pinned game from Mojang when no install on the machine has it.
         let resolved = sources::resolve(minecraft, &pins, &known, &linked, &fetch, log);
         if reused {
             assets_folder(resolved, &chosen, &version, log)
@@ -1352,7 +1367,23 @@ pub fn preparer(
             match resolved? {
                 sources::Resolved::Folder(dir) => dir,
                 sources::Resolved::NotFound(checked) => {
-                    return Err(sources::not_found(&version, &checked, minecraft));
+                    log(format!(
+                        "Minecraft {version} was not found; downloading it from Mojang"
+                    ));
+                    crate::mojang::CANCEL.store(false, std::sync::atomic::Ordering::Relaxed);
+                    let files = crate::piston::download(
+                        &pins,
+                        &own,
+                        crate::piston::JOBS,
+                        &fetch,
+                        &crate::mojang::CANCEL,
+                        log,
+                        &|_, _| {},
+                    )?;
+                    if !files.installed {
+                        return Err(sources::not_found(&version, &checked, minecraft));
+                    }
+                    own.clone()
                 }
             }
         }
@@ -1824,6 +1855,29 @@ pub fn remove_version(tag: &str) -> Result<(), String> {
 
 /// The Minecraft folder to prepare from: the one given, the one chosen in the launcher, or the
 /// official launcher's default. It may be absent when imported files can be reused.
+/// Scoria's own Minecraft folder, in the official launcher's layout. A version downloaded from
+/// piston-meta lands here; preparation reads it like any other install.
+pub fn minecraft_folder() -> PathBuf {
+    data_dir().join("minecraft")
+}
+
+/// The game files a version pins (`research-lock.json`).
+pub fn pins(tag: &str) -> Result<sources::Pins, String> {
+    read_json(&version_dir(tag).join("research-lock.json"))
+        .and_then(|lock| sources::Pins::read(&lock))
+        .ok_or_else(|| format!("{tag}'s research-lock.json doesn't pin the Minecraft files"))
+}
+
+/// A URL's body, through the player's proxy when one is set.
+pub fn fetch_bytes(url: &str) -> Result<Vec<u8>, String> {
+    let mut body = Vec::new();
+    get(url)?
+        .into_reader()
+        .read_to_end(&mut body)
+        .map_err(|e| e.to_string())?;
+    Ok(body)
+}
+
 pub fn minecraft_dir(requested: Option<PathBuf>) -> Result<PathBuf, String> {
     Ok(requested
         .or(Settings::load().minecraft_dir)
@@ -1851,20 +1905,13 @@ pub fn need_prepared(tag: &str) -> Result<(), String> {
     }
 }
 
-/// The client's command, once its resources are prepared. Scoria has no owner gate: no account
-/// (or a sign-in that can't be renewed) starts the game offline.
+/// The client's command, once its resources are prepared. Scoria has no account: the game
+/// always starts offline, with the profile's `--name` added by the caller.
 pub fn client(tag: &str) -> Result<Command, String> {
-    let (session, offline) = account::session_for_game(&game_home());
     need_prepared(tag)?;
     complete_assets(tag);
     crate::browser::horizon::before_play(&game_home());
     let mut cmd = client_command(tag);
-    if let Some(file) = session {
-        cmd.arg("--session-file").arg(file);
-    }
-    if let Some(e) = offline {
-        eprintln!("Playing offline: {e}");
-    }
     append_game_args(&mut cmd);
     Ok(cmd)
 }
@@ -2411,11 +2458,8 @@ pub enum Msg {
     LauncherUpdated(Result<(), String>),
     /// `reuse_prepared_everywhere` prepared these versions.
     Reused(Vec<(String, String)>),
-    /// Whether secrets are kept in the OS keychain (else only until the launcher closes).
-    Keychain(bool),
-    /// The game about to start: the selected account's session file (none = offline) and why it
-    /// plays offline, if it does. Never a refusal.
-    Session((Option<PathBuf>, Option<String>)),
+    /// The game about to start: its resources are ready, start it. There is no session to fetch.
+    Session,
     /// A modpack step's line (`modpacks`).
     PackLine(String),
     /// A modpack step ended: the pack as it now is.

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Scoria
+GenericName=Game launcher
+Comment=Minecraft: Java Edition 26.3 in Rust; offline profiles, no account
+Icon=horizon
+Exec=scoria-launcher-ui
+Terminal=false
+Categories=Game;
+StartupWMClass=scoria-launcher

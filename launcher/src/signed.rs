@@ -4,12 +4,12 @@
 //! with the SHA-256 pinned for it in legacy-releases.txt (a rollback). Anything else is refused
 //! with a message saying why.
 
-use crate::backend::REPO;
+use crate::build_sources;
 use horizon_release_sign::{PublicKey, SIGNATURE, SUMS};
 
 /// Where a release's attached file downloads from (GitHub's fixed address for it).
 pub fn asset_url(tag: &str, name: &str) -> String {
-    format!("https://github.com/{REPO}/releases/download/{tag}/{name}")
+    build_sources::asset_url(tag, name)
 }
 
 /// The signed SHA-256 of `asset` in release `tag`, fetching its SHA256SUMS and SHA256SUMS.sig
@@ -79,7 +79,11 @@ mod tests {
         let signature = key.sign("v2099.01.01", sums.as_bytes());
         // GitHub as it answers for a signed release (any tag: the files are what a replay would serve).
         let signed = |url: &str| -> Result<Option<Vec<u8>>, String> {
-            assert!(url.starts_with("https://github.com/horizon-rust/horizon/releases/download/"));
+            let prefix = format!(
+                "https://github.com/{}/releases/download/",
+                build_sources::repo()
+            );
+            assert!(url.starts_with(&prefix), "{url}");
             Ok(Some(
                 if url.ends_with(".sig") {
                     signature.clone()

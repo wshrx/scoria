@@ -90,33 +90,15 @@ MCP: `links`.
 
 ## `horizon-launcher account list`
 
-The signed-in accounts and which one plays.
+The offline names and which one plays.
 
     horizon-launcher account list
 
 MCP: `account_list`.
 
-## `horizon-launcher account sign-in`
-
-Sign in with a Microsoft account in your browser (device code). Play needs one that owns Minecraft: Java Edition.
-
-    horizon-launcher account sign-in
-
-MCP: `account_sign_in`.
-
-## `horizon-launcher account sign-out`
-
-Sign out: the account's tokens leave the keychain.
-
-    horizon-launcher account sign-out <WHO>
-
-- `WHO`: Its name or UUID
-
-MCP: `account_sign_out`, needs `confirm: true`.
-
 ## `horizon-launcher account select`
 
-Play as this account, or as one of your offline names.
+Play as one of your offline names.
 
     horizon-launcher account select <WHO>
 
@@ -126,7 +108,7 @@ MCP: `account_select`.
 
 ## `horizon-launcher account offline`
 
-Play offline (LAN, offline-mode servers) beside a signed-in account that owns the game: as NAME (kept to switch back to; 3 to 16 letters, digits or _), or as the name the game made up.
+Play offline: as NAME (kept to switch back to; 3 to 16 letters, digits or _), or as the name the game made up.
 
     horizon-launcher account offline [NAME]
 
@@ -750,6 +732,14 @@ Serve the Model Context Protocol on stdin and stdout, for AI agents (refused whi
     horizon-launcher mcp
 
 MCP: none: this command is the MCP server.
+
+## `horizon-launcher api`
+
+Machine interface for the launcher UI: JSON lines on stdin/stdout.
+
+    horizon-launcher api
+
+MCP: `api`.
 
 ## `horizon-launcher agent-config`
 

@@ -1,10 +1,10 @@
 # Microsoft account sign-in and online-mode play
 
-> **Scoria fork:** the owner gate below is removed. Play works without any account (see
-> [fork/offline-mode.md](fork/offline-mode.md)); Microsoft sign-in stays optional and is what
-> online-mode servers, cloud skins and the Mojang download path use. Everything else on this page
-> — the device-code flow, the Xbox/XSTS/Minecraft exchange, token storage and the session file —
-> still describes the code.
+> **Scoria fork:** Microsoft accounts are **removed entirely** (ADR-0007). There is no device
+> code, no Xbox/XSTS exchange, no token storage, no session file and no owner gate. `account.rs`
+> holds offline names and the launcher's keychain for the Tailscale token only. This page is kept
+> as upstream Horizon's design history; none of it describes Scoria's code any more. See
+> [fork/offline-mode.md](fork/offline-mode.md).
 
 Horizon signs players in with their Microsoft account in the launcher and joins online-mode
 (authenticated) servers like vanilla 26.3 does. The launcher plays only with an account that owns

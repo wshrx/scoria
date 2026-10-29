@@ -2,7 +2,7 @@
 //! two can't drift: the tool `mods_search` is `horizon-launcher mods search`, its arguments are the
 //! command's (snake_case), and a call runs that command with `--json` as a child process and
 //! returns what it printed. A few commands keep a process or a sign-in going for the session;
-//! mcp.rs runs those itself under the same names (`play`, `server`, `account_sign_in`...).
+//! mcp.rs runs those itself under the same names (`play`, `server`, `account_list`...).
 use clap::{ArgAction, Command};
 use serde_json::{json, Map, Value};
 
@@ -14,7 +14,6 @@ const NOT_TOOLS: &[&str] = &[
     "no-ai",
     "play",
     "server",
-    "account sign-in",
     "account list",
 ];
 
@@ -24,7 +23,6 @@ pub const DESTRUCTIVE: &[&str] = &[
     "modpack remove",
     "mods remove",
     "servers forget",
-    "account sign-out",
     "worlds delete",
     "multiplayer remove",
     "screenshots delete",
@@ -240,7 +238,6 @@ fn session_tool(words: &str) -> &'static str {
     match words {
         "play" => "`play`, then the `game_*` tools",
         "server" => "`server`, `server_command`, `server_log`, `server_stop`",
-        "account sign-in" => "`account_sign_in`",
         "account list" => "`account_list`",
         "mcp" => "none: this command is the MCP server",
         "agent-config" => "none: it prints how to connect a client to `mcp`",
@@ -380,7 +377,7 @@ mod tests {
         ] {
             assert!(names.iter().any(|n| n == want), "{want} missing: {names:?}");
         }
-        for not in ["mcp", "no_ai", "play", "server", "account_sign_in"] {
+        for not in ["mcp", "no_ai", "play", "server"] {
             assert!(!names.iter().any(|n| n == not), "{not}");
         }
     }

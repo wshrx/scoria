@@ -77,21 +77,12 @@ enum ServersCmd {
 
 #[derive(Subcommand)]
 enum AccountCmd {
-    /// The signed-in accounts and which one plays
+    /// The offline names and which one plays
     List,
-    /// Sign in with a Microsoft account in your browser (device code). Play needs one that owns
-    /// Minecraft: Java Edition
-    SignIn,
-    /// Sign out: the account's tokens leave the keychain
-    SignOut {
-        /// Its name or UUID
-        who: String,
-    },
-    /// Play as this account, or as one of your offline names
+    /// Play as one of your offline names
     Select { who: String },
-    /// Play offline (LAN, offline-mode servers) beside a signed-in account that owns the game:
-    /// as NAME (kept to switch back to; 3 to 16 letters, digits or _), or as the name the game
-    /// made up
+    /// Play offline: as NAME (kept to switch back to; 3 to 16 letters, digits or _), or as the
+    /// name the game made up
     Offline { name: Option<String> },
     /// Forget one of your offline names
     ForgetOffline { name: String },
@@ -559,7 +550,7 @@ enum Cmd {
     Notes { tag: Option<String> },
     /// Show the Discord, sponsor and website links
     Links,
-    /// Microsoft accounts: list them (the default), sign in, sign out, or pick the one that plays
+    /// Offline profiles: list them (the default) or pick the one that plays
     Account {
         #[command(subcommand)]
         action: Option<AccountCmd>,
@@ -665,6 +656,9 @@ enum Cmd {
     /// Serve the Model Context Protocol on stdin and stdout, for AI agents (refused while No AI
     /// is on)
     Mcp,
+    /// Machine interface for the launcher UI: JSON lines on stdin/stdout
+    #[command(hide = true)]
+    Api,
     /// How to connect an AI agent (Claude Code, Codex, Cursor, any MCP client) to `mcp`: the
     /// config to paste and the command that adds it (refused while No AI is on)
     AgentConfig {
@@ -809,6 +803,7 @@ pub fn run() -> Option<i32> {
     let result = match command {
         Cmd::Mcp | Cmd::AgentConfig { .. } if no_ai => Err(horizon_core::no_ai::REFUSAL.into()),
         Cmd::Mcp => crate::mcp::serve(),
+        Cmd::Api => horizon_launcher::api::serve(),
         command => execute(command, cli.json),
     };
     Some(match result {
@@ -1203,7 +1198,7 @@ fn execute(command: Cmd, as_json: bool) -> Result<(), String> {
         Cmd::Modpack { action } => modpack(action.unwrap_or(ModpackCmd::List), as_json)?,
         Cmd::Mods { action } => mods(action.unwrap_or(ModsCmd::List { instance: None }), as_json)?,
         Cmd::Servers { action } => servers(action.unwrap_or(ServersCmd::List), as_json)?,
-        Cmd::Mcp => unreachable!(),
+        Cmd::Mcp | Cmd::Api => unreachable!(),
     }
     Ok(())
 }
@@ -1247,102 +1242,52 @@ fn update(check: bool, as_json: bool) -> Result<(), String> {
     Ok(())
 }
 
-/// `account …`: names and UUIDs only; tokens are never printed.
+/// `account …`: offline names only. Scoria has no account service and stores no tokens.
 fn account_command(action: AccountCmd, as_json: bool) -> Result<(), String> {
     let mut accounts = Accounts::load();
-    let find = |accounts: &Accounts, who: &str| {
-        accounts
-            .find(who)
-            .cloned()
-            .ok_or_else(|| format!("No signed-in account {who}. See `horizon-launcher account`."))
-    };
     match action {
         AccountCmd::List => {
+            let playing = match accounts.player() {
+                account::Player::Offline(name) => name,
+                account::Player::GameName => "the game's own name".to_string(),
+            };
             if as_json {
                 json(serde_json::json!({
-                    "accounts": accounts.accounts.iter().map(|a| serde_json::json!({
-                        "name": a.name, "uuid": a.uuid,
-                        "selected": accounts.selected.as_ref() == Some(&a.uuid),
-                    })).collect::<Vec<_>>(),
                     "offline": accounts.offline.iter().map(|n| serde_json::json!({
                         "name": n,
-                        "selected": accounts.player() == account::Player::Offline(n.clone()),
+                        "selected": accounts.name_arg() == Some(n.as_str()),
                     })).collect::<Vec<_>>(),
-                    "sign_in_configured": account::client_id().is_some(),
-                    "owner": accounts.has_owner(account::store()),
+                    "playing": playing,
                 }));
-            } else if accounts.accounts.is_empty() && accounts.offline.is_empty() {
-                println!(
-                    "No Microsoft account signed in. Scoria plays offline; sign in for online \
-                     servers and cloud skins: horizon-launcher account sign-in"
-                );
+            } else if accounts.offline.is_empty() {
+                println!("No offline names yet. Add one: horizon-launcher account offline NAME");
             } else {
-                for a in &accounts.accounts {
-                    let mark = if accounts.selected.as_ref() == Some(&a.uuid) {
-                        "*"
-                    } else {
-                        " "
-                    };
-                    println!("{mark} {}  {}", a.name, a.uuid);
-                }
                 for n in &accounts.offline {
-                    let on = accounts.player() == account::Player::Offline(n.clone());
+                    let on = accounts.name_arg() == Some(n.as_str());
                     println!("{} {n}  offline", if on { "*" } else { " " });
                 }
-                if accounts.player() == account::Player::GameName {
-                    println!(
-                        "Playing offline as the game's own name (`account select NAME` to switch)."
-                    );
-                }
+                println!("Playing as {playing}.");
             }
-        }
-        AccountCmd::SignIn => {
-            let client_id = account::client_id().ok_or(account::NOT_CONFIGURED)?;
-            let ep = account::Endpoints::live();
-            let code = account::device_code(&ep, &client_id)?;
-            eprintln!(
-                "To sign in, open {} in a browser and enter the code {}",
-                code.verification_uri, code.user_code
-            );
-            let ms = account::wait_for_sign_in(&ep, &client_id, &code, &|| false)?;
-            let (signed_in, secrets) = account::finish_sign_in(&ep, ms)?;
-            accounts.add(account::store(), signed_in.clone(), &secrets)?;
-            accounts.save()?;
-            println!("Signed in as {}.", signed_in.name);
-            if !account::store().persistent() {
-                eprintln!("{}", account::NO_KEYCHAIN);
-            }
-        }
-        AccountCmd::SignOut { who } => {
-            let a = find(&accounts, &who)?;
-            accounts.remove(account::store(), &a.uuid)?;
-            accounts.save()?;
-            println!("Signed out {}.", a.name);
         }
         AccountCmd::Select { who } => {
-            let offline = accounts
+            let name = accounts
                 .offline
                 .iter()
                 .find(|n| n.eq_ignore_ascii_case(&who))
-                .cloned();
-            let (player, name) = match (accounts.find(&who).cloned(), offline) {
-                (Some(a), _) => (account::Player::Microsoft(a.uuid), a.name),
-                (None, Some(n)) => (
-                    account::Player::Offline(n.clone()),
-                    format!("{n} (offline)"),
-                ),
-                (None, None) => return Err(find(&accounts, &who).unwrap_err()),
-            };
-            accounts.play_as(account::store(), player)?;
+                .cloned()
+                .ok_or_else(|| {
+                    format!("No offline name {who}: add it with `account offline {who}`.")
+                })?;
+            accounts.play_as(account::Player::Offline(name.clone()))?;
             accounts.save()?;
-            println!("The game plays as {name}.");
+            println!("The game plays as {name} (offline).");
         }
         AccountCmd::Offline { name } => {
             let player = match name {
                 Some(n) => account::Player::Offline(n),
                 None => account::Player::GameName,
             };
-            accounts.play_as(account::store(), player)?;
+            accounts.play_as(player)?;
             accounts.save()?;
             match accounts.name_arg() {
                 Some(n) => println!("The game plays offline as {n}."),
