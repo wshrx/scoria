@@ -21,6 +21,8 @@ echo "Building the flint UI…"
 
 cp "$root/launcher/target/release/horizon-launcher" "$out/horizon-launcher"
 cp "$root"/launcher-ui/src/lib/fonts/*.ttf "$out/fonts/"
+mkdir -p "$out/brand"
+cp "$root"/launcher-ui/src/assets/*.png "$out/brand/"
 cp "$root/packaging/linux/scoria-launcher-ui.desktop" "$out/"
 cp "$root/packaging/PLAY.txt" "$out/README.txt"
 

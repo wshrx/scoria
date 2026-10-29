@@ -16,8 +16,9 @@ echo "Building the UI…"
 (cd "$root/launcher-ui" && bun build --compile app.tsx --outfile "$out/scoria-ui.exe")
 
 cp "$root/launcher/target/release/horizon-launcher.exe" "$out/"
-mkdir -p "$out/fonts"
+mkdir -p "$out/fonts" "$out/brand"
 cp "$root"/launcher-ui/src/lib/fonts/*.ttf "$out/fonts/"
+cp "$root"/launcher-ui/src/assets/*.png "$out/brand/"
 
 addon="$root/launcher-ui/node_modules/@gpuix/native-win32-x64-msvc/gpuix-native.win32-x64-msvc.node"
 [ -f "$addon" ] || { echo "missing $addon: bun install must run on Windows" >&2; exit 1; }

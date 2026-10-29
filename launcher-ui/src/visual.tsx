@@ -1,6 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react"
 import { motion, type LinearGradientBackground } from "@gpuix/react"
 import { Text, useTheme } from "@/lib/flint"
+import { brandAsset } from "./lib/brand"
+
+const MARK_SRC = brandAsset("scoria-mark.png")
 
 export const gradient = (from: string, to: string, angle = 160): LinearGradientBackground => ({
   type: "linear-gradient",
@@ -225,43 +228,16 @@ export function ParticleField({ dark = true }: { dark?: boolean }) {
 /** The wordmark: a soft violet tile with an S, deliberately not a game logo. */
 export function Mark({ size = 40 }: { size?: number }) {
   return (
-    <div
+    <img
+      src={MARK_SRC}
+      alt="Scoria"
+      objectFit="contain"
       style={{
-        position: "relative",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
         width: size,
         height: size,
-        borderRadius: Math.round(size * 0.27),
-        background: gradient("#B49CFF", "#5B21B6", 145),
-        borderWidth: 1,
-        borderStyle: "solid",
-        borderColor: "#FFFFFF2E",
+        flexShrink: 0,
       }}
-    >
-      <Text
-        style={{
-          color: "#FFFFFF",
-          fontSize: Math.round(size * 0.5),
-          lineHeight: Math.round(size * 0.54),
-          fontWeight: "700",
-        }}
-      >
-        S
-      </Text>
-      <div
-        style={{
-          position: "absolute",
-          top: Math.round(size * 0.14),
-          right: Math.round(size * 0.14),
-          width: Math.max(3, Math.round(size * 0.11)),
-          height: Math.max(3, Math.round(size * 0.11)),
-          borderRadius: 99,
-          background: gradient("#FFD9A0", "#F59E0B", 135),
-        }}
-      />
-    </div>
+    />
   )
 }
 

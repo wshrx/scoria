@@ -19,8 +19,9 @@ echo "Building the UI…"
 
 cp "$root/launcher/target/release/horizon-launcher" "$app/Contents/MacOS/"
 cp "$root/packaging/icons/horizon.icns" "$app/Contents/Resources/scoria.icns"
-mkdir -p "$app/Contents/MacOS/fonts"
+mkdir -p "$app/Contents/MacOS/fonts" "$app/Contents/MacOS/brand"
 cp "$root"/launcher-ui/src/lib/fonts/*.ttf "$app/Contents/MacOS/fonts/"
+cp "$root"/launcher-ui/src/assets/*.png "$app/Contents/MacOS/brand/"
 
 addon="$root/launcher-ui/node_modules/@gpuix/native-darwin-arm64/gpuix-native.darwin-arm64.node"
 [ -f "$addon" ] || { echo "missing $addon: bun install must run on macOS" >&2; exit 1; }

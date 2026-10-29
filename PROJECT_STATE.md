@@ -103,6 +103,9 @@ no online-mode servers, no Minecraft assets.
 - Launcher version is `0.1.0` + `beta` (`launcher-ui/src/version.ts`), separate from the engine
   version (`data.version`, v0.2.93): rail badge and About show both.
 - Every `t("...")` key has a Russian line; `bun run check:i18n` fails on a missing one.
+- Brand: the chosen Scoria mark (`s2`, the motion cube) is the source for the `.ico`, `.icns`,
+  hicolor PNGs, the game icon and the in-app `<Mark>` (`launcher-ui/src/assets/scoria-mark.png`).
+  `tools/make_icons.sh` regenerates from `docs/public/logo.svg`.
 - Medeo Sans/Mono are registered **before** the first frame in `launcher-ui/app.tsx`; a React
   effect left the first paint in the fallback. Credits are in About, THIRD_PARTY_NOTICES and the
   public README; the wordmark is outlined Medeo.
