@@ -1,12 +1,12 @@
 # Release engineering
 
-The tag workflow (`.github/workflows/release.yml`) builds the **launcher** for three targets and
-attaches the archives with a SHA-256 file:
+The tag workflow (`.github/workflows/release.yml`) builds the **launcher** and the **game bundle**
+for Linux and Windows (macOS is deferred until signing and notarization) and attaches the archives
+with a SHA-256 file:
 
 | Target | Runner | Archive |
 |---|---|---|
 | Linux x86_64 (Wayland) | `ubuntu-latest` | `scoria-launcher-linux-x86_64.tar.gz` (plus a `.tar.zst` twin) |
-| macOS 14+, Apple silicon | `macos-14` | `scoria-launcher-macos-arm64.zip` |
 | Windows 10/11 x64 | `windows-latest` | `scoria-launcher-windows-x64.zip` |
 
 Tag format: `v0.1.0-beta.1` (a `beta`/`alpha` tag becomes a GitHub pre-release).
