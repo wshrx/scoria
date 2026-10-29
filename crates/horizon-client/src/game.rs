@@ -273,9 +273,11 @@ use std::{
 };
 use winit::{
     application::ApplicationHandler,
-    event::{DeviceEvent, DeviceId, ElementState, MouseButton, MouseScrollDelta, WindowEvent},
+    event::{
+        DeviceEvent, DeviceId, ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent,
+    },
     event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
-    keyboard::{KeyCode, PhysicalKey},
+    keyboard::{Key, KeyCode, PhysicalKey},
     window::{CursorGrabMode, Window, WindowId},
 };
 
@@ -1381,6 +1383,35 @@ fn ticking_chunk(world: &World, x: i32, z: i32) -> bool {
 }
 fn drop_whole_stack(physical_keys: &HashSet<KeyCode>) -> bool {
     physical_keys.contains(&KeyCode::ControlLeft) || physical_keys.contains(&KeyCode::ControlRight)
+}
+
+/// The text a key typed.
+///
+/// `KeyEvent.text` is empty for non-Latin layouts on Linux backends that never
+/// set up a text input (XIM on X11, text-input on some compositors). The
+/// logical key already has the layout applied, so it still carries "ф" where
+/// `text` carries nothing; without this every Cyrillic keystroke is dropped.
+fn typed_text(event: &KeyEvent, ctrl: bool) -> Option<String> {
+    if event.state != ElementState::Pressed || ctrl {
+        return None;
+    }
+    if let Some(text) = &event.text
+        && !text.is_empty()
+    {
+        return Some(text.to_string());
+    }
+    typed_character(&event.logical_key)
+}
+
+/// The printable part of a logical key: the character a non-Latin layout put on it.
+fn typed_character(key: &Key) -> Option<String> {
+    match key {
+        Key::Character(chars) => {
+            let text: String = chars.chars().filter(|c| !c.is_control()).collect();
+            (!text.is_empty()).then_some(text)
+        }
+        _ => None,
+    }
 }
 
 fn select_creative_tab(
@@ -7479,6 +7510,10 @@ impl Game<'_> {
         self.physical_keys.contains(&KeyCode::ControlLeft)
             || self.physical_keys.contains(&KeyCode::ControlRight)
     }
+    /// The text this key typed, with the layout fallback (`typed_text`).
+    pub(super) fn typed(&self, event: &KeyEvent) -> Option<String> {
+        typed_text(event, self.has_control_down())
+    }
     /// `hasClickedOutside` of the open screen at the cursor.
     fn clicked_outside(&self, batch: &HudBatch) -> bool {
         use horizon_client::container_screen::{Book, clicked_outside};
@@ -13126,10 +13161,11 @@ impl ApplicationHandler for Game<'_> {
                 }
                 WindowEvent::KeyboardInput { event, .. } if self.dialog_open() => {
                     let shortcut = self.edit_shortcut(&event);
+                    let typed = self.typed(&event);
                     if event.state == ElementState::Pressed
                         && let PhysicalKey::Code(key) = event.physical_key
                     {
-                        self.dialog_key(key, shortcut, event.text.as_deref())?
+                        self.dialog_key(key, shortcut, typed.as_deref())?
                     }
                 }
                 WindowEvent::KeyboardInput { event, .. }
@@ -13156,6 +13192,7 @@ impl ApplicationHandler for Game<'_> {
                         && event.state == ElementState::Pressed
                         && !matches!(event.physical_key, PhysicalKey::Code(KeyCode::Escape)) =>
                 {
+                    let typed = self.typed(&event);
                     if let PhysicalKey::Code(key) = event.physical_key
                         && self.search_tab_hotbar_key(key)
                     {
@@ -13171,10 +13208,10 @@ impl ApplicationHandler for Game<'_> {
                                 self.creative_screen.scroll = 0.0;
                             }
                         } else {
-                            self.creative_search_edit(event.text.as_deref());
+                            self.creative_search_edit(typed.as_deref());
                         }
                     } else {
-                        self.creative_search_edit(event.text.as_deref());
+                        self.creative_search_edit(typed.as_deref());
                     }
                 }
                 WindowEvent::KeyboardInput { event, .. }
@@ -13206,7 +13243,8 @@ impl ApplicationHandler for Game<'_> {
                     {
                     } else {
                         let backspace = event.physical_key == PhysicalKey::Code(KeyCode::Backspace);
-                        self.station_text(event.text.as_deref(), backspace);
+                        let typed = self.typed(&event);
+                        self.station_text(typed.as_deref(), backspace);
                     }
                 }
                 WindowEvent::KeyboardInput { event, .. }
@@ -13232,7 +13270,8 @@ impl ApplicationHandler for Game<'_> {
                         return Ok(());
                     }
                     if let PhysicalKey::Code(key) = event.physical_key {
-                        self.options_key(key, event.text.as_deref())?;
+                        let typed = self.typed(&event);
+                        self.options_key(key, typed.as_deref())?;
                     }
                 }
                 WindowEvent::KeyboardInput { event, .. } if self.title.is_some() => {
@@ -13273,7 +13312,10 @@ impl ApplicationHandler for Game<'_> {
                                 }
                                 self.save_title_options();
                             }
-                            _ => self.title_edit(event.text.as_deref(), false),
+                            _ => {
+                                let typed = self.typed(&event);
+                                self.title_edit(typed.as_deref(), false)
+                            }
                         }
                     }
                 }
@@ -15505,6 +15547,21 @@ mod tests {
     use super::*;
     use horizon_client::container_screen::{Button, Clicks, Release, Target};
     use horizon_client::keymapping::{KeyAction, SPRINT, ToggleKeys};
+
+    #[test]
+    fn a_cyrillic_logical_key_is_text() {
+        use winit::keyboard::{Key, NamedKey};
+        assert_eq!(
+            typed_character(&Key::Character("ф".into())).as_deref(),
+            Some("ф")
+        );
+        assert_eq!(
+            typed_character(&Key::Character("Ж".into())).as_deref(),
+            Some("Ж")
+        );
+        assert_eq!(typed_character(&Key::Named(NamedKey::Enter)), None);
+        assert_eq!(typed_character(&Key::Character("\u{7f}".into())), None);
+    }
 
     #[test]
     fn sleep_fade_lasts_ten_ticks_after_waking() {

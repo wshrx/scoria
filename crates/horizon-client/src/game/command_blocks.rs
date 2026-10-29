@@ -574,13 +574,14 @@ impl Game<'_> {
         let ctrl = self.keys.contains(&KeyCode::ControlLeft);
         let shift = self.keys.contains(&KeyCode::ShiftLeft);
         let shortcut = self.edit_shortcut(event);
+        let typed = self.typed(event);
         let Some(s) = self.command_block_screen.as_mut() else {
             return;
         };
         if let Some(shortcut) = shortcut {
             s.command.shortcut(shortcut, &mut self.clipboard);
         } else if !s.command.key(key, ctrl, shift) && !ctrl {
-            self.command_block_type(event.text.as_deref().unwrap_or(""));
+            self.command_block_type(typed.as_deref().unwrap_or(""));
         }
     }
     /// Characters typed into the command box (`StringUtil.isAllowedChatCharacter`).

@@ -305,7 +305,8 @@ impl Game<'_> {
             PhysicalKey::Code(k) => Some(k),
             _ => None,
         };
-        self.sign_input(key, event.text.as_deref());
+        let typed = self.typed(event);
+        self.sign_input(key, typed.as_deref());
     }
     /// A key and the text it typed on the sign being edited (the keyboard,
     /// or a controller's on-screen keyboard).
