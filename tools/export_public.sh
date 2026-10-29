@@ -29,6 +29,7 @@ cp "$root/LICENSE" "$root/THIRD_PARTY_NOTICES.md" "$out/" 2>/dev/null || true
 cp "$root/docs/public/README.md" "$out/README.md"
 cp "$root/docs/public/README.ru.md" "$out/README.ru.md"
 cp "$root/docs/public/logo.svg" "$out/logo.svg"
+cp "$root/docs/public/BUILDING.md" "$out/BUILDING.md"
 mkdir -p "$out/screenshots"
 for shot in home mods settings; do
   if [ -f "$root/docs/public/screenshots/$shot.webp" ]; then

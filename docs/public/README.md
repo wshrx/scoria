@@ -27,18 +27,20 @@
 
 ![Scoria launcher](screenshots/home.webp)
 
-## Download
+## Builds
 
-| Platform | Requirements | File |
-|---|---|---|
-| **Linux x86_64** | Wayland session, Vulkan driver | `scoria-launcher-linux-x86_64.tar.gz` |
-| **macOS 14+** | Apple silicon (M1 or newer) | `scoria-launcher-macos-arm64.zip` |
-| **Windows 10/11** | x64, Vulkan driver | `scoria-launcher-windows-x64.zip` |
+**Public beta builds are not published yet.** The first Linux, macOS and Windows archives will be
+attached to [Releases](https://github.com/wshrx/scoria/releases) together with a game client bundle
+and `SHA256SUMS`. Until then the repository is source only: see [BUILDING.md](BUILDING.md).
 
-The archives contain the launcher only: **no Minecraft files inside**. On first run Scoria either
-uses an installation you already own (official launcher, Prism, Freesm, MultiMC, Modrinth App,
-ATLauncher) or downloads the pinned 26.3 files from Mojang's servers when you press **Download and
-prepare**. SHA-256 checksums are on the release page.
+A launcher archive alone cannot play: it needs a game version bundle, which is the remaining
+release-engineering task (signed client bundles, no Minecraft assets inside).
+
+| Platform | Status |
+|---|---|
+| Linux x86_64 (Wayland, Vulkan) | first beta, not published |
+| macOS 14+, Apple silicon | first beta, not published |
+| Windows 10/11 x64 (Vulkan) | first beta, not published |
 
 ## What it is
 
@@ -92,22 +94,12 @@ If you redistribute Scoria, keep the MIT notice and do not add game assets to th
 |---|---|---|
 | ![](screenshots/home.webp) | ![](screenshots/mods.webp) | ![](screenshots/settings.webp) |
 
-## Install
+## Install (when the first beta is out)
 
-**Linux**
-
-```sh
-tar -xzf scoria-launcher-linux-x86_64.tar.gz
-./scoria-linux-x86_64/scoria-launcher-ui
-```
-
-**macOS** — unzip, move `Scoria.app` to Applications, open it. The beta is not notarized:
-right-click → Open the first time.
-
-**Windows** — unzip and run `Scoria.cmd`. SmartScreen warns until the build is signed:
-More info → Run anyway.
-
-First launch asks for nothing. Press **Download and prepare** once; Scoria prepares 26.3 locally.
+Linux: unpack the tarball and run `scoria-launcher-ui`. macOS: unzip, move `Scoria.app` to
+Applications, right-click → Open once (not notarized). Windows: unzip and run `Scoria.cmd`
+(SmartScreen warns until signed). The first launch asks for nothing; press **Download and prepare**
+once and Scoria prepares 26.3 locally from your own files or Mojang's servers.
 
 ## Release channels
 
