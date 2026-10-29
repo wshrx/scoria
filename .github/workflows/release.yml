@@ -1,7 +1,8 @@
 name: release
-# Builds the launcher for Linux, macOS (Apple silicon) and Windows, then attaches the three
-# archives plus SHA256SUMS to the GitHub Release for the tag. The game client is a separate
-# artifact: see docs/public/RELEASE.md (signed client bundles are the next step).
+# Builds the launcher for Linux, macOS (Apple silicon) and Windows, and the game bundle for Linux
+# and Windows (macOS game bundle deferred), then attaches the archives plus SHA256SUMS to the
+# GitHub Release for the tag. The game archives carry no Minecraft assets; signing is the next
+# release step (docs/public/RELEASE.md).
 on:
   push:
     tags: ["v*"]
@@ -53,9 +54,44 @@ jobs:
           path: ${{ matrix.file }}
           if-no-files-found: error
 
+  game:
+    name: game (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            os: ubuntu-latest
+            script: sh tools/package_game.sh
+            file: dist/horizon-linux-x86_64.tar.gz
+          - name: windows-x64
+            os: windows-latest
+            script: sh tools/package_game_windows.sh
+            file: dist/horizon-windows-x64.zip
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-dev libwayland-dev libx11-xcb-dev libfontconfig-dev \
+            libvulkan-dev libasound2-dev libudev-dev
+      - name: Package
+        run: ${{ matrix.script }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: game-${{ matrix.name }}
+          path: ${{ matrix.file }}
+          if-no-files-found: error
+
   publish:
     name: publish
-    needs: package
+    needs: [package, game]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
@@ -64,12 +100,14 @@ jobs:
           path: dist
           merge-multiple: true
       - name: Checksums
-        run: cd dist && sha256sum scoria-launcher-* > SHA256SUMS
+        run: cd dist && sha256sum scoria-launcher-* horizon-* > SHA256SUMS
       - uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/scoria-launcher-*.tar.gz
             dist/scoria-launcher-*.zip
+            dist/horizon-*.tar.gz
+            dist/horizon-*.zip
             dist/SHA256SUMS
           generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
