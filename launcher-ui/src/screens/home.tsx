@@ -6,7 +6,9 @@ import type { DownloadProgress } from "../api"
 import { downloadMinecraft, play, prepare } from "../api"
 import { useT, useLang } from "../i18n"
 import { ago } from "../lib/time"
-import { downloadStopped } from "../errors"
+import { downloadStopped, friendlyError } from "../errors"
+import { EmptyState } from "../components/feedback/empty-state"
+import { useToast } from "../components/feedback/toast"
 import { PageHeader } from "../components/layout/page-header"
 import type { ScreenProps } from "./registry"
 import { Meter, Panel, SceneThumb } from "../visual"
@@ -20,10 +22,10 @@ export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
   const theme = useTheme()
   const t = useT()
   const lang = useLang()
+  const toast = useToast()
   const { width } = useWindowSize()
   const narrow = width < 1060
   const [busy, setBusy] = useState(false)
-  const [note, setNote] = useState<string | null>(null)
   const [progress, setProgress] = useState<DownloadProgress | null>(null)
 
   const files = data.minecraft
@@ -36,29 +38,34 @@ export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
       ? t("Minecraft 26.3 is not here yet. Download it once and it is yours.")
       : t("The files are here. One more step prepares the resources.")
 
-  const fail = (said: string) => setNote(said)
   const percent = progress && progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0
 
   const playNow = (world?: string) => {
     setBusy(true)
-    setNote(null)
-    void play(world ? { world } : {}).then((said) => {
-      if (!said.startsWith("Started")) fail(said)
-      setBusy(false)
-    })
+    void play(world ? { world } : {})
+      .then((said) => {
+        if (!said.startsWith("Started")) {
+          toast({ tone: "error", title: friendlyError(said, t) })
+        }
+      })
+      .catch((error: Error) => toast({ tone: "error", title: friendlyError(error, t) }))
+      .finally(() => setBusy(false))
   }
 
   const prepareAll = async () => {
     setBusy(true)
-    setNote(null)
     setProgress(null)
     try {
       if (!files.installed) await downloadMinecraft(undefined, setProgress)
       const said = await prepare(undefined, undefined, false)
-      if (said.startsWith("Preparation failed")) fail(said)
+      if (said.startsWith("Preparation failed")) {
+        toast({ tone: "error", title: friendlyError(said, t) })
+      } else {
+        toast({ tone: "success", title: t("Resources prepared.") })
+      }
       onRefresh()
     } catch (error) {
-      fail(downloadStopped(error, t))
+      toast({ tone: "error", title: downloadStopped(error, t) })
     } finally {
       setBusy(false)
       setProgress(null)
@@ -143,11 +150,6 @@ export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
             </Text>
           ) : null}
 
-          {note ? (
-            <Text size="xs" style={{ color: theme.colors.destructive }}>
-              {note}
-            </Text>
-          ) : null}
         </div>
 
         <div style={{ width: narrow ? "100%" : 360, flexShrink: 0, padding: narrow ? 16 : 10 }}>
@@ -208,15 +210,29 @@ export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
             </Text>
           </div>
           {data.worlds.length === 0 ? (
-            <Text size="sm" tone="muted" style={{ padding: 16, paddingTop: 6 }}>
-              {t("Play once, create a world, and it will appear here.")}
-            </Text>
+            <div style={{ padding: 12, paddingTop: 4 }}>
+              <EmptyState
+                compact
+                icon="layers"
+                title={t("No worlds yet.")}
+                description={t("Play once, create a world, and it will appear here.")}
+              />
+            </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", paddingLeft: 8, paddingRight: 8, paddingBottom: 8 }}>
               {data.worlds.slice(0, 4).map((world, index) => (
                 <div
                   key={world.folder}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={world.name}
                   onClick={() => playNow(world.folder)}
+                  onKeyDown={(event) => {
+                    if (event.key === "enter" || event.key === " " || event.key === "space") {
+                      event.preventDefault()
+                      playNow(world.folder)
+                    }
+                  }}
                   style={{
                     display: "flex",
                     flexDirection: "row",
@@ -226,6 +242,7 @@ export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
                     borderRadius: 10,
                     cursor: "pointer",
                     hover: { backgroundColor: theme.colors.accent },
+                    focusVisible: { outlineWidth: 2, outlineColor: theme.colors.ring, outlineOffset: -2 },
                   }}
                 >
                   <SceneThumb seed={index + 2} width={64} height={40} />

@@ -1,4 +1,4 @@
-import { useWindowSize } from "@gpuix/react"
+import { Tooltip, TooltipContent, TooltipTrigger, useWindowSize } from "@gpuix/react"
 import { Icon, Text, useTheme, type IconName } from "@/lib/flint"
 import type { Snapshot } from "../../api"
 import { useT } from "../../i18n"
@@ -23,7 +23,7 @@ export function Rail({
 
   const item = (id: ScreenId, icon: IconName, label: string) => {
     const active = page === id
-    return (
+    const row = (
       <div
         key={id}
         role="button"
@@ -31,11 +31,18 @@ export function Rail({
         aria-label={t(label)}
         aria-selected={active}
         onClick={() => onPage(id)}
+        onKeyDown={(event) => {
+          if (event.key === "enter" || event.key === " " || event.key === "space") {
+            event.preventDefault()
+            onPage(id)
+          }
+        }}
         style={{
           display: "flex",
           flexDirection: "row",
           alignItems: "center",
           gap: 10,
+          width: "100%",
           height: 38,
           paddingLeft: 11,
           paddingRight: 10,
@@ -44,6 +51,7 @@ export function Rail({
           background: active ? gradient("#8B5CF624", "#8B5CF60A", 120) : undefined,
           cursor: "pointer",
           hover: active ? {} : { backgroundColor: theme.colors.accent },
+          focusVisible: { outlineWidth: 2, outlineColor: theme.colors.ring, outlineOffset: -2 },
         }}
       >
         <Icon
@@ -61,6 +69,29 @@ export function Rail({
           </Text>
         )}
       </div>
+    )
+    if (!compact) return row
+    return (
+      <Tooltip key={id}>
+        <TooltipTrigger asChild>{row}</TooltipTrigger>
+        <TooltipContent
+          side="right"
+          sideOffset={8}
+          style={{
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 5,
+            paddingBottom: 5,
+            borderRadius: 8,
+            borderWidth: 1,
+            borderStyle: "solid",
+            borderColor: theme.colors.border,
+            backgroundColor: theme.colors.popover,
+          }}
+        >
+          <Text size="xs">{t(label)}</Text>
+        </TooltipContent>
+      </Tooltip>
     )
   }
 

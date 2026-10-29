@@ -35,6 +35,16 @@ is read once at mount (`home`, `mods`, `servers`, `settings`). `SCORIA_UI_SETTIN
 `game`, `builds`, `about`) opens a tab without a click; GPUIX ignores synthetic clicks, so this is
 the only way to screenshot a sub-page. The launcher is Wayland-only: X11 `import`/`xwd` see nothing.
 
+State fixtures for screenshots that normally need a click (`SCORIA_UI_QA`):
+
+```sh
+SCORIA_UI_QA=toast    ...   # success, info and error toasts (60 s)
+SCORIA_UI_QA=dialog   ...   # destructive confirm dialog
+SCORIA_UI_QA=skeleton ...   # Mods results and installed skeletons
+```
+
+They are inert unless the variable is set and live in `launcher-ui/src/qa.ts` / `QaFixtures`.
+
 ## 3. What to look for
 
 - **Text**: no English on a Russian screen. Watch engine data: world modes, relative times, errors.

@@ -39,6 +39,8 @@ no online-mode servers, no Minecraft assets.
   - `src/screens/registry.tsx` — the only screen list; rail and app render from it.
   - `src/screens/` — home, mods, servers, settings, test-only instances.
   - `src/components/layout/` — shell, rail, page header.
+  - `src/components/feedback/` — toast, confirm, skeleton, empty state, error boundary.
+  - `src/qa.ts` — screenshot fixtures behind `SCORIA_UI_QA`; inert in a normal launch.
   - `src/api/` — `client` (process + JSON lines), `launcher`, `mods`, `types`.
   - `src/visual.tsx` — mesh, particles, mark, avatar, SceneThumb, Panel, Meter.
   - `DESIGN.md` — tokens, layout and regression rules; `bun run check:ui` enforces the mechanical ones.
@@ -70,6 +72,8 @@ no online-mode servers, no Minecraft assets.
 - Launcher version is `0.1.0` + `beta` (`launcher-ui/src/version.ts`), separate from the engine
   version (`data.version`, v0.2.93): rail badge and About show both.
 - Every `t("...")` key has a Russian line; `bun run check:i18n` fails on a missing one.
+- SaaS P0 feedback layer: global toasts, confirm dialogs, list skeletons, empty states, an error
+  boundary, tooltips in the compact rail and keyboard focus on rail/world rows.
 - `dev` and `test/instances` are pushed to Entire; GitHub untouched.
 
 ## Bugs fixed (and why they happened)

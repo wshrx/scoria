@@ -7,6 +7,8 @@ import type { Snapshot } from "../api"
 import { createInstance, selectInstance } from "../api"
 import { useT } from "../i18n"
 import { PageHeader } from "../components/layout/page-header"
+import { useToast } from "../components/feedback/toast"
+import { friendlyError } from "../errors"
 import { SceneThumb } from "../visual"
 
 const KIND: Record<string, string> = {
@@ -18,11 +20,11 @@ const KIND: Record<string, string> = {
 export function InstancesPage({ data, onRefresh }: { data: Snapshot; onRefresh: () => void }) {
   const theme = useTheme()
   const t = useT()
+  const toast = useToast()
   const { width } = useWindowSize()
   const narrow = width < 1000
   const [creating, setCreating] = useState(false)
   const [name, setName] = useState("")
-  const [note, setNote] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
 
   return (
@@ -72,20 +74,16 @@ export function InstancesPage({ data, onRefresh }: { data: Snapshot; onRefresh: 
                 .then(() => {
                   setCreating(false)
                   setName("")
+                  toast({ tone: "success", title: t("Instance created.") })
                   onRefresh()
                 })
-                .catch((error: Error) => setNote(error.message))
+                .catch((error: Error) => toast({ tone: "error", title: friendlyError(error, t) }))
                 .finally(() => setBusy(null))
             }}
             style={{ borderRadius: 999, height: 36, paddingLeft: 18, paddingRight: 18 }}
           >
             {t("Create")}
           </Button>
-          {note ? (
-            <Text size="xs" tone="destructive">
-              {note}
-            </Text>
-          ) : null}
         </div>
       ) : null}
 
@@ -100,7 +98,7 @@ export function InstancesPage({ data, onRefresh }: { data: Snapshot; onRefresh: 
                 setBusy(instance.id)
                 void selectInstance(instance.id)
                   .then(() => onRefresh())
-                  .catch((error: Error) => setNote(error.message))
+                  .catch((error: Error) => toast({ tone: "error", title: friendlyError(error, t) }))
                   .finally(() => setBusy(null))
               }}
               style={{

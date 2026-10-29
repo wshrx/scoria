@@ -49,6 +49,21 @@ the painted backdrop. Rounding is a house rule; shadows are not.
 - Motion: page fade, meter easing, spinner dots, particles. No layout animation. Keep rounded
   controls; no new shadows.
 
+## Feedback
+
+- **Toasts** (`components/feedback/toast.tsx`): one bottom-right stack, three at most, success/info
+  4 s, errors 7 s. Every screen uses `useToast()` for completed or failed actions; close buttons
+  are icon buttons with a focus ring.
+- **Confirm dialog** (`confirm.tsx`): destructive actions ask through `useConfirm()`; it traps Tab,
+  closes on Escape or the backdrop, and never uses a second click on the row.
+- **Skeleton** (`skeleton.tsx`): lists that have not loaded show row-shaped placeholders, not
+  `Loading…`.
+- **Empty state** (`empty-state.tsx`): an icon tile, one short title, one line, optional action.
+- **Error boundary** (`error-boundary.tsx`): a render error shows a panel with the message and
+  Retry instead of a blank window.
+- **Keyboard**: rail items and world rows are tab stops with Enter/Space, and `focusVisible` draws
+  the ring; buttons/inputs already carry one.
+
 ## Window rules
 
 - Linux runs on Wayland only. The compositor owns the frame: titlebar, drag, resize and rounded

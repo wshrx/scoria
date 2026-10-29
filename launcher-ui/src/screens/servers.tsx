@@ -5,25 +5,33 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { addServer, play, removeServer, savedServers, type SavedServer } from "../api"
 import { useT } from "../i18n"
+import { friendlyError } from "../errors"
 import { PageHeader } from "../components/layout/page-header"
+import { EmptyState } from "../components/feedback/empty-state"
+import { SkeletonList } from "../components/feedback/skeleton"
+import { useToast } from "../components/feedback/toast"
+import { useConfirm } from "../components/feedback/confirm"
 
 export function ServersPage() {
   const theme = useTheme()
   const t = useT()
+  const toast = useToast()
+  const confirm = useConfirm()
   const { width } = useWindowSize()
   const narrow = width < 1000
   const [servers, setServers] = useState<SavedServer[]>([])
   const [adding, setAdding] = useState(false)
   const [name, setName] = useState("")
   const [ip, setIp] = useState("")
-  const [note, setNote] = useState<string | null>(null)
-  const [confirming, setConfirming] = useState<number | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const refresh = () => {
+    setLoading(true)
     void savedServers()
       .then(setServers)
-      .catch((error: Error) => setNote(error.message))
+      .catch((error: Error) => toast({ tone: "error", title: friendlyError(error, t) }))
+      .finally(() => setLoading(false))
   }
 
   useEffect(refresh, [])
@@ -36,10 +44,7 @@ export function ServersPage() {
         actions={
           <Button
             variant={adding ? "ghost" : "secondary"}
-            onClick={() => {
-              setAdding((value) => !value)
-              setNote(null)
-            }}
+            onClick={() => setAdding((value) => !value)}
             style={{ borderRadius: 999, height: 36, paddingLeft: 16, paddingRight: 16 }}
           >
             <Icon name={adding ? "x" : "plus"} size={13} color={theme.colors.foreground} />
@@ -79,9 +84,9 @@ export function ServersPage() {
                   setAdding(false)
                   setName("")
                   setIp("")
-                  setNote(null)
+                  toast({ tone: "success", title: t("Server added.") })
                 })
-                .catch((error: Error) => setNote(error.message))
+                .catch((error: Error) => toast({ tone: "error", title: friendlyError(error, t) }))
                 .finally(() => setBusy(null))
             }}
             style={{ borderRadius: 999, height: 36, paddingLeft: 18, paddingRight: 18 }}
@@ -92,24 +97,14 @@ export function ServersPage() {
       ) : null}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {servers.length === 0 ? (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 6,
-              padding: 22,
-              borderRadius: 18,
-              borderWidth: 1,
-              borderStyle: "dashed",
-              borderColor: theme.colors.border,
-            }}
-          >
-            <Text size="sm">{t("No servers yet.")}</Text>
-            <Text size="xs" tone="muted">
-              {t("Add an offline-mode server, or open a world to LAN.")}
-            </Text>
-          </div>
+        {loading && servers.length === 0 ? (
+          <SkeletonList rows={2} height={64} />
+        ) : servers.length === 0 ? (
+          <EmptyState
+            icon="server"
+            title={t("No servers yet.")}
+            description={t("Add an offline-mode server, or open a world to LAN.")}
+          />
         ) : (
           servers.map((server, index) => (
             <div
@@ -153,11 +148,14 @@ export function ServersPage() {
                   loading={busy === `join-${index}`}
                   onClick={() => {
                     setBusy(`join-${index}`)
-                    setNote(null)
-                    void play({ server: server.ip }).then((said) => {
-                      setNote(said)
-                      setBusy(null)
-                    })
+                    void play({ server: server.ip })
+                      .then((said) => {
+                        if (!said.startsWith("Started")) {
+                          toast({ tone: "error", title: friendlyError(said, t) })
+                        }
+                      })
+                      .catch((error: Error) => toast({ tone: "error", title: friendlyError(error, t) }))
+                      .finally(() => setBusy(null))
                   }}
                   style={{ borderRadius: 999, height: 28, paddingLeft: 14, paddingRight: 14 }}
                 >
@@ -165,32 +163,32 @@ export function ServersPage() {
                 </Button>
                 <Button
                   size="sm"
-                  variant={confirming === index ? "destructive" : "ghost"}
-                  onClick={() => {
-                    if (confirming !== index) {
-                      setConfirming(index)
-                      return
+                  variant="ghost"
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: t("Remove server?"),
+                      description: t("The server is removed from this list. Its address and name are forgotten."),
+                      confirmLabel: t("Remove"),
+                      tone: "destructive",
+                    })
+                    if (!ok) return
+                    try {
+                      const list = await removeServer(index)
+                      setServers(list)
+                      toast({ tone: "success", title: t("Server removed.") })
+                    } catch (error) {
+                      toast({ tone: "error", title: friendlyError(error, t) })
                     }
-                    setConfirming(null)
-                    void removeServer(index)
-                      .then(setServers)
-                      .catch((error: Error) => setNote(error.message))
                   }}
                   style={{ borderRadius: 999, height: 28, paddingLeft: 12, paddingRight: 12 }}
                 >
-                  {confirming === index ? t("Confirm") : t("Remove")}
+                  {t("Remove")}
                 </Button>
               </div>
             </div>
           ))
         )}
       </div>
-
-      {note ? (
-        <Text size="xs" tone="muted">
-          {note}
-        </Text>
-      ) : null}
 
     </div>
   )

@@ -18,7 +18,11 @@ import {
 } from "../api"
 import { useT } from "../i18n"
 import { LAUNCHER_CHANNEL, LAUNCHER_VERSION } from "../version"
-import { downloadStopped } from "../errors"
+import { downloadStopped, friendlyError } from "../errors"
+import { EmptyState } from "../components/feedback/empty-state"
+import { SkeletonList } from "../components/feedback/skeleton"
+import { useToast } from "../components/feedback/toast"
+import { useConfirm } from "../components/feedback/confirm"
 import { PageHeader } from "../components/layout/page-header"
 import { Avatar, Meter, Sheet } from "../visual"
 
@@ -82,6 +86,8 @@ export function SettingsPage({
 }) {
   const theme = useTheme()
   const t = useT()
+  const toast = useToast()
+  const confirm = useConfirm()
   const { width } = useWindowSize()
   const narrow = width < 1000
   const files = data.minecraft
@@ -93,7 +99,6 @@ export function SettingsPage({
   const [name, setName] = useState(data.offlineName)
   const [nameError, setNameError] = useState<string | null>(null)
   const [nameHint, setNameHint] = useState<string | null>(null)
-  const [note, setNote] = useState<string | null>(null)
   const [busy, setBusy] = useState<"save" | "download" | "prepare" | null>(null)
   const [progress, setProgress] = useState<DownloadProgress | null>(null)
   const [log, setLog] = useState<string[]>([])
@@ -101,18 +106,20 @@ export function SettingsPage({
 
   const [installed, setInstalled] = useState<VersionInfo[]>([])
   const [selected, setSelected] = useState<string | null>(null)
-  const [confirming, setConfirming] = useState<string | null>(null)
   const [versionBusy, setVersionBusy] = useState<string | null>(null)
+  const [versionsLoading, setVersionsLoading] = useState(true)
 
   const refreshVersions = () => {
+    setVersionsLoading(true)
     void versions()
       .then((state) => {
         setInstalled(state.installed)
         setSelected(state.selected)
       })
       .catch((error: Error) => {
-        if (data.live) setNote(error.message)
+        if (data.live) toast({ tone: "error", title: friendlyError(error, t) })
       })
+      .finally(() => setVersionsLoading(false))
   }
 
   useEffect(refreshVersions, [])
@@ -125,14 +132,14 @@ export function SettingsPage({
 
   const download = async () => {
     setBusy("download")
-    setNote(null)
     setProgress(null)
     setLog([])
     try {
       await downloadMinecraft(pushLog, setProgress)
+      toast({ tone: "success", title: t("Game files are ready.") })
       onRefresh()
     } catch (error) {
-      setNote(downloadStopped(error, t))
+      toast({ tone: "error", title: downloadStopped(error, t) })
     } finally {
       setBusy(null)
       setProgress(null)
@@ -141,16 +148,19 @@ export function SettingsPage({
 
   const prepareAll = async () => {
     setBusy("prepare")
-    setNote(null)
     setLog([])
     setProgress(null)
     try {
       if (!files.installed) await downloadMinecraft(pushLog, setProgress)
       const said = await prepare(undefined, pushLog, false)
-      if (said.startsWith("Preparation failed")) setNote(said)
+      if (said.startsWith("Preparation failed")) {
+        toast({ tone: "error", title: friendlyError(said, t) })
+      } else {
+        toast({ tone: "success", title: t("Resources prepared.") })
+      }
       onRefresh()
     } catch (error) {
-      setNote(downloadStopped(error, t))
+      toast({ tone: "error", title: downloadStopped(error, t) })
     } finally {
       setBusy(null)
       setProgress(null)
@@ -265,7 +275,13 @@ export function SettingsPage({
                         setNameHint(t("Saved."))
                         onRefresh()
                       })
-                      .catch((error: Error) => setNameError(error.message))
+                      .catch((error: Error) =>
+                        setNameError(
+                          /name/i.test(error.message)
+                            ? t("A name needs 3 to 16 letters, digits or _.")
+                            : friendlyError(error, t)
+                        )
+                      )
                       .finally(() => setBusy(null))
                   }}
                   style={{ borderRadius: 999, height: 38, marginTop: 20, paddingLeft: 18, paddingRight: 18 }}
@@ -360,7 +376,7 @@ export function SettingsPage({
                     onClick={() => {
                       void setWhilePlaying(mode.value)
                         .then(() => onRefresh())
-                        .catch((error: Error) => setNote(error.message))
+                        .catch((error: Error) => toast({ tone: "error", title: friendlyError(error, t) }))
                     }}
                     style={{ borderRadius: 999, height: 32, paddingLeft: 14, paddingRight: 14 }}
                   >
@@ -370,11 +386,6 @@ export function SettingsPage({
               </div>
             </SectionField>
 
-            {note ? (
-              <Text size="xs" tone="muted">
-                {note}
-              </Text>
-            ) : null}
           </>
         ) : null}
 
@@ -498,11 +509,6 @@ export function SettingsPage({
               </div>
             ) : null}
 
-            {note ? (
-              <Text size="xs" tone="muted">
-                {note}
-              </Text>
-            ) : null}
           </>
         ) : null}
 
@@ -524,11 +530,11 @@ export function SettingsPage({
                   setVersionBusy("latest")
                   void installLatest()
                     .then(() => {
-                      setNote(t("Installed the latest build."))
+                      toast({ tone: "success", title: t("Installed the latest build.") })
                       refreshVersions()
                       onRefresh()
                     })
-                    .catch((error: Error) => setNote(error.message))
+                    .catch((error: Error) => toast({ tone: "error", title: friendlyError(error, t) }))
                     .finally(() => setVersionBusy(null))
                 }}
                 style={{ borderRadius: 999, height: 34, paddingLeft: 14, paddingRight: 14 }}
@@ -539,10 +545,15 @@ export function SettingsPage({
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {installed.length === 0 ? (
-                <Text size="sm" tone="muted">
-                  {t("No versions installed.")}
-                </Text>
+              {versionsLoading && installed.length === 0 ? (
+                <SkeletonList rows={2} height={56} />
+              ) : installed.length === 0 ? (
+                <EmptyState
+                  compact
+                  icon="layers"
+                  title={t("No builds installed.")}
+                  description={t("Install the latest build to start.")}
+                />
               ) : (
                 installed.map((version) => (
                   <div
@@ -589,7 +600,7 @@ export function SettingsPage({
                               refreshVersions()
                               onRefresh()
                             })
-                            .catch((error: Error) => setNote(error.message))
+                            .catch((error: Error) => toast({ tone: "error", title: friendlyError(error, t) }))
                             .finally(() => setVersionBusy(null))
                         }}
                         style={{ borderRadius: 999, height: 28, paddingLeft: 12, paddingRight: 12 }}
@@ -599,34 +610,33 @@ export function SettingsPage({
                     )}
                     <Button
                       size="sm"
-                      variant={confirming === version.tag ? "destructive" : "ghost"}
-                      onClick={() => {
-                        if (confirming !== version.tag) {
-                          setConfirming(version.tag)
-                          return
+                      variant="ghost"
+                      onClick={async () => {
+                        const ok = await confirm({
+                          title: t("Remove build?"),
+                          description: t("The build's files are deleted from this machine. Worlds are kept."),
+                          confirmLabel: t("Remove"),
+                          tone: "destructive",
+                        })
+                        if (!ok) return
+                        try {
+                          await removeVersion(version.tag)
+                          toast({ tone: "success", title: t("Build removed."), description: version.tag })
+                          refreshVersions()
+                          onRefresh()
+                        } catch (error) {
+                          toast({ tone: "error", title: friendlyError(error, t) })
                         }
-                        setConfirming(null)
-                        void removeVersion(version.tag)
-                          .then(() => {
-                            refreshVersions()
-                            onRefresh()
-                          })
-                          .catch((error: Error) => setNote(error.message))
                       }}
                       style={{ borderRadius: 999, height: 28, paddingLeft: 12, paddingRight: 12 }}
                     >
-                      {confirming === version.tag ? t("Confirm") : t("Remove")}
+                      {t("Remove")}
                     </Button>
                   </div>
                 ))
               )}
             </div>
 
-            {note ? (
-              <Text size="xs" tone="muted">
-                {note}
-              </Text>
-            ) : null}
           </>
         ) : null}
 

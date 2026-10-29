@@ -1,13 +1,40 @@
 import { useEffect, useRef, useState } from "react"
 import { existsSync } from "node:fs"
 import { dirname, resolve } from "node:path"
-import { useGpuixRequired } from "@gpuix/react"
+import { TooltipProvider, useGpuixRequired } from "@gpuix/react"
 import { Text, ThemeProvider, registerFlintFonts } from "@/lib/flint"
 import { setAppearance, setLanguage, snapshot, type Snapshot } from "./api"
 import { Shell } from "./components/layout/shell"
 import { SCREENS, screenFor, type ScreenId } from "./screens/registry"
 import { scoriaDark, scoriaLight } from "./theme"
 import { LangProvider } from "./i18n"
+import { ConfirmProvider } from "./components/feedback/confirm"
+import { ErrorBoundary } from "./components/feedback/error-boundary"
+import { ToastProvider, ToastViewport, useToast } from "./components/feedback/toast"
+import { useConfirm } from "./components/feedback/confirm"
+import { qaOn } from "./qa"
+
+/** Test-only states the QA skill screenshots; inert unless SCORIA_UI_QA is set. */
+function QaFixtures() {
+  const toast = useToast()
+  const confirm = useConfirm()
+  useEffect(() => {
+    if (qaOn("toast")) {
+      toast({ tone: "success", title: "Установлено.", description: "Sodium", duration: 60_000 })
+      toast({ tone: "info", title: "Обновление доступно.", description: "Scoria 0.1.1 beta", duration: 60_000 })
+      toast({ tone: "error", title: "Нет соединения. Проверьте сеть и попробуйте снова.", duration: 60_000 })
+    }
+    if (qaOn("dialog")) {
+      void confirm({
+        title: "Удалить сборку?",
+        description: "Файлы сборки будут удалены с этого компьютера. Миры сохранятся.",
+        confirmLabel: "Удалить",
+        tone: "destructive",
+      })
+    }
+  }, [confirm, toast])
+  return null
+}
 
 /** Fonts need a live renderer, so they are registered after the window exists. */
 function Fonts() {
@@ -97,19 +124,31 @@ export function App() {
   return (
     <ThemeProvider theme={theme}>
       <LangProvider lang={data.language === "ru" ? "ru" : "en"}>
-        <Fonts />
-        <Shell page={page} onPage={setPage} data={data}>
-          <Active
-            data={data}
-            onRefresh={refresh}
-            onPage={setPage}
-            dark={dark}
-            onToggleTheme={toggleTheme}
-            onLanguage={(value) => {
-              void setLanguage(value).then(apply)
-            }}
-          />
-        </Shell>
+        <TooltipProvider delayDuration={350}>
+          <ToastProvider>
+            <ConfirmProvider>
+              <div style={{ display: "flex", width: "100%", height: "100%", position: "relative" }}>
+                <Fonts />
+                <ErrorBoundary>
+                  <Shell page={page} onPage={setPage} data={data}>
+                    <Active
+                      data={data}
+                      onRefresh={refresh}
+                      onPage={setPage}
+                      dark={dark}
+                      onToggleTheme={toggleTheme}
+                      onLanguage={(value) => {
+                        void setLanguage(value).then(apply)
+                      }}
+                    />
+                  </Shell>
+                </ErrorBoundary>
+                <ToastViewport />
+                <QaFixtures />
+              </div>
+            </ConfirmProvider>
+          </ToastProvider>
+        </TooltipProvider>
       </LangProvider>
     </ThemeProvider>
   )

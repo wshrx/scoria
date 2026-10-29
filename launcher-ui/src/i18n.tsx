@@ -7,6 +7,37 @@ export type Lang = "en" | "ru"
  * English is the key: a missing translation falls back to it instead of showing a key.
  */
 export const RU: Record<string, string> = {
+  "Build removed.": "Сборка удалена.",
+  "Instance created.": "Инстанс создан.",
+  "Dismiss": "Закрыть",
+  "Game files are ready.": "Файлы игры готовы.",
+  "Install the latest build to start.": "Установите последнюю сборку, чтобы начать.",
+  "Installed mods and resource packs appear here.": "Установленные моды и ресурспаки появятся здесь.",
+  "It is removed from the game folder.": "Он будет удалён из папки игры.",
+  "No access to the folder. Choose another one.": "Нет доступа к папке. Выберите другую.",
+  "No builds installed.": "Сборки не установлены.",
+  "Not enough disk space.": "Не хватает места на диске.",
+  "Remove build?": "Удалить сборку?",
+  "Remove mod?": "Удалить мод?",
+  "Remove server?": "Удалить сервер?",
+  "Resources prepared.": "Ресурсы подготовлены.",
+  "Retry": "Повторить",
+  "Server added.": "Сервер добавлен.",
+  "Server removed.": "Сервер удалён.",
+  "Something went wrong. Try again.": "Что-то пошло не так. Попробуйте ещё раз.",
+  "The build's files are deleted from this machine. Worlds are kept.":
+    "Файлы сборки будут удалены с этого компьютера. Миры сохранятся.",
+  "The connection dropped. Check your network and try again.":
+    "Соединение пропало. Проверьте сеть и попробуйте снова.",
+  "The console has the full error.": "Полная ошибка есть в консоли.",
+  "The download is corrupted. Try again.": "Файл скачался повреждённым. Попробуйте ещё раз.",
+  "The file was not found on the server.": "Файл не найден на сервере.",
+  "The launcher hit an unexpected error.": "Лаунчер столкнулся с неожиданной ошибкой.",
+  "The server is removed from this list. Its address and name are forgotten.":
+    "Сервер исчезнет из списка. Имя и адрес будут забыты.",
+  "The service is rate-limiting requests. Try again in a minute.":
+    "Сервис временно ограничил запросы. Попробуйте через минуту.",
+  "Try another search or install from Modrinth.": "Попробуйте другой запрос или установите мод с Modrinth.",
   Play: "Играть",
   Instances: "Инстансы",
   "Game files": "Файлы игры",

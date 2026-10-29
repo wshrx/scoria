@@ -7,7 +7,13 @@ import { Kbd } from "@/components/ui/kbd"
 import type { ModEntry, ModProject } from "../api"
 import { installMod, installedMods, removeMod, searchMods } from "../api"
 import { useT } from "../i18n"
+import { friendlyError } from "../errors"
 import { PageHeader } from "../components/layout/page-header"
+import { EmptyState } from "../components/feedback/empty-state"
+import { SkeletonList } from "../components/feedback/skeleton"
+import { useToast } from "../components/feedback/toast"
+import { useConfirm } from "../components/feedback/confirm"
+import { qaOn } from "../qa"
 import { Meter, Panel } from "../visual"
 
 type ModKind = "mod" | "resource-pack"
@@ -25,8 +31,11 @@ function kindLabel(kind: string, t: (text: string) => string) {
 export function ModsPage() {
   const theme = useTheme()
   const t = useT()
+  const toast = useToast()
+  const confirm = useConfirm()
   const { width } = useWindowSize()
   const narrow = width < 1060
+  const forceSkeleton = qaOn("skeleton")
 
   const [kind, setKind] = useState<ModKind>("mod")
   const [query, setQuery] = useState("")
@@ -35,23 +44,23 @@ export function ModsPage() {
   const [searching, setSearching] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
   const [progress, setProgress] = useState<{ label: string; value: number } | null>(null)
-  const [note, setNote] = useState<{ text: string; error: boolean } | null>(null)
-  const [confirming, setConfirming] = useState<string | null>(null)
+  const [loadingInstalled, setLoadingInstalled] = useState(true)
 
   const loadInstalled = () => {
+    setLoadingInstalled(true)
     void installedMods()
       .then((state) => setEntries(state.entries))
-      .catch((error: Error) => setNote({ text: error.message, error: true }))
+      .catch((error: Error) => toast({ tone: "error", title: friendlyError(error, t) }))
+      .finally(() => setLoadingInstalled(false))
   }
 
   useEffect(loadInstalled, [])
 
   const runSearch = (text = "") => {
     setSearching(true)
-    setNote(null)
     void searchMods(text, kind)
       .then(setResults)
-      .catch((error: Error) => setNote({ text: error.message, error: true }))
+      .catch((error: Error) => toast({ tone: "error", title: friendlyError(error, t) }))
       .finally(() => setSearching(false))
   }
 
@@ -59,18 +68,34 @@ export function ModsPage() {
 
   const install = (project: ModProject) => {
     setBusy(project.id)
-    setNote(null)
     setProgress({ label: "", value: 0 })
     void installMod(project.id, (label, value) => setProgress({ label, value }))
       .then(() => {
         loadInstalled()
-        setNote({ text: t("Installed."), error: false })
+        toast({ tone: "success", title: t("Installed."), description: project.title })
       })
-      .catch((error: Error) => setNote({ text: error.message, error: true }))
+      .catch((error: Error) => toast({ tone: "error", title: friendlyError(error, t) }))
       .finally(() => {
         setBusy(null)
         setProgress(null)
       })
+  }
+
+  const remove = async (entry: ModEntry) => {
+    const ok = await confirm({
+      title: t("Remove mod?"),
+      description: t("It is removed from the game folder."),
+      confirmLabel: t("Remove"),
+      tone: "destructive",
+    })
+    if (!ok) return
+    try {
+      const state = await removeMod(entry.project)
+      setEntries(state)
+      toast({ tone: "success", title: t("Removed."), description: entry.title })
+    } catch (error) {
+      toast({ tone: "error", title: friendlyError(error, t) })
+    }
   }
 
   const percent = progress ? Math.round(progress.value * 100) : 0
@@ -135,10 +160,6 @@ export function ModsPage() {
                 </Text>
               </div>
             </div>
-          ) : note ? (
-            <Text size="xs" style={{ color: note.error ? theme.colors.destructive : theme.colors.success }}>
-              {note.text}
-            </Text>
           ) : null}
         </div>
       </Panel>
@@ -153,10 +174,19 @@ export function ModsPage() {
               {searching ? t("Searching…") : `${results.length} ${t("results")}`}
             </Text>
           </div>
-          {results.length === 0 && !searching ? (
-            <Text size="sm" tone="muted" style={{ padding: 14, paddingTop: 4 }}>
-              {t("Nothing found.")}
-            </Text>
+          {forceSkeleton || (searching && results.length === 0) ? (
+            <div style={{ padding: 12, paddingTop: 4 }}>
+              <SkeletonList rows={6} height={64} />
+            </div>
+          ) : results.length === 0 ? (
+            <div style={{ padding: 12, paddingTop: 4 }}>
+              <EmptyState
+                compact
+                icon="search"
+                title={t("Nothing found.")}
+                description={t("Try another search or install from Modrinth.")}
+              />
+            </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column" }}>
               {results.map((project) => {
@@ -262,10 +292,19 @@ export function ModsPage() {
               {entries.length}
             </Text>
           </div>
-          {entries.length === 0 ? (
-            <Text size="xs" tone="muted" style={{ padding: 14, paddingTop: 4 }}>
-              {t("Nothing installed from Modrinth yet.")}
-            </Text>
+          {forceSkeleton || (loadingInstalled && entries.length === 0) ? (
+            <div style={{ padding: 12 }}>
+              <SkeletonList rows={2} height={72} />
+            </div>
+          ) : entries.length === 0 ? (
+            <div style={{ padding: 12 }}>
+              <EmptyState
+                compact
+                icon="box"
+                title={t("Nothing installed from Modrinth yet.")}
+                description={t("Installed mods and resource packs appear here.")}
+              />
+            </div>
           ) : (
             entries.map((entry) => (
               <div
@@ -290,23 +329,11 @@ export function ModsPage() {
                 </Text>
                 <Button
                   size="sm"
-                  variant={confirming === entry.project ? "destructive" : "ghost"}
-                  onClick={() => {
-                    if (confirming !== entry.project) {
-                      setConfirming(entry.project)
-                      return
-                    }
-                    setConfirming(null)
-                    void removeMod(entry.project)
-                      .then((state) => {
-                        setEntries(state)
-                        setNote({ text: t("Removed."), error: false })
-                      })
-                      .catch((error: Error) => setNote({ text: error.message, error: true }))
-                  }}
+                  variant="ghost"
+                  onClick={() => void remove(entry)}
                   style={{ borderRadius: 999, height: 26, minWidth: 88, paddingLeft: 10, paddingRight: 10, alignSelf: "flex-start" }}
                 >
-                  {confirming === entry.project ? t("Confirm") : t("Remove")}
+                  {t("Remove")}
                 </Button>
               </div>
             ))
