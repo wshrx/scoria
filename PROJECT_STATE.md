@@ -33,6 +33,11 @@ no online-mode servers, no Minecraft assets.
   affiliated with Mojang/Microsoft, and ships no Minecraft assets. Releases carry binaries, UI,
   OFL fonts and branding only; game files are downloaded from Mojang on request or taken from the
   user's install. `tools/check_public_assets.sh` gates the public tree.
+- **Upstream sync**: `docs/fork/patches.md` lists every fork patch; `tools/sync_upstream.sh`
+  fetches Horizon, merges on a throwaway branch and runs the gates. Engine delta is 9 files
+  (+87/−26, only the typed-text fallback) on top of `b6c936f82`, but upstream is **781 commits
+  ahead** (`9c15e18c6`, 2026-10-29): a large sync is due, engine patch re-applied after taking
+  upstream. The launcher is the real fork.
 - **Branches**: `main` = public stable (release = merge `dev`, then tag on `main`); `dev` =
   integration/beta; `test/instances` = unpublished. `nightly` is upstream Horizon's branch, never
   ours: do not push or release from it. Nightly builds, if added, are a rolling pre-release tag
