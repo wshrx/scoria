@@ -16,7 +16,7 @@ echo "Building the Rust engine…"
 (cd "$root/launcher" && cargo build --release --locked)
 
 echo "Building the flint UI…"
-(cd "$root/launcher-ui" && bun install --frozen-lockfile && bun run check:ui && bun run typecheck)
+(cd "$root/launcher-ui" && bun install --frozen-lockfile && bun run check:ui && bun run typecheck && bun run check:i18n)
 (cd "$root/launcher-ui" && bun build --compile app.tsx --outfile "$out/scoria-ui")
 
 cp "$root/launcher/target/release/horizon-launcher" "$out/horizon-launcher"

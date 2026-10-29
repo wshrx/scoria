@@ -5,9 +5,8 @@ import { App } from "./src/app"
 // come up without showing anything on the user's desktop.
 const headless = process.env.SCORIA_UI_HEADLESS === "1"
 
-// The launcher draws its own titlebar on Linux (chrome.ts), which needs the
-// XWayland backend. scripts/run.ts and the packaged wrapper set that before
-// this module loads; SCORIA_UI_WAYLAND=1 keeps the native Wayland window.
+// The window is 1280x720 and the compositor draws its frame. The launcher is
+// Wayland-native on Linux: no X11 backend and no client-side titlebar.
 const width = Number(process.env.SCORIA_UI_WIDTH ?? 1280)
 const height = Number(process.env.SCORIA_UI_HEIGHT ?? 720)
 
