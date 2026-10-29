@@ -45,11 +45,17 @@ machine:
 Until step 3 is done, mac/win downloads are **launcher previews**: they start, but installing 26.3
 uses the existing asset path and may fall back to an already installed version.
 
-## Nightly
+## Branches and channels
 
-There is no `nightly` branch. Releases are tags on `dev`; a branch would fork history and mix with
-upstream Horizon's own `nightly`. If a nightly channel is wanted, add a scheduled job that builds
-from `dev` and publishes a rolling `nightly` pre-release tag with the same three archives.
+- `main` — the public stable line. A release is `dev` merged into `main`, then a tag on `main`.
+- `dev` — integration and the beta line; every push is a candidate.
+- `test/instances` — unfinished instance manager, never published.
+- `nightly` — **upstream Horizon's branch**, inherited with the fork. Scoria does not release from
+  it and never pushes to it: its history is Horizon's, not ours.
+
+Tags are the only release channel: `v0.1.0-beta.N` (pre-release) and `v0.1.0` (stable). A nightly
+channel, if wanted, is a rolling `nightly` pre-release tag built from `dev` on a schedule — still
+not a branch.
 
 ## Signing
 

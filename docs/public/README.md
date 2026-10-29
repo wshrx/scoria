@@ -148,6 +148,13 @@ Beta. The engine is Horizon's; Scoria adds the offline launcher, piston-meta dow
 support, the new UI and its branding. Roadmap and known gaps are in
 [Issues](https://github.com/wshrx/scoria/issues).
 
+## Credits
+
+- Engine: [Horizon](https://github.com/horizon-rust/horizon), MIT.
+- Typefaces: **Medeo Sans** and **Medeo Mono** by the Medeo Project Authors (DNFDEVS), SIL OFL.
+  The Scoria wordmark is outlined from Medeo Sans Bold.
+- UI: GPUIX and flint-ui.
+
 ## License
 
 MIT — see [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

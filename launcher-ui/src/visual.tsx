@@ -227,25 +227,40 @@ export function Mark({ size = 40 }: { size?: number }) {
   return (
     <div
       style={{
+        position: "relative",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         width: size,
         height: size,
-        borderRadius: Math.round(size * 0.34),
-        background: gradient("#A78BFA", "#6D28D9", 145),
+        borderRadius: Math.round(size * 0.27),
+        background: gradient("#B49CFF", "#5B21B6", 145),
+        borderWidth: 1,
+        borderStyle: "solid",
+        borderColor: "#FFFFFF2E",
       }}
     >
       <Text
         style={{
           color: "#FFFFFF",
-          fontSize: Math.round(size * 0.46),
-          lineHeight: Math.round(size * 0.5),
+          fontSize: Math.round(size * 0.5),
+          lineHeight: Math.round(size * 0.54),
           fontWeight: "700",
         }}
       >
         S
       </Text>
+      <div
+        style={{
+          position: "absolute",
+          top: Math.round(size * 0.14),
+          right: Math.round(size * 0.14),
+          width: Math.max(3, Math.round(size * 0.11)),
+          height: Math.max(3, Math.round(size * 0.11)),
+          borderRadius: 99,
+          background: gradient("#FFD9A0", "#F59E0B", 135),
+        }}
+      />
     </div>
   )
 }

@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react"
-import { existsSync } from "node:fs"
-import { dirname, resolve } from "node:path"
-import { TooltipProvider, useGpuixRequired } from "@gpuix/react"
-import { Text, ThemeProvider, registerFlintFonts } from "@/lib/flint"
+import { TooltipProvider } from "@gpuix/react"
+import { Text, ThemeProvider } from "@/lib/flint"
 import { setAppearance, setLanguage, snapshot, type Snapshot } from "./api"
 import { Shell } from "./components/layout/shell"
 import { SCREENS, screenFor, type ScreenId } from "./screens/registry"
@@ -33,19 +31,6 @@ function QaFixtures() {
       })
     }
   }, [confirm, toast])
-  return null
-}
-
-/** Fonts need a live renderer, so they are registered after the window exists. */
-function Fonts() {
-  const renderer = useGpuixRequired()
-  useEffect(() => {
-    // In a checkout the fonts are in the tree; in a packaged build they sit beside the binary.
-    const dir = existsSync("./src/lib/fonts")
-      ? "./src/lib/fonts"
-      : resolve(dirname(process.execPath), "fonts")
-    void registerFlintFonts(renderer, { dir })
-  }, [renderer])
   return null
 }
 
@@ -128,7 +113,6 @@ export function App() {
           <ToastProvider>
             <ConfirmProvider>
               <div style={{ display: "flex", width: "100%", height: "100%", position: "relative" }}>
-                <Fonts />
                 <ErrorBoundary>
                   <Shell page={page} onPage={setPage} data={data}>
                     <Active

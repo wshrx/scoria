@@ -11,6 +11,12 @@ developers, with one upstream fix applied
 ([gfx-rs/wgpu#10124](https://github.com/gfx-rs/wgpu/pull/10124)). It is licensed under MIT or
 Apache-2.0; both licenses are in that folder (`LICENSE.MIT`, `LICENSE.APACHE`).
 
+## Medeo Sans and Medeo Mono
+
+`launcher-ui/src/lib/fonts/MedeoSans-*.ttf` and `MedeoMono-*.ttf` are the Medeo fonts by the Medeo
+Project Authors (https://github.com/DNFDEVS/medeo-font), licensed under the SIL Open Font License
+1.1 (`launcher-ui/src/lib/fonts/OFL.txt`). The Scoria wordmark is outlined from Medeo Sans Bold.
+
 ## Pixelify Sans
 
 `crates/horizon-theme/fonts/PixelifySans-*.ttf` is [Pixelify Sans](https://github.com/eifetx/Pixelify-Sans)

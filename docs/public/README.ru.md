@@ -113,6 +113,13 @@ sh tools/package_macos.sh     # macOS .app
 sh tools/package_windows.sh   # Windows zip
 ```
 
+## Благодарности
+
+- Движок: [Horizon](https://github.com/horizon-rust/horizon), MIT.
+- Шрифты: **Medeo Sans** и **Medeo Mono** от Medeo Project Authors (DNFDEVS), SIL OFL.
+  Логотип Scoria построен из Medeo Sans Bold.
+- Интерфейс: GPUIX и flint-ui.
+
 ## Лицензия
 
 MIT — см. [LICENSE](LICENSE) и [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

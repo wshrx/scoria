@@ -10,6 +10,9 @@ export const RU: Record<string, string> = {
   "Build removed.": "Сборка удалена.",
   "Instance created.": "Инстанс создан.",
   "Playing": "Игра идёт",
+  "Typeface: Medeo Sans and Medeo Mono by DNFDEVS, SIL OFL.":
+    "Шрифты: Medeo Sans и Medeo Mono от DNFDEVS, SIL OFL.",
+  "Engine: Horizon, MIT.": "Движок: Horizon, MIT.",
   "The game is already running. Close its window to play again.":
     "Игра уже запущена. Закройте её окно, чтобы запустить снова.",
   "Dismiss": "Закрыть",

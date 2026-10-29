@@ -684,6 +684,12 @@ export function SettingsPage({
             <Text size="xs" tone="muted">
               {t("Files come from Mojang only when you ask for them.")}
             </Text>
+            <Text size="xs" tone="muted">
+              {t("Typeface: Medeo Sans and Medeo Mono by DNFDEVS, SIL OFL.")}
+            </Text>
+            <Text size="xs" tone="muted">
+              {t("Engine: Horizon, MIT.")}
+            </Text>
           </>
         ) : null}
       </div>

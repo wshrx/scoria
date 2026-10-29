@@ -33,8 +33,10 @@ no online-mode servers, no Minecraft assets.
   affiliated with Mojang/Microsoft, and ships no Minecraft assets. Releases carry binaries, UI,
   OFL fonts and branding only; game files are downloaded from Mojang on request or taken from the
   user's install. `tools/check_public_assets.sh` gates the public tree.
-- **No `nightly` branch**: releases are tags on `dev` (`v0.1.0-beta.N`). A nightly channel, if
-  added, is a rolling pre-release tag built from `dev`, never a branch.
+- **Branches**: `main` = public stable (release = merge `dev`, then tag on `main`); `dev` =
+  integration/beta; `test/instances` = unpublished. `nightly` is upstream Horizon's branch, never
+  ours: do not push or release from it. Nightly builds, if added, are a rolling pre-release tag
+  built from `dev`.
 
 ## Product decisions
 
@@ -92,6 +94,9 @@ no online-mode servers, no Minecraft assets.
 - Launcher version is `0.1.0` + `beta` (`launcher-ui/src/version.ts`), separate from the engine
   version (`data.version`, v0.2.93): rail badge and About show both.
 - Every `t("...")` key has a Russian line; `bun run check:i18n` fails on a missing one.
+- Medeo Sans/Mono are registered **before** the first frame in `launcher-ui/app.tsx`; a React
+  effect left the first paint in the fallback. Credits are in About, THIRD_PARTY_NOTICES and the
+  public README; the wordmark is outlined Medeo.
 - SaaS P0 feedback layer: global toasts, confirm dialogs, list skeletons, empty states, an error
   boundary, tooltips in the compact rail and keyboard focus on rail/world rows.
 - One game per folder: `.scoria-running` holds the PID; a second Play is refused, Home shows
