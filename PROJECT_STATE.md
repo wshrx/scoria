@@ -24,6 +24,11 @@ no online-mode servers, no Minecraft assets.
   there; keep them on Entire or in a private tools repo. Push GitHub at milestones/tags, not WIP.
 - **Builds are release artifacts, not commits**: CI builds on a tag, attaches the tarball plus a
   SHA-256 file to the GitHub Release, and never stores the 100 MB binary in git.
+- **Linux game bundle proven**: `tools/package_game.sh` builds `horizon-linux-x86_64.tar.gz`
+  (26 MB, no Mojang assets). On a fresh `HORIZON_LAUNCHER_HOME` it was recognised as `v0.2.94`,
+  downloaded 26.3 from piston, prepared 1.4 GB of resources locally, and launched the client.
+  Windows has the same job (`package_game_windows.sh` + `release.yml`); it has not run yet.
+  Signing the checksums is the remaining install blocker.
 - **Cross-platform releases**: `.github/workflows/release.yml` builds Linux x86_64, macOS arm64
   and Windows x64 launchers on a tag. `tools/package_{macos,windows}.sh` make `Scoria.app` and
   the Windows zip. See `docs/public/RELEASE.md`: signed client bundles are the remaining step
@@ -36,6 +41,8 @@ no online-mode servers, no Minecraft assets.
   affiliated with Mojang/Microsoft, and ships no Minecraft assets. Releases carry binaries, UI,
   OFL fonts and branding only; game files are downloaded from Mojang on request or taken from the
   user's install. `tools/check_public_assets.sh` gates the public tree.
+- **Download resilience**: IPv4-only resolution when the host has A records, five attempts per
+  file and a 64-error cap; a flaky route no longer aborts a 5 200-file asset download.
 - **Upstream sync**: `docs/fork/patches.md` lists every fork patch; `tools/sync_upstream.sh`
   fetches Horizon, merges on a throwaway branch and runs the gates. Engine delta is 9 files
   (+87/−26, only the typed-text fallback) on top of `b6c936f82`, but upstream is **781 commits

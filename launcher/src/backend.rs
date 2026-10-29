@@ -1167,11 +1167,9 @@ fn minecraft_folders() -> Vec<PathBuf> {
 /// The official launcher's game directory, else the first other launcher's found
 /// (sources.rs); preparing looks in all of them anyway.
 pub fn default_minecraft_dir() -> Option<PathBuf> {
-    let folders = sources::Folders::current()?;
-    sources::known_folders(sources::Os::current(), &folders)
-        .into_iter()
-        .map(|(_, dir)| dir)
-        .find(|dir| dir.is_dir())
+    // Scoria's own folder, never another launcher's: the first prepare downloads 26.3 from
+    // piston there, and later runs reuse it. A folder explicitly chosen in Settings still wins.
+    Some(data_dir().join("minecraft"))
 }
 
 fn found(program: &str, arg: &str) -> bool {
