@@ -21,6 +21,13 @@ no online-mode servers, no Minecraft assets.
   there; keep them on Entire or in a private tools repo. Push GitHub at milestones/tags, not WIP.
 - **Builds are release artifacts, not commits**: CI builds on a tag, attaches the tarball plus a
   SHA-256 file to the GitHub Release, and never stores the 100 MB binary in git.
+- **Cross-platform releases**: `.github/workflows/release.yml` builds Linux x86_64, macOS arm64
+  and Windows x64 launchers on a tag. `tools/package_{macos,windows}.sh` make `Scoria.app` and
+  the Windows zip. See `docs/public/RELEASE.md`: signed client bundles are the remaining step
+  before the mac/win downloads can play on a clean machine.
+- **Public showcase**: `docs/public/README.md` + `README.ru.md` are the GitHub landing (downloads,
+  what works, screenshots); `tools/export_public.sh` builds `dist/public/` by allowlist, without
+  `.opencode/`, memory, fork notes or build output. Screenshots are still to capture.
 
 ## Product decisions
 

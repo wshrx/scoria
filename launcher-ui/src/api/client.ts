@@ -14,10 +14,11 @@ const here = dirname(fileURLToPath(import.meta.url))
 
 function engineBinary(): string {
   if (process.env.SCORIA_LAUNCHER_BIN) return process.env.SCORIA_LAUNCHER_BIN
+  const suffix = process.platform === "win32" ? ".exe" : ""
   // A packaged build: the Rust engine sits beside the compiled UI.
-  const beside = resolve(dirname(process.execPath), "horizon-launcher")
+  const beside = resolve(dirname(process.execPath), `horizon-launcher${suffix}`)
   if (existsSync(beside)) return beside
-  const dev = resolve(here, "../../../launcher/target/debug/horizon-launcher")
+  const dev = resolve(here, `../../../launcher/target/debug/horizon-launcher${suffix}`)
   return existsSync(dev) ? dev : beside
 }
 
