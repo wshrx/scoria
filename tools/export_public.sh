@@ -24,7 +24,8 @@ cp "$root/Cargo.toml" "$root/Cargo.lock" "$out/"
 rm -rf "$out/docs/media" "$out/docs/public" "$out/docs/agents" "$out/docs/fork" \
        "$out/launcher/docs" "$out/packaging/macos/background.png" "$out/packaging/macos/background@2x.png"
 mkdir -p "$out/tools"
-cp "$root"/tools/package_ui.sh "$root"/tools/package_macos.sh "$root"/tools/package_windows.sh "$out/tools/"
+cp "$root"/tools/package_ui.sh "$root"/tools/package_macos.sh "$root"/tools/package_windows.sh \
+   "$root"/tools/package_game.sh "$root"/tools/package_game_windows.sh "$out/tools/"
 mkdir -p "$out/tools/ci"
 cp "$root/tools/ci/sign_release.sh" "$out/tools/ci/"
 cp "$root/LICENSE" "$root/THIRD_PARTY_NOTICES.md" "$out/" 2>/dev/null || true
