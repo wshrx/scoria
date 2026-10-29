@@ -1,9 +1,24 @@
 #!/bin/sh
-# Copies the Visual C++ runtime DLLs the Rust exes and the GPUIX addon import
-# (VCRUNTIME140.dll) beside a Windows build. They are not part of Windows itself.
+# Copies VCRUNTIME140.dll beside a Windows build, but only when a binary there
+# imports it: the Rust exes are built with +crt-static and the GPUIX addon can be
+# built from source the same way, so usually nothing is needed.
 set -eu
 destination=${1:?usage: windows_runtime.sh <folder>}
 dll=vcruntime140.dll
+
+needed=0
+for file in "$destination"/*.exe "$destination"/*.node; do
+  [ -f "$file" ] || continue
+  if grep -aq "VCRUNTIME140.dll" "$file"; then
+    echo "$(basename "$file") imports $dll"
+    needed=1
+  fi
+done
+
+if [ "$needed" -eq 0 ]; then
+  echo "No binary imports $dll; nothing to copy."
+  exit 0
+fi
 
 if [ -f "$destination/$dll" ]; then
   exit 0

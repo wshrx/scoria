@@ -24,8 +24,17 @@ jobs:
             os: windows-latest
             script: sh tools/package_windows.sh
             file: dist/scoria-launcher-windows-x64.zip
+            # The C runtime linked in: without it horizon-launcher.exe asks for
+            # VCRUNTIME140.dll, which only the Visual C++ redistributable installs.
+            rustflags: -C target-feature=+crt-static
+            # Build the GPUIX addon from source with the same flag instead of the
+            # npm binary, which links the DLL CRT.
+            gpuix_from_source: 1
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    timeout-minutes: 90
+    env:
+      RUSTFLAGS: ${{ matrix.rustflags }}
+      SCORIA_GPUIX_FROM_SOURCE: ${{ matrix.gpuix_from_source }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -41,9 +50,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libxkbcommon-dev libwayland-dev libx11-xcb-dev libfontconfig-dev \
-            libvulkan-dev libasound2-dev libudev-dev
+            libvulkan-dev libasound2-dev libudev-dev zstd
+      - name: Version from the tag
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: echo "HORIZON_LAUNCHER_VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
       - name: Package
         run: ${{ matrix.script }}
+      - name: Check the Windows binaries' imports
+        if: runner.os == 'Windows'
+        run: |
+          # Everything in the folder must run on a clean Windows: the Rust launcher
+          # is +crt-static and the GPUIX addon is built from source the same way.
+          python tools/check_imports.py --shipped dist/windows \
+            dist/windows/horizon-launcher.exe \
+            dist/windows/scoria-ui.exe \
+            dist/windows/gpuix-native.node
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}
@@ -64,8 +86,13 @@ jobs:
             os: windows-latest
             script: sh tools/package_game_windows.sh
             file: dist/horizon-windows-x64.zip
+            # Same static C runtime as the launcher: the game runs on a machine
+            # without the Visual C++ redistributable.
+            rustflags: -C target-feature=+crt-static
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
+    env:
+      RUSTFLAGS: ${{ matrix.rustflags }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -76,9 +103,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libxkbcommon-dev libwayland-dev libx11-xcb-dev libfontconfig-dev \
-            libvulkan-dev libasound2-dev libudev-dev
+            libvulkan-dev libasound2-dev libudev-dev zstd
       - name: Package
         run: ${{ matrix.script }}
+      - name: Check the game binaries' imports
+        if: runner.os == 'Windows'
+        run: |
+          python tools/check_imports.py \
+            dist/game-windows-x64/horizon-windows-x64/horizon-client.exe \
+            dist/game-windows-x64/horizon-windows-x64/horizon-ctl.exe \
+            dist/game-windows-x64/horizon-windows-x64/horizon-prepare.exe \
+            dist/game-windows-x64/horizon-windows-x64/horizon-server.exe
       - uses: actions/upload-artifact@v4
         with:
           name: game-${{ matrix.name }}
@@ -113,8 +148,10 @@ jobs:
         with:
           files: |
             dist/scoria-launcher-*.tar.gz
+            dist/scoria-launcher-*.tar.zst
             dist/scoria-launcher-*.zip
             dist/horizon-*.tar.gz
+            dist/horizon-*.tar.zst
             dist/horizon-*.zip
             dist/SHA256SUMS
             dist/SHA256SUMS.sig
