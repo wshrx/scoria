@@ -19,7 +19,7 @@ jobs:
           - name: linux-x86_64
             os: ubuntu-latest
             script: sh tools/package_ui.sh
-            file: dist/scoria-launcher-linux-x86_64.tar.gz
+            file: dist/scoria-launcher-linux-x86_64.tar.*
           - name: windows-x64
             os: windows-latest
             script: sh tools/package_windows.sh
@@ -82,7 +82,7 @@ jobs:
           - name: linux-x86_64
             os: ubuntu-latest
             script: sh tools/package_game.sh
-            file: dist/horizon-linux-x86_64.tar.gz
+            file: dist/horizon-linux-x86_64.tar.*
           - name: windows-x64
             os: windows-latest
             script: sh tools/package_game_windows.sh
