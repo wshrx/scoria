@@ -25,7 +25,8 @@ rm -rf "$out/docs/media" "$out/docs/public" "$out/docs/agents" "$out/docs/fork" 
        "$out/launcher/docs" "$out/packaging/macos/background.png" "$out/packaging/macos/background@2x.png"
 mkdir -p "$out/tools"
 cp "$root"/tools/package_ui.sh "$root"/tools/package_macos.sh "$root"/tools/package_windows.sh "$out/tools/"
-[ -f "$root/tools/ci/sign_release.sh" ] && mkdir -p "$out/tools/ci" && cp "$root/tools/ci/sign_release.sh" "$out/tools/ci/"
+mkdir -p "$out/tools/ci"
+cp "$root/tools/ci/sign_release.sh" "$out/tools/ci/"
 cp "$root/LICENSE" "$root/THIRD_PARTY_NOTICES.md" "$out/" 2>/dev/null || true
 
 # Landing page and brand mark. The readme only points at files that exist in the public tree.
