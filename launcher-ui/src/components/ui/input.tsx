@@ -37,7 +37,9 @@ export const Input: ForwardRefExoticComponent<InputProps & RefAttributes<PublicI
           flexDirection: "row",
           alignItems: "center",
           gap: 8,
-          height: 32,
+          height: 34,
+          minHeight: 34,
+          overflow: "hidden",
           paddingLeft: 10,
           paddingRight: 10,
           borderRadius: theme.radius.sm,
@@ -48,8 +50,15 @@ export const Input: ForwardRefExoticComponent<InputProps & RefAttributes<PublicI
           cursor: "text",
         },
         focused && !invalid
-          ? { outlineWidth: 2, outlineColor: theme.colors.ring, outlineOffset: 0, borderColor: theme.colors.ring }
-          : undefined,
+          ? {
+              outlineWidth: 1,
+              outlineColor: theme.colors.ring,
+              outlineOffset: 2,
+              borderColor: theme.colors.ring,
+            }
+          : invalid
+            ? { outlineWidth: 1, outlineColor: theme.colors.destructive, outlineOffset: 2 }
+            : undefined,
         style
       )}
     >
@@ -69,7 +78,11 @@ export const Input: ForwardRefExoticComponent<InputProps & RefAttributes<PublicI
         style={{
           flexGrow: 1,
           minWidth: 0,
-          height: "100%",
+          height: 30,
+          minHeight: 0,
+          paddingTop: 0,
+          paddingBottom: 0,
+          lineHeight: 18,
           backgroundColor: "transparent",
           color: theme.colors.foreground,
           selectionColor: theme.colors.selection,

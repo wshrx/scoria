@@ -127,6 +127,10 @@ no online-mode servers, no Minecraft assets.
   launcher `0.1.0 · beta` from `version.ts`.
 - **Mods progress/remove jumped the layout and notes sat at the page bottom**: reserve a fixed
   progress row showing the file label, keep the note in the search panel, fixed-width Remove button.
+- **Input grew and its focus ring looked like a thick border**: after Medeo was
+  registered before the first frame, the native editor's font metrics pushed the
+  wrapper past 32 px and the 2 px outline read as a second border → the wrapper is
+  34 px with `overflow: hidden`, the editor 30 px, and the ring is 1 px at offset 2.
 - **World time and modes were English**: `lastPlayedAt` + `Intl.RelativeTimeFormat`; `t(world.mode)`.
 - **A second game copy started on a second Play**: `play` spawned and forgot the child → a
   per-folder PID mark refuses a second launch, a waiter clears it on exit, and the snapshot
