@@ -9,6 +9,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follo
 
 ## [Unreleased]
 
+Nothing yet. The next published build becomes `0.1.0-beta.2`: a beta number is never reused, and
+unpublished work stays untagged in the repository history.
+
 ## [0.1.0-beta.1] — 2026-10-29
 
 First public beta: a Linux and Windows launcher plus the matching 26.3 game bundle, offline by
