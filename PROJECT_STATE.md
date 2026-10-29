@@ -28,6 +28,13 @@ no online-mode servers, no Minecraft assets.
   game bundles, `SHA256SUMS` and a valid `SHA256SUMS.sig` (Scoria key). Fresh-home
   `install_latest` accepted the signature and installed `v0.2.98`; Linux prepare + game start
   were verified. Tags `v0.2.94`–`v0.2.97` were retries and were deleted; only `v0.2.98` remains.
+- **Microsoft cut**: launcher accounts, the server `--check-accounts` switch, the client
+  `--session-file`/`HORIZON_SESSION_FILE` path and the Microsoft account document are gone.
+  There is no way to hand the game a Microsoft session; online-mode servers are refused with a
+  Scoria-specific message. The engine's dormant online-mode/auth module stays for server parity
+  but is unreachable without a session.
+- **Entire tidy**: `main` fast-forwarded to `dev`, `nightly` pushed to its remote; only the old
+  `lab` and `feat/launcher-ui` branches remain as history.
 - **Online-mode message**: Scoria cannot join online-mode servers (no Microsoft session). The
   disconnect text now says Scoria and points to offline-mode/LAN; the `v0.2.98` binary still has
   the old Horizon wording until the next game build.
