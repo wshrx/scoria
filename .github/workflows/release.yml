@@ -167,10 +167,8 @@ jobs:
           body_path: dist/release-notes.md
           generate_release_notes: false
           files: |
-            dist/scoria-launcher-*.tar.gz
             dist/scoria-launcher-*.tar.zst
             dist/scoria-launcher-*.zip
-            dist/horizon-*.tar.gz
             dist/horizon-*.tar.zst
             dist/horizon-*.zip
             dist/SHA256SUMS

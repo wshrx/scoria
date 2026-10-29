@@ -38,7 +38,6 @@ NAPI_RS_NATIVE_LIBRARY_PATH="$DIR/gpuix-native.node" exec "$DIR/scoria-ui" "$@"
 WRAPPER
 chmod +x "$out/scoria-launcher-ui"
 
-(cd "$root/dist" && tar -czf scoria-launcher-linux-x86_64.tar.gz scoria-linux-x86_64)
 (cd "$root/dist" && tar -cf - scoria-linux-x86_64 \
   | zstd -19 -T0 -q -o scoria-launcher-linux-x86_64.tar.zst)
-echo "Wrote $root/dist/scoria-launcher-linux-x86_64.tar.{gz,zst}"
+echo "Wrote $root/dist/scoria-launcher-linux-x86_64.tar.zst"
