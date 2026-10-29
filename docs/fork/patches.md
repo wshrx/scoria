@@ -51,6 +51,21 @@ Do it as one deliberate port, not a blind merge:
 4. Merge the sync branch into `dev`. Record the new base here.
 5. Next sync is weekly; 781 is what happens when it waits.
 
+## Engine patch queue
+
+`docs/fork/engine-patches/*.patch` is a `git format-patch` series of every commit that touched `crates/`
+(input, icons, release key, Microsoft removal). To rebuild the fork on a new upstream:
+
+```sh
+git switch -c sync/upstream-YYYYMMDD upstream/main
+git am -3 docs/fork/engine-patches/*.patch     # resolve conflicts, keep order
+sh tools/check_fork_surfaces.sh
+```
+
+The check fails if `typed_text`, the Scoria online-mode text, the offline-only server, the session
+file removal, the release key or the icon disappear. It also runs at the start of
+`tools/sync_upstream.sh`.
+
 ## Sync runbook
 
 ```sh

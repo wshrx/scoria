@@ -33,7 +33,10 @@ MSG
   exit 1
 fi
 
-echo "Merged; running the gates…"
+echo "Merged; checking the Scoria-only surfaces…"
+sh tools/check_fork_surfaces.sh
+
+echo "Running the gates…"
 (cd launcher && cargo test)
 cargo check -p horizon-client
 cargo test -p horizon-client --bin horizon-client cyrillic 2>/dev/null || true

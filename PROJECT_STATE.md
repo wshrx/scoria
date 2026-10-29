@@ -58,6 +58,9 @@ no online-mode servers, no Minecraft assets.
   user's install. `tools/check_public_assets.sh` gates the public tree.
 - **Download resilience**: IPv4-only resolution when the host has A records, five attempts per
   file and a 64-error cap; a flaky route no longer aborts a 5 200-file asset download.
+- **Engine patch queue**: `docs/fork/engine-patches/*.patch` (7 commits touching `crates/`);
+  `tools/check_fork_surfaces.sh` fails if the input fallback, no-session rule, offline-only
+  server, release key or icon disappears after a sync.
 - **Upstream sync**: `docs/fork/patches.md` lists every fork patch; `tools/sync_upstream.sh`
   fetches Horizon, merges on a throwaway branch and runs the gates. Engine delta is 9 files
   (+87/−26, only the typed-text fallback) on top of `b6c936f82`, but upstream is **781 commits
