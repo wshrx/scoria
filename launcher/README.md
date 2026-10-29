@@ -87,7 +87,7 @@ The opening, then Play ([clip](docs/opening.webm)):
   folder stays the first one, "Horizon", exactly where it was; imported and registry modpacks are
   instances too, in their own folders as before; new ones go to `instances/<name>/` in the game's
   folder, empty but for the player's options and name, or a copy of another instance (never its
-  sign-in sessions, logs or data collection state). Names, icons (a block or item texture from the
+  logs or data collection state). Names, icons (a block or item texture from the
   player's prepared files, or a colour) and groups are kept in `instances.json` in the launcher's
   data folder, so renaming moves nothing. Every instance follows the launcher's data collection
   answer and No AI. In the window, **+** beside Instances makes one, the sidebar lists them by
@@ -225,8 +225,8 @@ page `servers.json` (the list), `servers/<name>/` (the servers created there) an
 - **Proxy**: when the internet here needs one (a school's, an office's, a country where a host is
   unreachable), Settings' Proxy takes the `http://host:port` address your proxy app listens on, and
   every download goes through it: Horizon's releases and the launcher's own update, Minecraft's
-  files and Java from Mojang, Modrinth, CurseForge, Horizon's mod registry, pictures,
-  sign-in, and the jars a modpack import fetches. It is kept as `proxy` in `settings.json`, and
+  files and Java from Mojang, Modrinth, CurseForge, Horizon's mod registry, pictures and the
+  jars a modpack import fetches. It is kept as `proxy` in `settings.json`, and
   `horizon-launcher settings proxy http://127.0.0.1:7890` sets it too ("default" removes it).
   Without one, `HTTPS_PROXY` and `HTTP_PROXY` are used when the launcher is started with them, and
   `NO_PROXY` names the hosts to reach directly, a modpack import's jars included. A server on this
@@ -351,10 +351,9 @@ same name and arguments, generated from the CLI's definition (`src/cli_tools.rs`
 `install`, `remove`, `prepare`, `settings`, `mods_search`, `mods_install`, `modpack_import`,
 `servers_create`, `data_status`... A call runs that command with `--json` and returns its
 output. Tools that delete something (`remove`, `mods_remove`, `modpack_remove`,
-`servers_forget`, `account_sign_out`, `data_delete`) need `confirm: true`. The session runs a few
+`servers_forget`, `data_delete`) need `confirm: true`. The session runs a few
 itself, under the CLI's names: `play`, `server` with `server_command`, `server_log` and
-`server_stop`, `account_list` and `account_sign_in` (returns the link and code for the player;
-the sign-in finishes in the background). A server started through MCP stops (cleanly, with
+`server_stop`, `account_list`. A server started through MCP stops (cleanly, with
 `stop`) when the session ends. Starting one needs `accept_eula`, which an agent should only pass
 with the player's consent.
 

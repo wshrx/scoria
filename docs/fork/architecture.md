@@ -64,8 +64,8 @@ P1 removes the gate itself:
   "Sign in to play" row and the "Download and prepare" button are gone.
 - `horizon-launcher play` and MCP `play` reach preparation instead of stopping at the gate
   (`launcher/tests/offline_play.rs` asserts it).
-- Microsoft sign-in, its keychain storage and the session-file handoff stay: they are what
-  online-mode servers need.
+- Microsoft sign-in, its keychain storage, the session-file handoff and the online-mode server
+  switch are removed. The client cannot be handed a session; online-mode servers are refused.
 - P2 removes the Mojang **game download** (`--download`, `download_for_owner`,
   `mojang::download`): preparation always reads an installation the player has.
 - P2 adds Freesm Launcher to `sources::known_folders` (Linux, macOS, Windows) and to

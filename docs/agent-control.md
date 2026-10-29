@@ -223,11 +223,10 @@ turn the switch off.
   `connect`, `lan`, `friends`, `chat` and `command`; in the launcher, `data allow`, `data send`,
   `data bug`, `data benchmark` and `servers create`. `play`'s `join` argument says the same.
   Telemetry stays opt-in, and only `data allow` turns it on.
-- **No secrets.** No surface returns tokens, session files, keychain entries or invite secrets
-  the player didn't ask to share:
-  - accounts are names and UUIDs;
-  - sign-in is a device code the player enters;
-  - `--session-file` is read once and deleted;
+- **No secrets.** No surface returns tokens, keychain entries or invite secrets the player did
+  not ask to share:
+  - accounts are offline names only;
+  - there is no sign-in and no session file;
   - `servers` reads names and addresses only.
 - **Vanilla behaviour untouched.** Control code reads state and synthesizes the input events a
   player produces; registering widgets for the tree draws nothing. A change to game files runs
