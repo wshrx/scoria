@@ -25,8 +25,6 @@
   <img alt="No assets" src="https://img.shields.io/badge/ships%20no%20Minecraft%20assets-2f855a">
 </p>
 
-![Scoria launcher](screenshots/home.webp)
-
 ## Builds
 
 **Public beta builds are not published yet.** The first Linux, macOS and Windows archives will be
@@ -90,9 +88,8 @@ If you redistribute Scoria, keep the MIT notice and do not add game assets to th
 
 ## Screenshots
 
-| Home | Mods | Settings |
-|---|---|---|
-| ![](screenshots/home.webp) | ![](screenshots/mods.webp) | ![](screenshots/settings.webp) |
+UI captures will be added with the first beta. This page will not show game content: Scoria ships
+no Minecraft assets.
 
 ## Install (when the first beta is out)
 
