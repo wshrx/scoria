@@ -106,8 +106,9 @@ no online-mode servers, no Minecraft assets.
 - LOD at max: `lodDistance=1024` + `resolutionScale=200` shows approximate distant peaks; lower
   LOD to 256/512, resolution to 100, Full Detail 12–16. Consider a warning/cap in Graphics.
 - Instances: finish create/delete/switch on `test/instances`; then decide release.
-- Cyrillic in the game: the source fix is tested, but a version folder still carries the old
-  `horizon-client` until it is rebuilt and copied into `~/.local/share/horizon-launcher/versions/`.
+- Cyrillic in the game: verify by typing in chat and a sign. The local `v0.2.93` client was
+  rebuilt with the fix (`horizon-client` in its version folder); the old binary is backed up at
+  `/tmp/opencode/horizon-client-v0.2.93.old` until a release build supersedes it.
 - Windows/macOS are not tested; the launcher UI and the game are Linux-first.
 
 ## Run and check
