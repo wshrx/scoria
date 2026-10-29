@@ -38,7 +38,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libasound2-dev libudev-dev
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-dev libwayland-dev libx11-xcb-dev libfontconfig-dev \
+            libasound2-dev libudev-dev
       - run: cargo check -p horizon-client --locked
   bundle:
     name: UI bundle
