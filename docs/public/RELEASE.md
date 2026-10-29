@@ -6,7 +6,7 @@ with a SHA-256 file:
 
 | Target | Runner | Archive |
 |---|---|---|
-| Linux x86_64 (Wayland) | `ubuntu-latest` | `scoria-launcher-linux-x86_64.tar.gz` (plus a `.tar.zst` twin) |
+| Linux x86_64 (Wayland) | `ubuntu-latest` | `scoria-launcher-linux-x86_64.tar.zst` (beta.1 also carried a `.tar.gz` for launchers that predate zstd) |
 | Windows 10/11 x64 | `windows-latest` | `scoria-launcher-windows-x64.zip` |
 
 Tag format: `v0.1.0-beta.1` (a `beta`/`alpha` tag becomes a GitHub pre-release).
@@ -30,8 +30,7 @@ sets `NAPI_RS_NATIVE_LIBRARY_PATH`; Windows ships `Scoria.cmd` for the same reas
 
 ## The game client is not in these archives
 
-A fresh launcher installs a **game version** from a release asset (`horizon-linux-x86_64.tar.gz`
-or its smaller `.tar.zst` twin,
+A fresh launcher installs a **game version** from a release asset (`horizon-linux-x86_64.tar.zst`,
 `horizon-macos-arm64.zip`, `horizon-windows-x64.zip`) and prepares Mojang resources locally. Scoria
 must therefore publish its own client bundles before the downloads above can play on a clean
 machine:
