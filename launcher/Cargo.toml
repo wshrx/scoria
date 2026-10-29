@@ -48,8 +48,8 @@ chrono = { version = "0.4", default-features = false, features = ["clock"] }
 # in the lockfile through gpui).
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
 
-# Microsoft account secrets in the OS keychain: the Secret Service on Linux through oo7 (the same
-# build gpui uses), Keychain and Credential Manager through keyring.
+# The launcher's own secrets (the Play with friends token) in the OS keychain: Secret Service on
+# Linux through oo7, Keychain and Credential Manager through keyring.
 [target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies]
 oo7 = { version = "0.5", default-features = false, features = ["async-std", "native_crypto"] }
 futures-lite = "2"

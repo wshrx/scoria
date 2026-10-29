@@ -23,6 +23,7 @@ cp "$root"/launcher-ui/src/assets/*.png "$out/brand/"
 addon="$root/launcher-ui/node_modules/@gpuix/native-win32-x64-msvc/gpuix-native.win32-x64-msvc.node"
 [ -f "$addon" ] || { echo "missing $addon: bun install must run on Windows" >&2; exit 1; }
 cp "$addon" "$out/gpuix-native.node"
+sh "$root/tools/windows_runtime.sh" "$out"
 
 # Batch files need CRLF; a shell here-string would write LF and cmd.exe can misread it.
 printf '@echo off\r\nsetlocal\r\nset NAPI_RS_NATIVE_LIBRARY_PATH=%%~dp0gpuix-native.node\r\nstart "" "%%~dp0scoria-ui.exe" %%*\r\n' > "$out/Scoria.cmd"

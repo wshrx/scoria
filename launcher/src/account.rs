@@ -77,7 +77,7 @@ impl SecretStore for SystemStore {
             let attributes = vec![("service", SERVICE), ("account", key)];
             keyring
                 .create_item(
-                    "Scoria launcher: Minecraft account",
+                    "Scoria launcher secret",
                     &attributes,
                     secret.as_bytes(),
                     true,
@@ -99,8 +99,8 @@ impl SecretStore for SystemStore {
 }
 
 /// Keychain on macOS, Credential Manager on Windows (the keyring crate). Credential Manager takes at
-/// most 2560 bytes of UTF-16 per item and a sign-in's secrets are longer, so a secret is kept in
-/// pieces: the first under the account's key, the rest under `key.1`, `key.2`...
+/// most 2560 bytes of UTF-16 per item, so a long secret is kept in pieces: the first under the
+/// key, the rest under `key.1`, `key.2`...
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 pub struct SystemStore;
 

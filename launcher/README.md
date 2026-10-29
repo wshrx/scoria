@@ -87,7 +87,7 @@ The opening, then Play ([clip](docs/opening.webm)):
   folder stays the first one, "Horizon", exactly where it was; imported and registry modpacks are
   instances too, in their own folders as before; new ones go to `instances/<name>/` in the game's
   folder, empty but for the player's options and name, or a copy of another instance (never its
-  sign-in sessions, logs or data collection state). Names, icons (a block or item texture from the
+  logs or data collection state). Names, icons (a block or item texture from the
   player's prepared files, or a colour) and groups are kept in `instances.json` in the launcher's
   data folder, so renaming moves nothing. Every instance follows the launcher's data collection
   answer and No AI. In the window, **+** beside Instances makes one, the sidebar lists them by
@@ -136,15 +136,12 @@ The opening, then Play ([clip](docs/opening.webm)):
   (`horizon_launcher::shortcut`). **Remove shortcut** moves it to the trash; it is found by the
   instance id inside it, so a rename doesn't lose it. `horizon-launcher instance shortcut
   [instance] [--remove]`; `HORIZON_LAUNCHER_DESKTOP` points it at another folder.
-- **Accounts and quick switch**: the top bar's account chip opens a menu of everyone who can play:
-  each signed-in Microsoft account, the offline names the player keeps, and the name the game
-  made up (`horizon-player.txt`). Picking one plays as it from the next Play. Offline names play
-  only while an account that owns the game is signed in ([Microsoft accounts](#microsoft-accounts));
-  signing the last one out keeps them, unplayable until one is back. Settings > Account
-  adds offline names (3 to 16 letters, digits or `_`; the game gets `--name`) and forgets them;
-  the Console's Share log takes them out of the log too. `horizon-launcher account offline
-  [NAME]`, `account select <name>` (an account or an offline name), `account forget-offline
-  <name>`.
+- **Offline names and quick switch**: the top bar's account chip opens a menu of the offline names
+  the player keeps and the name the game made up (`horizon-player.txt`). Picking one plays as it
+  from the next Play. There is no sign-in and no account service. Settings > Account adds offline
+  names (3 to 16 letters, digits or `_`; the game gets `--name`) and forgets them; the Console's
+  Share log takes them out of the log too. `horizon-launcher account offline [NAME]`,
+  `account select <name>`, `account forget-offline <name>`.
 - **Accent and Home background**: on top of Dark, Light or System, Settings > Launcher picks an
   accent (Horizon's violet, blue, teal, green, amber, red or pink) and a picture of the player's
   own behind Home (PNG, JPEG or WebP, cropped to fill; **Landscape** brings Horizon's back). An
@@ -162,8 +159,7 @@ The opening, then Play ([clip](docs/opening.webm)):
   skin and cape, takes a skin PNG (64×64, or the older 64×32) and a cape PNG (64×32), and picks
   classic or slim arms. The launcher keeps copies in its `skins/` folder and gives the game
   `HORIZON_OFFLINE_SKIN`, `HORIZON_OFFLINE_SKIN_MODEL` and `HORIZON_OFFLINE_CAPE` when that name
-  plays; the game draws the default skins until it reads them. A Microsoft account's skin and
-  cape: coming soon, with sign-in. `horizon-launcher account skin <name> [FILE] [--model
+  plays; the game draws the default skins until it reads them. `horizon-launcher account skin <name> [FILE] [--model
   classic|slim] [--cape FILE] [--no-skin] [--no-cape]`.
 - **Console**: Home's Console shows the game's output of this run as it comes: a search (every
   word, any case), Follow to keep the newest line in view, Copy, and Open logs folder. Warnings
@@ -229,8 +225,8 @@ page `servers.json` (the list), `servers/<name>/` (the servers created there) an
 - **Proxy**: when the internet here needs one (a school's, an office's, a country where a host is
   unreachable), Settings' Proxy takes the `http://host:port` address your proxy app listens on, and
   every download goes through it: Horizon's releases and the launcher's own update, Minecraft's
-  files and Java from Mojang, Modrinth, CurseForge, Horizon's mod registry, pictures, Microsoft
-  sign-in, and the jars a modpack import fetches. It is kept as `proxy` in `settings.json`, and
+  files and Java from Mojang, Modrinth, CurseForge, Horizon's mod registry, pictures and the
+  jars a modpack import fetches. It is kept as `proxy` in `settings.json`, and
   `horizon-launcher settings proxy http://127.0.0.1:7890` sets it too ("default" removes it).
   Without one, `HTTPS_PROXY` and `HTTP_PROXY` are used when the launcher is started with them, and
   `NO_PROXY` names the hosts to reach directly, a modpack import's jars included. A server on this
@@ -294,11 +290,9 @@ and don't set `%ERRORLEVEL%` / `$LASTEXITCODE`. Scripts that need the exit code 
     horizon-launcher game-args [<line>]             show or set the extra arguments the game starts with
     horizon-launcher update [--check]               Horizon and the launcher
     horizon-launcher logs [--lines N] [--crash]     the end of the game's log, or its newest crash report
-    horizon-launcher account [list]                 the Microsoft accounts signed in (* = plays)
-    horizon-launcher account sign-in                sign in in your browser with a code
-    horizon-launcher account sign-out <name>
-    horizon-launcher account select <name>          play as this account
-    horizon-launcher account offline                play without an account
+    horizon-launcher account [list]                 the offline names (* = plays)
+    horizon-launcher account select <name>          play as this name
+    horizon-launcher account offline                use the name the game made up
     horizon-launcher instance [list]                the instances and their game folders (* = Play starts it)
     horizon-launcher instance create <name> [--copy <instance>]   empty, or a copy of one's worlds, options and packs
     horizon-launcher instance rename|icon|group <instance> <value>  icon: a block or item name, #rrggbb or none
@@ -357,10 +351,9 @@ same name and arguments, generated from the CLI's definition (`src/cli_tools.rs`
 `install`, `remove`, `prepare`, `settings`, `mods_search`, `mods_install`, `modpack_import`,
 `servers_create`, `data_status`... A call runs that command with `--json` and returns its
 output. Tools that delete something (`remove`, `mods_remove`, `modpack_remove`,
-`servers_forget`, `account_sign_out`, `data_delete`) need `confirm: true`. The session runs a few
+`servers_forget`, `data_delete`) need `confirm: true`. The session runs a few
 itself, under the CLI's names: `play`, `server` with `server_command`, `server_log` and
-`server_stop`, `account_list` and `account_sign_in` (returns the link and code for the player;
-the sign-in finishes in the background). A server started through MCP stops (cleanly, with
+`server_stop`, `account_list`. A server started through MCP stops (cleanly, with
 `stop`) when the session ends. Starting one needs `accept_eula`, which an agent should only pass
 with the player's consent.
 
@@ -377,26 +370,6 @@ feature: `mcp` and `agent-config` refuse, the game opens no control socket and `
 refuses. Every other command keeps working.
 
 The window, the command line and the MCP server all call the same core, `src/backend.rs`.
-
-## Microsoft accounts
-
-The launcher starts the game only while a Microsoft account that owns Minecraft: Java Edition is
-signed in, as other launchers do: without one, Play (Home, instances, `horizon-launcher play`, the
-MCP's `play`) says "Sign in with a Microsoft account that owns Minecraft: Java Edition to play"
-and starts nothing. Settings → Accounts signs in: the launcher shows a code, you enter it at
-microsoft.com/link, and the launcher checks that the account owns the game. It asks again at every
-Play, with the token renewal; with no network the last answer stands, and a "doesn't own" blocks
-at once. The account also plays online-mode servers under your own name and skin; offline names
-play LAN and offline-mode servers beside it. The game binary started directly (`horizon-client`,
-`horizon-ctl launch`), the harnesses and the servers don't go through this check. Tokens live in the system keychain (Keychain,
-Credential Manager, or the Secret Service on Linux), never in a file, a log or the command line;
-`accounts.json` in the data folder keeps only names and UUIDs. Without a keychain you stay signed
-in until the launcher closes. When the game starts, it gets the session in a private file it
-deletes as soon as it has read it. Sign out removes the tokens.
-
-Sign-in needs Horizon's own Azure app registration: its client ID is built in from
-`HORIZON_MSA_CLIENT_ID` (and `HORIZON_MSA_CLIENT_ID` at run time overrides it; empty = not
-configured). How it works: [docs/microsoft-account.md](../docs/microsoft-account.md).
 
 ## Logs and crash reports
 

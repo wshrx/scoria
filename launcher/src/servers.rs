@@ -463,8 +463,6 @@ pub struct NewServer {
     pub max_players: u32,
     /// Only listed players (and operators) may join.
     pub friends_only: bool,
-    /// Check players' Minecraft accounts: they must sign in with Microsoft.
-    pub check_accounts: bool,
     /// Who may join first (whitelisted), and the first of them becomes an operator.
     pub players: Vec<String>,
     pub eula: bool,
@@ -481,7 +479,6 @@ impl Default for NewServer {
             difficulty: "normal".into(),
             max_players: 10,
             friends_only: true,
-            check_accounts: false,
             players: Vec::new(),
             eula: false,
         }
@@ -552,9 +549,8 @@ pub fn init_args(spec: &NewServer, world: &str, port: u16) -> Vec<String> {
     } else {
         "--no-whitelist".into()
     });
-    if !spec.check_accounts {
-        args.push("--offline".into());
-    }
+    // Scoria has no Microsoft account: a new server is always offline-mode.
+    args.push("--offline".into());
     for p in &spec.players {
         args.extend(["--player".into(), p.clone()]);
     }

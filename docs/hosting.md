@@ -17,12 +17,10 @@ plan are in [docs/server.md](https://github.com/horizon-rust/horizon/blob/main/d
   `horizon-server whitelist add` always writes the offline UUID, the one the player joins with, also while
   the server runs (it writes the entry and the game reloads the list): the console's own `whitelist add`
   takes the account's UUID when someone owns that name, as vanilla does, and that player is then refused.
-- **Horizon's own client can't sign in to a Microsoft account yet.** That needs an Azure app registration and
-  Mojang's approval, which the project doesn't have
-  ([docs/microsoft-account.md](https://github.com/horizon-rust/horizon/blob/main/docs/microsoft-account.md)).
-  Until then Horizon players can join offline servers only (`online_mode = false`). An offline server never
-  checks accounts: anyone who reaches it can join under any name. Keep it on your LAN or a tailnet
-  (Tailscale, ZeroTier), or share it only with friends you trust.
+- **Scoria has no Microsoft sign-in at all.** Host offline-mode servers (`online_mode = false`); the
+  client has no account service and cannot join online-mode servers by design. An offline server
+  never checks accounts: anyone who reaches it can join under any name. Keep it on your LAN or a
+  tailnet (Tailscale, ZeroTier), or share it only with friends you trust.
 - **Secure chat** works as on vanilla's server: in online mode, vanilla clients sign their chat, and with
   `enforce-secure-profile=true` (the default) unsigned chat is refused. On an offline server, or for a player
   without a chat session (Horizon's own client today), chat stays unsigned and shows as not secure.

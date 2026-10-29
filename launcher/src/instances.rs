@@ -265,7 +265,7 @@ pub fn select(query: &str) -> Result<Instance, String> {
 }
 
 /// What a copy of a game folder leaves out: other instances and packs, logs and crash reports,
-/// caches, data collection's state, and sign-in sessions (a session never leaves its folder).
+/// caches and data collection's state.
 const NOT_COPIED: &[&str] = &[
     OWN,
     "ports",
