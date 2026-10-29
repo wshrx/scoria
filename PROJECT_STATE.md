@@ -27,7 +27,14 @@ no online-mode servers, no Minecraft assets.
   before the mac/win downloads can play on a clean machine.
 - **Public showcase**: `docs/public/README.md` + `README.ru.md` are the GitHub landing (downloads,
   what works, screenshots); `tools/export_public.sh` builds `dist/public/` by allowlist, without
-  `.opencode/`, memory, fork notes or build output. Screenshots are still to capture.
+  `.opencode/`, memory, fork notes, game screenshots or build output. Screenshots are still to
+  capture.
+- **Legal line (Freesm-style)**: say plainly that Scoria is an independent Horizon fork, not
+  affiliated with Mojang/Microsoft, and ships no Minecraft assets. Releases carry binaries, UI,
+  OFL fonts and branding only; game files are downloaded from Mojang on request or taken from the
+  user's install. `tools/check_public_assets.sh` gates the public tree.
+- **No `nightly` branch**: releases are tags on `dev` (`v0.1.0-beta.N`). A nightly channel, if
+  added, is a rolling pre-release tag built from `dev`, never a branch.
 
 ## Product decisions
 

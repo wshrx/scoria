@@ -1,7 +1,7 @@
 #!/bin/sh
 # Builds dist/public: the exact tree that may be published to GitHub. It is an allowlist, not a
-# copy of the working checkout: no agent skills, project memory, QA fixtures, nightly branches or
-# build output. Review the result once, then push it as the public history.
+# copy of the working checkout: no agent skills, project memory, QA fixtures, nightly branches,
+# build output or Minecraft assets/screenshots. Review it once, then push it as public history.
 set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 out="$root/dist/public"
@@ -15,20 +15,26 @@ copy() {
     --exclude='logs' --exclude='*.log' --exclude='.git' "$@") | (cd "$out" && tar -xf -)
 }
 
+# Product sources and build files. docs/media is game art and old launcher screenshots: it stays
+# out. launcher/docs is the same. The public README carries only UI screenshots.
 copy crates launcher launcher-ui docs packaging
+rm -rf "$out/docs/media" "$out/docs/public" "$out/docs/agents" "$out/docs/fork" \
+       "$out/launcher/docs" "$out/packaging/macos/background.png" "$out/packaging/macos/background@2x.png"
 mkdir -p "$out/tools"
 cp "$root"/tools/package_ui.sh "$root"/tools/package_macos.sh "$root"/tools/package_windows.sh "$out/tools/"
 [ -f "$root/tools/ci/sign_release.sh" ] && mkdir -p "$out/tools/ci" && cp "$root/tools/ci/sign_release.sh" "$out/tools/ci/"
 cp "$root/LICENSE" "$root/THIRD_PARTY_NOTICES.md" "$out/" 2>/dev/null || true
 
-# Internal notes stay out: agent memory, fork decision log, QA and release engineering notes.
-rm -rf "$out/docs/agents" "$out/docs/fork"
-rm -f "$out/docs/public/RELEASE.md"
-
-# The landing page becomes the repository README, with paths relative to the repo root.
+# Landing page and brand mark. The readme only points at files that exist in the public tree.
 cp "$root/docs/public/README.md" "$out/README.md"
 cp "$root/docs/public/README.ru.md" "$out/README.ru.md"
-sed -i 's#\.\./\.\./docs/media/#docs/media/#g' "$out/README.md" "$out/README.ru.md"
+cp "$root/docs/public/logo.svg" "$out/logo.svg"
+mkdir -p "$out/screenshots"
+for shot in home mods settings; do
+  if [ -f "$root/docs/public/screenshots/$shot.webp" ]; then
+    cp "$root/docs/public/screenshots/$shot.webp" "$out/screenshots/"
+  fi
+done
 
 mkdir -p "$out/.github/workflows"
 cp "$root/.github/workflows/release.yml" "$out/.github/workflows/"
@@ -42,5 +48,9 @@ logs/
 *.log
 IGNORE
 
+# A last gate: no game assets, no decompiled code, no internal notes.
+sh "$root/tools/check_public_assets.sh" "$out"
+
 echo "Public tree: $out"
-echo "Next: capture docs/public/screenshots/{home,mods,settings}.webp, review, then push as a new history."
+[ -f "$out/screenshots/home.webp" ] || echo "Missing screenshots: capture home/mods/settings into docs/public/screenshots/ first."
+echo "Next: review dist/public, then push it as the public history."

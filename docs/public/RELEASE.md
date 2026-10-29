@@ -11,6 +11,15 @@ attaches the archives with a SHA-256 file:
 
 Tag format: `v0.1.0-beta.1` (a `beta`/`alpha` tag becomes a GitHub pre-release).
 
+## Assets
+
+Nothing in a release may contain Minecraft code, textures, sounds, language files or other game
+data. Archives carry binaries, the UI, the bundled SIL OFL fonts and Scoria/Horizon branding only.
+The game files are downloaded from Mojang on request or read from an installation the user owns.
+`tools/package_native_client.py` includes prepared resources and is therefore **private only**;
+never attach its output to a release. `tools/check_public_assets.sh` rejects game media and
+decompiled Java in the public tree.
+
 ## What a launcher archive contains
 
 `scoria-ui` (the Bun-compiled UI), `horizon-launcher` (the Rust engine), `gpuix-native.node`, and
@@ -35,6 +44,12 @@ machine:
 
 Until step 3 is done, mac/win downloads are **launcher previews**: they start, but installing 26.3
 uses the existing asset path and may fall back to an already installed version.
+
+## Nightly
+
+There is no `nightly` branch. Releases are tags on `dev`; a branch would fork history and mix with
+upstream Horizon's own `nightly`. If a nightly channel is wanted, add a scheduled job that builds
+from `dev` and publishes a rolling `nightly` pre-release tag with the same three archives.
 
 ## Signing
 
