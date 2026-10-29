@@ -88,7 +88,7 @@ fn holes(s: &str) -> BTreeSet<&str> {
 #[test]
 fn every_language_has_every_string_the_code_asks_for() {
     let (asked, all) = strings();
-    assert!(asked.contains("Language"), "the scan finds tr(\"…\")");
+    assert!(asked.contains("under a minute"), "the scan finds tr(\"…\")");
     for language in [Language::French, Language::Russian] {
         let table: HashMap<String, String> = serde_json::from_str(language.source())
             .unwrap_or_else(|e| panic!("lang/{}.json: {e}", language.code()));

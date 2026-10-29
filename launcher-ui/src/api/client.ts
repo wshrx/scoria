@@ -72,7 +72,7 @@ function start(): ChildProcessWithoutNullStreams | null {
     return null
   }
   try {
-    const child = spawn(bin, ["api"], { stdio: ["pipe", "pipe", "pipe"] })
+    const child = spawn(bin, ["api"], { stdio: ["pipe", "pipe", "pipe"], windowsHide: true })
     child.stdout.on("data", (chunk: Buffer) => {
       buffer += chunk.toString("utf8")
       let newline = buffer.indexOf("\n")
