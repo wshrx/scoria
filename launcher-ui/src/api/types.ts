@@ -1,4 +1,6 @@
 export interface World {
+  /** The folder under `saves/`, unique even when two worlds share a name. */
+  folder: string
   name: string
   mode: string
   lastPlayed: string

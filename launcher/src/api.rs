@@ -122,6 +122,7 @@ fn state() -> Result<Value, String> {
         .into_iter()
         .map(|w| {
             json!({
+                "folder": w.folder,
                 "name": w.name,
                 "mode": w.mode,
                 "lastPlayed": ago(w.last_played),

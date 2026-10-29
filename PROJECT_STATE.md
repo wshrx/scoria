@@ -62,6 +62,8 @@ no online-mode servers, no Minecraft assets.
 - flint-ui 0.1.2 copied in (Field/Kbd/Combobox added; button spinner/icons kept).
 - README rewritten for Scoria; DESIGN.md, skills, check:ui, package script.
 - New worlds appear without restart: `App` polls `state` every 4 s while the engine is live.
+- Worlds are keyed and launched by `folder` (from `worlds::list`), not by display name.
+- `dev` (`7f2db940e`) and `test/instances` are pushed to Entire; GitHub untouched.
 
 ## Bugs fixed (and why they happened)
 
@@ -77,7 +79,10 @@ no online-mode servers, no Minecraft assets.
 - **ASCII-only names**: `valid_offline_name` now Unicode alphanumeric + `_`; lowercase compares use
   `to_lowercase`.
 - **Download aborted on one asset**: retries, keeps partial, 8-error cap, friendly note.
-- **New world missing until restart**: polling state (the game writes the world after `play` returns).
+- **New world missing until restart**: the snapshot was fetched once on mount, and the game writes the
+  world after `play` returns → poll `state` every 4 s while live.
+- **Two worlds named "Новый мир" collided**: the API sent only the display name, so React keys
+  duplicated and Play could open the wrong folder → send `folder` and key/launch by it.
 
 ## Known gaps / next
 

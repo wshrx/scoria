@@ -114,7 +114,7 @@ export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
             {ready && recent ? (
               <Button
                 variant="secondary"
-                onClick={() => playNow(recent.name)}
+                onClick={() => playNow(recent.folder)}
                 style={{ height: 44, paddingLeft: 16, paddingRight: 16, borderRadius: 999 }}
               >
                 <Icon name="chevronRight" size={14} color={theme.colors.foreground} />
@@ -213,8 +213,8 @@ export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
             <div style={{ display: "flex", flexDirection: "column", paddingLeft: 8, paddingRight: 8, paddingBottom: 8 }}>
               {data.worlds.slice(0, 4).map((world, index) => (
                 <div
-                  key={world.name}
-                  onClick={() => playNow(world.name)}
+                  key={world.folder}
+                  onClick={() => playNow(world.folder)}
                   style={{
                     display: "flex",
                     flexDirection: "row",

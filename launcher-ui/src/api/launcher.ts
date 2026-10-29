@@ -18,8 +18,8 @@ const preview: Snapshot = {
   language: "en",
   whilePlaying: "stay",
   worlds: [
-    { name: "Survival", mode: "Survival", lastPlayed: "2 hours ago", size: "184 MB" },
-    { name: "Creative flat", mode: "Creative", lastPlayed: "yesterday", size: "12 MB" },
+    { folder: "Survival", name: "Survival", mode: "Survival", lastPlayed: "2 hours ago", size: "184 MB" },
+    { folder: "Creative flat", name: "Creative flat", mode: "Creative", lastPlayed: "yesterday", size: "12 MB" },
   ],
   instances: [
     { id: "release", name: "Scoria", version: "v0.2.94", minecraft: "26.3", kind: "release", prepared: true, selected: true },
