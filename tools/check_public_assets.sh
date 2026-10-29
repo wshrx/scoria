@@ -15,6 +15,7 @@ done
 
 # Decompiled or original Java/Minecraft artifacts.
 find "$tree" -type f \( -name '*.jar' -o -name '*.class' -o -name '*.java' -o -name '*.jfr' -o -name '*.hprof' \) \
+  ! -path "$tree/packaging/exporters/*" \
   | while read -r file; do echo "public tree: game artifact ${file#"$tree"/}" >&2; exit 1; done || bad=1
 
 # Game media outside the allowed UI screenshots. launcher/assets is Horizon's original partner

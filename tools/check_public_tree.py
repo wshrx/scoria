@@ -13,6 +13,9 @@ ORIGINAL_JDK_TOOLS = {"tools/JfrSummary.java", "tests/java/JfrFixture.java"}
 
 def prohibited(path):
     parsed = PurePosixPath(path)
+    # Compiled clean-room exporter oracles shipped in the game bundle (no Mojang code).
+    if path.startswith("packaging/exporters/"):
+        return False
     # Original JDK-only tools are an exact allowlist; recovered game Java stays private.
     if path in ORIGINAL_JDK_TOOLS:
         return False
