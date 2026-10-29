@@ -1,18 +1,19 @@
 # Changelog
 
 All notable changes to Scoria. The release workflow takes the section whose heading matches the
-tag (`v0.1.0-beta.1` → `## [0.1.0-beta.1]`) and uses it as the GitHub Release body, so the notes
+tag (`v0.1.1-beta` → `## [0.1.1-beta]`) and uses it as the GitHub Release body, so the notes
 live here, in one place, and not in tag names.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
-[Semantic Versioning](https://semver.org/spec/v2.0.0.html) with a `-beta.N` suffix during the beta.
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html): during the beta every published build
+raises the patch and keeps the `-beta` suffix (`0.1.0-beta`, `0.1.1-beta`, ...).
 
 ## [Unreleased]
 
-Nothing yet. The next published build becomes `0.1.0-beta.2`: a beta number is never reused, and
+Nothing yet. The next published build becomes `0.1.1-beta`: every beta raises the patch number, and
 unpublished work stays untagged in the repository history.
 
-## [0.1.0-beta.1] — 2026-10-29
+## [0.1.0-beta] — 2026-10-29
 
 First public beta: a Linux and Windows launcher plus the matching 26.3 game bundle, offline by
 default.
@@ -31,7 +32,8 @@ default.
 
 ### Changed
 
-- Scoria numbers its own releases (`v0.1.0-beta.N`); Horizon's `0.2.x` numbers stay upstream.
+- Scoria numbers its own releases (`v0.1.N-beta` during the beta); Horizon's `0.2.x` numbers stay
+  upstream.
 - Windows binaries link the C runtime statically, including the GPUIX addon built from source, so
   no Visual C++ redistributable and no extra DLL are needed.
 - Linux archives ship a `.tar.zst` twin beside the `.tar.gz`; the launcher prefers the smaller
