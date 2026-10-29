@@ -13,11 +13,9 @@ bun run typecheck
 bun run build          # dist/scoria-launcher-ui, one Linux binary (~106 MB); opens at 1280x720
 ```
 
-On Linux the window is frameless and draws its own titlebar (`src/chrome.ts`): a slim violet strip
-with minimize, maximize and close, dragging and eight resize edges. That needs the XWayland
-backend, so `bun run dev` and the packaged wrapper start it with `WINIT_UNIX_BACKEND=x11` and an
-empty `WAYLAND_DISPLAY`. Set `SCORIA_UI_WAYLAND=1` to keep the native Wayland window and its native
-titlebar instead.
+On Linux the launcher is Wayland-native: the compositor draws the titlebar, drag, resize and
+rounded corners, and text input goes through the native Wayland path. There is no X11/XWayland
+code and no in-app window chrome.
 
 The UI talks to the Rust engine over JSON lines through `src/api/` (`client`, `launcher` and
 `mods`). The engine downloads Minecraft 26.3 from Mojang's piston-meta when it is not already

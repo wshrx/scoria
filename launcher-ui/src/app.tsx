@@ -8,7 +8,6 @@ import { Shell } from "./components/layout/shell"
 import { SCREENS, screenFor, type ScreenId } from "./screens/registry"
 import { scoriaDark, scoriaLight } from "./theme"
 import { LangProvider } from "./i18n"
-import { enableFrameless } from "./chrome"
 
 /** Fonts need a live renderer, so they are registered after the window exists. */
 function Fonts() {
@@ -25,7 +24,6 @@ function Fonts() {
 
 export function App() {
   const [dark, setDark] = useState(true)
-  const [frameless, setFrameless] = useState(false)
   const [page, setPage] = useState<ScreenId>(() => {
     const requested = process.env.SCORIA_UI_PAGE
     return SCREENS.some((screen) => screen.id === requested) ? (requested as ScreenId) : "home"
@@ -65,16 +63,6 @@ export function App() {
     }
   }, [])
 
-  useEffect(() => {
-    let alive = true
-    void enableFrameless().then((ok) => {
-      if (alive) setFrameless(ok)
-    })
-    return () => {
-      alive = false
-    }
-  }, [])
-
   const theme = dark ? scoriaDark : scoriaLight
   const refresh = () => {
     void snapshot().then(apply)
@@ -95,7 +83,7 @@ export function App() {
             height: "100%",
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: frameless ? "transparent" : theme.colors.background,
+            backgroundColor: theme.colors.background,
           }}
         >
           <Text tone="muted">Loading…</Text>
@@ -110,7 +98,7 @@ export function App() {
     <ThemeProvider theme={theme}>
       <LangProvider lang={data.language === "ru" ? "ru" : "en"}>
         <Fonts />
-        <Shell page={page} onPage={setPage} data={data} frameless={frameless}>
+        <Shell page={page} onPage={setPage} data={data}>
           <Active
             data={data}
             onRefresh={refresh}

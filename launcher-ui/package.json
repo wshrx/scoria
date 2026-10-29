@@ -7,13 +7,13 @@
     "start": "bun scripts/run.ts",
     "typecheck": "tsc --noEmit",
     "build": "bun build --compile app.tsx --outfile dist/scoria-launcher-ui",
-    "check:ui": "bun scripts/check-ui.ts"
+    "check:ui": "bun scripts/check-ui.ts",
+    "check:i18n": "bun scripts/check-i18n.ts"
   },
   "dependencies": {
     "@gpuix/native": "0.11.0",
     "@gpuix/react": "0.11.0",
-    "react": "19.3.1",
-    "x11": "^4.3.3"
+    "react": "19.3.1"
   },
   "devDependencies": {
     "@types/bun": "^1.4.0",

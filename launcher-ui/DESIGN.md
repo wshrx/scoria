@@ -16,7 +16,7 @@ the painted backdrop. Rounding is a house rule; shadows are not.
 - Colour: graphite page, one violet action, mint for success, amber for pending, red for danger.
   Night and Lilac are complete themes: rail, topbar, stage, backdrop and every card.
 - Surface: `theme.colors.card` over the mesh, `theme.colors.muted` for inset rows,
-  `theme.colors.border` (1 px) for separation. **No `boxShadow`**: on the X11 window it paints the
+  `theme.colors.border` (1 px) for separation. **No `boxShadow`**: it paints the
   black rectangles that were reported around avatars, active rail items and window corners.
 - Background: painted mesh, survey grid and dust. No Minecraft art, no screenshots, no chart-like
   skyline.
@@ -51,10 +51,8 @@ the painted backdrop. Rounding is a house rule; shadows are not.
 
 ## Window rules
 
-- Linux is frameless through X11: `_MOTIF_WM_HINTS` plus a rounded SHAPE, refreshed on resize and
-  every 250 ms. If SHAPE is unavailable, restore native decorations instead of leaving a black
-  inset.
-- Drag from the topbar; eight resize edges; minimize, maximize and close in the topbar.
+- Linux runs on Wayland only. The compositor owns the frame: titlebar, drag, resize and rounded
+  corners. The app draws no titlebar and no transparent padding.
 - Default window 1280×720. The content must fit there; pages scroll, cards never squeeze.
 - Do not reintroduce `transparent: true` or a shell shadow. Both caused the edge artefacts.
 
@@ -62,8 +60,8 @@ the painted backdrop. Rounding is a house rule; shadows are not.
 
 - Multi-node text (`{a} · {b}`) can wrap as one word per line; compose one template string.
 - Empty drag/resize elements need `pointerEvents: "auto"`, or they never receive the press.
-- `boxShadow` on rounded/transparent surfaces paints black rectangles on X11.
-- A window resize can outrun React's size subscription; the SHAPE timer is the safety net.
+- `boxShadow` on rounded surfaces paints black rectangles at the corners.
+- Never force `WINIT_UNIX_BACKEND=x11`; XWayland breaks layout switching and text input.
 
 ## Check
 

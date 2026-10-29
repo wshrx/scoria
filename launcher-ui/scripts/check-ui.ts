@@ -22,12 +22,15 @@ for (const path of files(src)) {
   if (relative.startsWith("src/screens") && text.includes('onPage("settings")')) {
     issues.push(`${relative}: Settings belongs to the rail registry, not another button`)
   }
+  if (text.includes("from \"x11\"") || text.includes("WINIT_UNIX_BACKEND")) {
+    issues.push(`${relative}: X11 is not supported; the launcher runs on Wayland`)
+  }
 }
 
 if (existsSync(join(src, "pages"))) issues.push("src/pages exists; screens live in src/screens")
 const app = readFileSync(join(root, "app.tsx"), "utf8")
 if (!app.includes("?? 1280") || !app.includes("?? 720")) issues.push("app.tsx: default window must stay 1280x720")
-if (app.includes("transparent: true")) issues.push("app.tsx: transparent windows paint black on X11")
+if (existsSync(join(src, "chrome.ts"))) issues.push("src/chrome.ts exists; Wayland uses the compositor's decorations")
 
 if (issues.length) {
   console.error(`UI check failed:\n${issues.map((issue) => `  - ${issue}`).join("\n")}`)

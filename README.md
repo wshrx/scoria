@@ -25,8 +25,8 @@ not have.
   Java itself is not run. CurseForge is not supported yet.
 - **Play offline** — offline-mode servers and LAN. There is no Microsoft sign-in and no session
   handoff.
-- **Use a 1280×720 frameless window** with its own titlebar: drag, resize, minimize, maximize and
-  close. On Linux the window is cut to a rounded shape through X11; Wayland remains a fallback.
+- **Use a 1280×720 window.** On Linux the launcher is Wayland-native: the compositor draws the
+  titlebar, drag, resize, minimize, maximize and close.
 - **Switch Night / Lilac** appearance. The theme covers the rail, the titlebar, the stage and every
   page, not just one panel.
 
@@ -52,8 +52,8 @@ sh tools/package_ui.sh
 # dist/scoria-launcher-linux-x86_64.tar.gz
 ```
 
-`bun run dev` and the packaged wrapper start the UI through XWayland so it can draw a frameless
-window. Set `SCORIA_UI_WAYLAND=1` to keep the native Wayland window and its native titlebar.
+`bun run dev` and the packaged wrapper start the UI on the session's native backend (Wayland), so
+keyboard layouts and text input work without an XWayland hop.
 
 ## How it is put together
 
@@ -63,7 +63,6 @@ window. Set `SCORIA_UI_WAYLAND=1` to keep the native Wayland window and its nati
   - `src/screens/` — one component per screen, listed in `src/screens/registry.tsx`.
   - `src/components/layout/` — rail, topbar, window controls, resize edges.
   - `src/api/` — the typed engine client, split by concern (`client`, `launcher`, `mods`).
-  - `src/chrome.ts` — frameless X11 window, rounded SHAPE, move/resize.
 - `docs/` — engine docs; Scoria's fork decisions are in [`docs/fork/`](docs/fork/README.md).
 
 ## Status

@@ -1,32 +1,27 @@
-import { useEffect, type ReactNode } from "react"
+import { type ReactNode } from "react"
 import { motion, useWindowSize } from "@gpuix/react"
 import { useTheme } from "@/lib/flint"
 import type { Snapshot } from "../../api"
-import { shapeWindow } from "../../chrome"
 import type { ScreenId } from "../../screens/registry"
 import { Backdrop, ParticleField } from "../../visual"
 import { Rail } from "./rail"
-import { ResizeHandles } from "./resize-handles"
-import { Topbar } from "./topbar"
 
 export interface ShellProps {
   page: ScreenId
   onPage: (page: ScreenId) => void
   data: Snapshot
-  frameless: boolean
   children?: ReactNode
 }
 
-/** The rail, a floating top strip, and a wide stage for one screen. */
-export function Shell({ page, onPage, data, frameless, children }: ShellProps) {
+/**
+ * The rail and a wide stage for one screen. The window itself is decorated by
+ * the Wayland compositor: no in-app titlebar, no X11 shape, no client-side move.
+ */
+export function Shell({ page, onPage, data, children }: ShellProps) {
   const theme = useTheme()
   const { width, height } = useWindowSize()
   const compact = width < 1000
   const dark = theme.appearance === "dark"
-
-  useEffect(() => {
-    if (frameless) void shapeWindow(width, height, 10, 24)
-  }, [frameless, width, height])
 
   return (
     <div
@@ -34,8 +29,7 @@ export function Shell({ page, onPage, data, frameless, children }: ShellProps) {
         display: "flex",
         width: "100%",
         height: "100%",
-        padding: frameless ? 10 : 0,
-        backgroundColor: frameless ? "transparent" : theme.colors.background,
+        backgroundColor: theme.colors.background,
       }}
     >
       <div
@@ -45,10 +39,6 @@ export function Shell({ page, onPage, data, frameless, children }: ShellProps) {
           width: "100%",
           height: "100%",
           overflow: "hidden",
-          borderRadius: frameless ? 24 : 0,
-          borderWidth: frameless ? 1 : 0,
-          borderStyle: "solid",
-          borderColor: theme.colors.border,
           backgroundColor: theme.colors.background,
           position: "relative",
         }}
@@ -66,8 +56,6 @@ export function Shell({ page, onPage, data, frameless, children }: ShellProps) {
         >
           <Backdrop strong={page === "home"} dark={dark} />
           <ParticleField dark={dark} />
-
-          <Topbar frameless={frameless} />
 
           <div
             style={{
@@ -95,7 +83,7 @@ export function Shell({ page, onPage, data, frameless, children }: ShellProps) {
                 maxWidth: 1360,
                 paddingLeft: compact ? 18 : 30,
                 paddingRight: compact ? 18 : 30,
-                paddingTop: 4,
+                paddingTop: 18,
                 paddingBottom: 32,
                 flexGrow: 1,
               }}
@@ -105,7 +93,6 @@ export function Shell({ page, onPage, data, frameless, children }: ShellProps) {
           </div>
         </div>
 
-        {frameless ? <ResizeHandles /> : null}
       </div>
     </div>
   )

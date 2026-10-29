@@ -97,7 +97,7 @@ P1 removes the gate itself:
 
 - The Mojang game-download code is still compiled (unreachable from the UI); P2 deletes it.
 - `launcher-ui/` is the shipping interface: Play, Mods, Servers and Settings over the
-  JSON-lines engine, with a frameless X11 titlebar on Linux (drag, resize, minimize/maximize/close).
+  JSON-lines engine. On Linux it is Wayland-native and the compositor owns the window frame.
   The shipped launcher is still the Rust GPUI one.
 - Horizon's release, nightly, parity, game-build and registry workflows are deleted. `.github/`
   keeps only `ci.yml` (format, clippy, tests, public-tree check) and `cancel-on-close.yml`;
