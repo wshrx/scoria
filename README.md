@@ -27,15 +27,15 @@
 
 ## Builds
 
-**The first beta is out:** [v0.1.0-beta.1](https://github.com/wshrx/scoria/releases/tag/v0.1.0-beta.1).
+**The first beta is out:** [v0.1.0-beta](https://github.com/wshrx/scoria/releases/tag/v0.1.0-beta).
 Linux and Windows archives are attached with a game client bundle, `SHA256SUMS` and its signature.
 A launcher archive alone cannot play: it installs the matching game bundle on first run and prepares
 26.3 locally from your own files or Mojang's servers. No Minecraft assets are shipped.
 
 | Platform | Status |
 |---|---|
-| Linux x86_64 (Wayland, Vulkan) | `v0.1.0-beta.1` |
-| Windows 10/11 x64 (Vulkan) | `v0.1.0-beta.1` |
+| Linux x86_64 (Wayland, Vulkan) | `v0.1.0-beta` |
+| Windows 10/11 x64 (Vulkan) | `v0.1.0-beta` |
 | macOS 14+, Apple silicon | deferred until signing and notarization |
 
 ## What it is
@@ -104,9 +104,9 @@ live in [CHANGELOG.md](CHANGELOG.md) and are copied into the release body.
 
 | Tag | Meaning |
 |---|---|
-| `v0.1.0-beta.N` | public beta; `N` grows by one for every published build (never reused) |
-| `v0.1.0` | first stable release, once the betas are clean |
-| `v0.1.1`, ... | fixes after that |
+| `v0.1.N-beta` | public beta; `N` grows by one for every published build (`0.1.0-beta`, `0.1.1-beta`, ...) |
+| `v0.2.0` | first stable release, once the betas are clean |
+| `v0.2.1`, ... | fixes after that |
 
 Work that is not published is not tagged: it lives in the history of `dev`. A CI run without a tag
 is a build, not a release.
