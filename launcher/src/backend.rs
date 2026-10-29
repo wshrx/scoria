@@ -1342,12 +1342,14 @@ pub fn preparer(
             .and_then(|lock| sources::Pins::read(&lock))
             .ok_or("The version's research-lock.json doesn't pin the Minecraft files")?;
         let own = data_dir().join("minecraft");
+        // Scoria downloads 26.3 from Mojang into its own folder. It does not scan other
+        // launchers: a first prepare always gets the pinned files from piston, and later runs
+        // reuse what Scoria already downloaded. `chosen` is only used when the player picked a
+        // folder explicitly in Settings.
         let mut known = vec![("Scoria's own folder", own.clone())];
-        known.extend(
-            sources::Folders::current()
-                .map(|f| sources::known_folders(sources::Os::current(), &f))
-                .unwrap_or_default(),
-        );
+        if chosen != own {
+            known.push(("The folder chosen in Settings", chosen.clone()));
+        }
         let fetch = |url: &str| -> Result<Vec<u8>, String> {
             let mut body = Vec::new();
             get(url)?

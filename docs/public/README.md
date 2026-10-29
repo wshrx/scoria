@@ -52,8 +52,9 @@ and is not approved by or associated with Mojang or Microsoft.
 
 - **No account.** Offline profiles, LAN and offline-mode servers. Online-mode servers need a
   Microsoft session, which Scoria does not have.
-- **Your files, your copy.** Scoria ships no game data and never redistributes it. It prepares
-  26.3 from the files you own, or fetches them from Mojang at your request.
+- **Downloads from Mojang.** Scoria fetches the pinned 26.3 files from Mojang's piston servers
+  into its own folder on first prepare. It does not scan or modify other launchers. Scoria ships
+  no game data and never redistributes it.
 - **Modrinth, labelled.** Mods and resource packs show **Works**, **Partly** or **Doesn't run**
   before you install. Java mods are ported to Scoria's runtime; Java itself is not run.
 - **A real desktop app.** 1280×720, Night and Lilac themes, keyboard navigation, toasts and

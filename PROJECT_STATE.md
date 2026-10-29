@@ -85,7 +85,8 @@ no online-mode servers, no Minecraft assets.
 - piston-meta/piston-data download of 26.3: version JSON, client, platform libraries, asset index
   and objects; sha1 checked, resumable. Per-file retries (3), partial progress kept, stops after 8
   failures with a plain-language connection note; DNS prefers IPv4.
-- Mojang files also prepare from official/Prism/Freesm/MultiMC/Modrinth/ATLauncher installs.
+- Mojang files: first prepare downloads the pinned 26.3 from piston into Scoria's own folder;
+  other launchers are no longer scanned (a folder chosen in Settings is the only exception).
 - Modrinth Mods page: mods/resource packs, Works/Partly/Doesn't run, progress, installed list,
   remove. Installed results now read **Installed** instead of offering Install again.
 - Release UI: labelled sidebar (Play/Mods/Servers/Settings/profile), no instance switcher; Home is
