@@ -19,6 +19,9 @@ git remote get-url github >/dev/null 2>&1 || {
 
 work="${XDG_CACHE_HOME:-$HOME/.cache}/scoria-public"
 remote=$(git remote get-url github)
+# The repository may point at a dedicated SSH key; a clone outside it would not inherit that.
+sshcmd=$(git config --get core.sshCommand || true)
+[ -n "$sshcmd" ] && export GIT_SSH_COMMAND="$sshcmd"
 
 if [ ! -d "$work/.git" ]; then
   if ! git clone --branch staging "$remote" "$work" 2>/dev/null; then
