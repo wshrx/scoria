@@ -12,6 +12,8 @@ const preview: Snapshot = {
   version: "v0.2.94",
   branch: "dev",
   prepared: true,
+  playing: false,
+  playingPid: null,
   offlineName: "Builder_1",
   selectedInstance: "release",
   appearance: "dark",

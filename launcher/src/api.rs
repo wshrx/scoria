@@ -157,10 +157,13 @@ fn state() -> Result<Value, String> {
         })
         .collect();
 
+    let playing = crate::running::running(&instance.home);
     Ok(json!({
         "version": tag,
         "branch": std::env::var("SCORIA_BRANCH").unwrap_or_else(|_| "dev".into()),
         "prepared": prepared,
+        "playing": playing.is_some(),
+        "playingPid": playing,
         "offlineName": offline,
         "selectedInstance": instance.id,
         "appearance": appearance,
@@ -223,6 +226,11 @@ fn prepare(id: &Value, params: &Value, emit: &mut dyn FnMut(Value)) -> Result<Va
 
 fn play(params: &Value) -> Result<Value, String> {
     let instance = requested_instance(params)?;
+    if let Some(pid) = crate::running::running(&instance.home) {
+        return Err(format!(
+            "Scoria is already running (PID {pid}). Close the game window first."
+        ));
+    }
     let tag = instance.resolve_version(None)?;
     let accounts = Accounts::load();
     let mut cmd = backend::client(&tag)?;
@@ -238,11 +246,19 @@ fn play(params: &Value) -> Result<Value, String> {
     }
     cmd.envs(accounts.look_env());
     let mut cmd = crate::launch::wrap(cmd, &instance.launch);
-    let child = cmd
+    let mut child = cmd
         .spawn()
         .map_err(|e| format!("The game did not start: {e}"))?;
+    let pid = child.id();
+    crate::running::hold(&instance.home, pid)?;
+    let home = instance.home.clone();
+    // Play returns at once; this waiter is what clears the mark when the player closes the game.
+    std::thread::spawn(move || {
+        let _ = child.wait();
+        crate::running::release(&home, pid);
+    });
     crate::instances::select(&instance.id)?;
-    Ok(json!({ "pid": child.id(), "version": tag, "instance": instance.name }))
+    Ok(json!({ "pid": pid, "version": tag, "instance": instance.name }))
 }
 
 fn requested_instance(params: &Value) -> Result<crate::instances::Instance, String> {

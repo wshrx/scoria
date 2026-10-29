@@ -15,6 +15,12 @@ no online-mode servers, no Minecraft assets.
   without an explicit request.
 - Do not push without the user's word. Pushing to Entire is allowed when asked; GitHub only when
   explicitly asked.
+- **Entire is the working remote** (all branches, project memory, QA fixtures, agent skills).
+  **GitHub is the public showcase**: curated history, README/screenshots, release tags and
+  artifacts. Never push `.opencode/`, `PROJECT_STATE.md`, `docs/agents/` or internal QA fixtures
+  there; keep them on Entire or in a private tools repo. Push GitHub at milestones/tags, not WIP.
+- **Builds are release artifacts, not commits**: CI builds on a tag, attaches the tarball plus a
+  SHA-256 file to the GitHub Release, and never stores the 100 MB binary in git.
 
 ## Product decisions
 
@@ -74,6 +80,8 @@ no online-mode servers, no Minecraft assets.
 - Every `t("...")` key has a Russian line; `bun run check:i18n` fails on a missing one.
 - SaaS P0 feedback layer: global toasts, confirm dialogs, list skeletons, empty states, an error
   boundary, tooltips in the compact rail and keyboard focus on rail/world rows.
+- One game per folder: `.scoria-running` holds the PID; a second Play is refused, Home shows
+  "Playing" and disables Play, the 4 s poll clears a stale mark after a crash.
 - `dev` and `test/instances` are pushed to Entire; GitHub untouched.
 
 ## Bugs fixed (and why they happened)
@@ -101,8 +109,15 @@ no online-mode servers, no Minecraft assets.
 - **Mods progress/remove jumped the layout and notes sat at the page bottom**: reserve a fixed
   progress row showing the file label, keep the note in the search panel, fixed-width Remove button.
 - **World time and modes were English**: `lastPlayedAt` + `Intl.RelativeTimeFormat`; `t(world.mode)`.
+- **A second game copy started on a second Play**: `play` spawned and forgot the child → a
+  per-folder PID mark refuses a second launch, a waiter clears it on exit, and the snapshot
+  exposes `playing` so the button is disabled.
 
 ## Known gaps / next
+
+Order of work: (1) release pipeline on GitHub (tag → CI artifact → checksums), (2) P1 UI
+(Ctrl+K, dashboard numbers, mod sorting, update centre, onboarding), (3) modpacks and shaders,
+(4) Windows/macOS if they are promised.
 
 - Modpacks in the new UI: engine can import/port; no screen yet. CurseForge unsupported.
 - Shaders: Scoria's `.hshader` packs came from Horizon's registry, removed; Modrinth shader packs

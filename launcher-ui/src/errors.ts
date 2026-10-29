@@ -30,6 +30,9 @@ export function friendlyError(error: unknown, t: (text: string) => string): stri
   if (/permission|denied|access is denied|read-only/i.test(text)) {
     return t("No access to the folder. Choose another one.")
   }
+  if (/already running|already open/i.test(text)) {
+    return t("The game is already running. Close its window to play again.")
+  }
   if (/no space|enospc|disk full/i.test(text)) {
     return t("Not enough disk space.")
   }

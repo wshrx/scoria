@@ -30,6 +30,7 @@ export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
 
   const files = data.minecraft
   const ready = files.installed && data.prepared
+  const playing = data.playing
   const recent = data.worlds[0]
 
   const summary = ready
@@ -75,7 +76,11 @@ export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
   const stats = [
     { label: t("Worlds"), value: String(data.worlds.length), icon: "layers" as const },
     { label: t("Minecraft"), value: files.version, icon: "globe" as const },
-    { label: t("Status"), value: ready ? t("ready") : t("needs attention"), icon: "check" as const },
+    {
+      label: t("Status"),
+      value: playing ? t("Playing") : ready ? t("ready") : t("needs attention"),
+      icon: "check" as const,
+    },
   ]
 
   return (
@@ -105,20 +110,26 @@ export function HomePage({ data, onRefresh, onPage }: ScreenProps) {
           <Text size="sm" tone="muted" style={{ maxWidth: 470, lineHeight: 20 }}>
             {summary}
           </Text>
+          {playing ? (
+            <Text size="xs" tone="muted">
+              {t("The game is already running. Close its window to play again.")}
+            </Text>
+          ) : null}
 
           <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <Button
               size="lg"
+              disabled={playing}
               loading={busy}
               onClick={() => void (ready ? playNow() : prepareAll())}
               style={{ height: 44, paddingLeft: 20, paddingRight: 20, borderRadius: 999 }}
             >
               <Icon
-                name={ready ? "play" : files.installed ? "refresh" : "download"}
+                name={playing ? "loader" : ready ? "play" : files.installed ? "refresh" : "download"}
                 size={15}
                 color={theme.colors.primaryForeground}
               />
-              {ready ? t("Play") : files.installed ? t("Prepare") : t("Download and prepare")}
+              {playing ? t("Playing") : ready ? t("Play") : files.installed ? t("Prepare") : t("Download and prepare")}
             </Button>
             {ready && recent ? (
               <Button

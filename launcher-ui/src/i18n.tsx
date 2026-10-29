@@ -9,6 +9,9 @@ export type Lang = "en" | "ru"
 export const RU: Record<string, string> = {
   "Build removed.": "Сборка удалена.",
   "Instance created.": "Инстанс создан.",
+  "Playing": "Игра идёт",
+  "The game is already running. Close its window to play again.":
+    "Игра уже запущена. Закройте её окно, чтобы запустить снова.",
   "Dismiss": "Закрыть",
   "Game files are ready.": "Файлы игры готовы.",
   "Install the latest build to start.": "Установите последнюю сборку, чтобы начать.",

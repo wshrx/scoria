@@ -43,6 +43,9 @@ export interface Snapshot {
   version: string
   branch: string
   prepared: boolean
+  /** A game holds the folder's `.scoria-running` mark right now. */
+  playing: boolean
+  playingPid: number | null
   offlineName: string
   selectedInstance: string
   appearance: "dark" | "light" | "system"
