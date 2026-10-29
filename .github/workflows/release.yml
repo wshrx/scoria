@@ -175,6 +175,5 @@ jobs:
             dist/horizon-*.zip
             dist/SHA256SUMS
             dist/SHA256SUMS.sig
-          generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
           fail_on_unmatched_files: true
