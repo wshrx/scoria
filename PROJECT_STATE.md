@@ -61,7 +61,8 @@ no online-mode servers, no Minecraft assets.
 ## Architecture map
 
 - `crates/` — Rust engine (client, world, protocol, assets, prepare, servers).
-- `launcher/` — Rust launcher engine and `horizon-launcher api` JSON-lines API.
+- `launcher/` — Rust launcher engine and `horizon-launcher api` JSON-lines API. The legacy GPUI
+  window is gone: the crate is CLI/API only (the 33 GUI modules and `gpui` dependency were removed).
 - `launcher-ui/` — React on GPUIX 0.11.0 + flint-ui 0.1.2.
   - `src/screens/registry.tsx` — the only screen list; rail and app render from it.
   - `src/screens/` — home, mods, servers, settings, test-only instances.
@@ -104,6 +105,9 @@ no online-mode servers, no Minecraft assets.
   public README; the wordmark is outlined Medeo.
 - SaaS P0 feedback layer: global toasts, confirm dialogs, list skeletons, empty states, an error
   boundary, tooltips in the compact rail and keyboard focus on rail/world rows.
+- Legacy launcher window removed: `scoria-launcher-ui` is the only UI; the Rust binary is the
+  engine/CLI (release ~16 MB, 23k lines fewer, no GPUI/sculk partner art). Translations pruned to
+  the strings the engine still uses.
 - One game per folder: `.scoria-running` holds the PID; a second Play is refused, Home shows
   "Playing" and disables Play, the 4 s poll clears a stale mark after a crash.
 - `dev` and `test/instances` are pushed to Entire; GitHub untouched.
