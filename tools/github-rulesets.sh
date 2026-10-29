@@ -1,15 +1,21 @@
 #!/bin/sh
 # Creates or updates the GitHub rulesets for the draft -> showcase flow.
 #
-#   tools/github-rulesets.sh [owner/repo]
+#   GITHUB_TOKEN=ghp_... tools/github-rulesets.sh [owner/repo]
 #
-# Defaults to wshrx/scoria. Needs a token with repository Administration write
-# (`gh auth refresh -h github.com -s repo` is usually enough for a personal repo).
-# It is idempotent: an existing ruleset with the same name is updated.
+# The token needs repository Administration write (a classic PAT with `repo`).
+# No gh CLI required: curl + jq. Idempotent: rulesets are matched by name and updated.
 set -eu
 repo="${1:-wshrx/scoria}"
-command -v gh >/dev/null 2>&1 || { echo "gh is required" >&2; exit 1; }
+token="${GITHUB_TOKEN:-${GH_TOKEN:-}}"
+[ -n "$token" ] || { echo "Set GITHUB_TOKEN (repo administration write)." >&2; exit 1; }
+command -v curl >/dev/null 2>&1 || { echo "curl is required" >&2; exit 1; }
+command -v jq >/dev/null 2>&1 || { echo "jq is required" >&2; exit 1; }
 
+api="https://api.github.com/repos/$repo"
+auth="Authorization: Bearer $token"
+accept="Accept: application/vnd.github+json"
+version="X-GitHub-Api-Version: 2022-11-28"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
@@ -97,13 +103,16 @@ JSON
 apply() {
   name=$1
   body=$2
-  id=$(gh api "repos/$repo/rulesets" --jq ".[] | select(.name == \"$name\") | .id" 2>/dev/null || true)
+  id=$(curl -fsS -H "$auth" -H "$accept" -H "$version" "$api/rulesets" \
+    | jq -r --arg n "$name" '.[] | select(.name == $n) | .id' | head -n 1)
   if [ -n "$id" ]; then
     echo "updating $name (id $id)"
-    gh api --method PUT "repos/$repo/rulesets/$id" --input "$body" >/dev/null
+    curl -fsS -X PUT -H "$auth" -H "$accept" -H "$version" \
+      --data @"$body" "$api/rulesets/$id" >/dev/null
   else
     echo "creating $name"
-    gh api --method POST "repos/$repo/rulesets" --input "$body" >/dev/null
+    curl -fsS -X POST -H "$auth" -H "$accept" -H "$version" \
+      --data @"$body" "$api/rulesets" >/dev/null
   fi
 }
 
@@ -112,4 +121,4 @@ apply protect-staging "$tmp/staging.json"
 apply protect-release-tags "$tmp/tags.json"
 
 echo "Rulesets are active on $repo."
-echo "If the status checks are not reported yet, push staging once; the names come from public-ci.yml."
+echo "Required checks appear after the first staging run of public-ci.yml."
