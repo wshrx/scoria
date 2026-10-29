@@ -132,6 +132,9 @@ no online-mode servers, no Minecraft assets.
   launcher `0.1.0 · beta` from `version.ts`.
 - **Mods progress/remove jumped the layout and notes sat at the page bottom**: reserve a fixed
   progress row showing the file label, keep the note in the search panel, fixed-width Remove button.
+- **An empty 30 px band sat under the Mods search**: the progress row was always
+  reserved to avoid a jump → render it only while an install is running; the panel
+  grows for the duration and collapses afterwards.
 - **Input grew and its focus ring looked like a thick border**: after Medeo was
   registered before the first frame, the native editor's font metrics pushed the
   wrapper past 32 px and the 2 px outline read as a second border → the wrapper is

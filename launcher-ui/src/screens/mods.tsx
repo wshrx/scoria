@@ -147,21 +147,19 @@ export function ModsPage() {
             {t("Search")}
           </Button>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", minHeight: 30, paddingTop: 6 }}>
-          {progress ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-              <Meter value={progress.value} total={1} height={4} />
-              <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <Text mono size="xs" tone="muted" truncate style={{ flexGrow: 1, minWidth: 0 }}>
-                  {progress.label ? `${t("Installing…")} ${progress.label}` : t("Installing…")}
-                </Text>
-                <Text mono size="xs" tone="muted">
-                  {`${percent}%`}
-                </Text>
-              </div>
+        {progress ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 5, paddingTop: 10 }}>
+            <Meter value={progress.value} total={1} height={4} />
+            <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <Text mono size="xs" tone="muted" truncate style={{ flexGrow: 1, minWidth: 0 }}>
+                {progress.label ? `${t("Installing…")} ${progress.label}` : t("Installing…")}
+              </Text>
+              <Text mono size="xs" tone="muted">
+                {`${percent}%`}
+              </Text>
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </Panel>
 
       <div style={{ display: "flex", flexDirection: narrow ? "column" : "row", gap: 16, alignItems: "flex-start" }}>
