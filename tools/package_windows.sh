@@ -31,13 +31,28 @@ fi
 sh "$root/tools/windows_runtime.sh" "$out"
 
 # Batch files need CRLF; a shell here-string would write LF and cmd.exe can misread it.
-printf '@echo off\r\nsetlocal\r\nset NAPI_RS_NATIVE_LIBRARY_PATH=%%~dp0gpuix-native.node\r\nstart "" "%%~dp0scoria-ui.exe" %%*\r\n' > "$out/Scoria.cmd"
+# The UI runs in this console, not detached: if it dies, its output must reach
+# scoria-ui.log and the window must stay open with the exit code.
+printf '@echo off
+setlocal
+cd /d "%%~dp0"
+set "NAPI_RS_NATIVE_LIBRARY_PATH=%%~dp0gpuix-native.node"
+set "RUST_BACKTRACE=1"
+"%%~dp0scoria-ui.exe" %%* > "%%~dp0scoria-ui.log" 2>&1
+set "code=%%errorlevel%%"
+if not "%%code%%"=="0" (
+  echo.
+  echo Scoria exited with code %%code%%. The log is %%~dp0scoria-ui.log
+  pause
+)
+exit /b %%code%%' | sed 's/$/\r/' > "$out/Scoria.cmd"
 
 cat > "$out/README.txt" <<'TXT'
 Scoria — Minecraft: Java Edition 26.3, offline by default.
 
 Run Scoria.cmd. Windows SmartScreen will warn until the build is signed:
-More info -> Run anyway.
+More info -> Run anyway. If the launcher closes, scoria-ui.log beside Scoria.cmd
+and the exit code in the console say why.
 
 Saves and options live in %APPDATA%\horizon; the launcher's files live in
 %LOCALAPPDATA%\horizon-launcher. Delete neither while the game is running.

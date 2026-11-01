@@ -10,8 +10,19 @@ raises the patch and keeps the `-beta` suffix (`0.1.0-beta`, `0.1.1-beta`, ...).
 
 ## [Unreleased]
 
-Nothing yet. The next published build becomes `0.1.1-beta`: every beta raises the patch number, and
-unpublished work stays untagged in the repository history.
+## [0.1.1-beta] — 2026-11-01
+
+### Fixed
+
+- `Scoria.cmd` runs the UI in the console, writes `scoria-ui.log` and pauses with the exit code, so
+  a launcher that closes on Windows says why.
+- Windows ships the published GPUIX addon with `vcruntime140.dll` again: the from-source static-CRT
+  addon is not proven on a real Windows machine and is opt-in until it is.
+
+### Added
+
+- `tests/test_release_artifacts.py`: checks archive layout, `Scoria.cmd`, every Windows binary's DLL
+  imports and the checksums before a release is published.
 
 ## [0.1.0-beta] — 2026-10-29
 

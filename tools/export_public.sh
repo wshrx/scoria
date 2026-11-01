@@ -28,6 +28,8 @@ cp "$root"/tools/package_ui.sh "$root"/tools/package_macos.sh "$root"/tools/pack
    "$root"/tools/package_game.sh "$root"/tools/package_game_windows.sh \
    "$root"/tools/windows_runtime.sh "$root"/tools/build_gpuix_native.sh \
    "$root"/tools/check_imports.py "$out/tools/"
+mkdir -p "$out/tests"
+cp "$root"/tests/test_release_artifacts.py "$out/tests/"
 mkdir -p "$out/tools/ci"
 cp "$root/tools/ci/sign_release.sh" "$out/tools/ci/"
 cp "$root/LICENSE" "$root/THIRD_PARTY_NOTICES.md" "$out/" 2>/dev/null || true
