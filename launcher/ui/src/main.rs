@@ -1,6 +1,6 @@
 //! Scoria's launcher window: one process, gpui-ce, no Bun and no native addon.
 use gpui::{
-    div, prelude::*, px, size, Bounds, Context, IntoElement, Render, Window, WindowBounds,
+    div, point, prelude::*, px, size, Bounds, Context, IntoElement, Render, Window, WindowBounds,
     WindowOptions,
 };
 use gpui_ce_platform::application;
@@ -51,7 +51,7 @@ impl Shell {
             .flex()
             .flex_col()
             .gap(px(theme.spacing.xs))
-            .w(px(220.0))
+            .w(px(232.0))
             .h_full()
             .p(px(theme.spacing.md))
             .bg(theme.colors.surface_secondary)
@@ -65,7 +65,6 @@ impl Shell {
                     .child("Scoria"),
             );
 
-        rail = rail.child(div().flex_1());
         // Navigation is static for now; clicks arrive with the screen state in the next slice.
         for screen in Screen::ALL {
             let selected = screen == self.screen;
@@ -77,12 +76,12 @@ impl Shell {
                     .px(px(theme.spacing.sm))
                     .rounded(px(theme.radii.lg))
                     .bg(if selected {
-                        theme.colors.surface_tertiary
+                        theme.colors.accent_soft
                     } else {
                         theme.colors.surface_secondary
                     })
                     .text_color(if selected {
-                        theme.colors.foreground
+                        theme.colors.accent
                     } else {
                         theme.colors.muted
                     })
@@ -90,7 +89,7 @@ impl Shell {
                     .child(screen.label()),
             );
         }
-        rail
+        rail.child(div().flex_1())
     }
 
     fn home(&self) -> impl IntoElement {
@@ -202,7 +201,8 @@ fn main() {
         })
         .detach();
 
-        let bounds = Bounds::centered(None, size(px(1280.0), px(720.0)), cx);
+        // A fixed origin keeps headless screenshots reproducible.
+        let bounds = Bounds::new(point(px(0.0), px(0.0)), size(px(1280.0), px(720.0)));
         cx.open_window(
             WindowOptions::new()
                 .window_bounds(Some(WindowBounds::Windowed(bounds)))
