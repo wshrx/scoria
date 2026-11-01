@@ -14,6 +14,7 @@ fn main() -> ExitCode {
         "test" => test(&args[1..]),
         "pytest" => pytest(&args[1..]),
         "gate" => gate(),
+        "build" => build(),
         "ui" => ui(&args[1..]),
         "help" | "--help" | "-h" => {
             help();
@@ -34,7 +35,8 @@ fn help() {
   check    cargo fmt --check and clippy -D warnings
   test     cargo nextest (or cargo test) for the launcher workspace
   pytest   uv run pytest for tests/
-  gate     check + test + pytest (what CI runs)
+  build    cargo build -p scoria-ui (the binary the Python tests drive)
+  gate     check + test + build + pytest (what CI runs)
   ui       run the launcher UI (pass --release for an optimized build)"
     );
 }
@@ -120,8 +122,12 @@ fn pytest(extra: &[String]) -> ExitCode {
     run("uv", &args, &root())
 }
 
+fn build() -> ExitCode {
+    run("cargo", &["build", "-p", "scoria-ui"], &launcher())
+}
+
 fn gate() -> ExitCode {
-    for step in [check, || test(&[]), || pytest(&[])] {
+    for step in [check, || test(&[]), build, || pytest(&[])] {
         let code = step();
         if code != ExitCode::SUCCESS {
             return code;

@@ -1,5 +1,11 @@
 //! Scoria's launcher window: one process, gpui-ce, no Bun and no native addon.
-use std::{borrow::Cow, sync::Arc};
+use std::{
+    borrow::Cow,
+    fs::OpenOptions,
+    io::Write,
+    sync::Arc,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use gpui::{
     div, img, point, prelude::*, px, size, Bounds, Context, Image, ImageFormat, ImageSource,
@@ -388,7 +394,43 @@ impl Render for Shell {
     }
 }
 
+/// A crash leaves a file next to the settings, because a window that disappears is not a bug
+/// report. `--crash-test` panics on purpose so the log can be checked without breaking anything.
+fn install_crash_log() {
+    let dir = scoria_core::backend::data_dir();
+    std::panic::set_hook(Box::new(move |info| {
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or_default();
+        let report = format!(
+            "Scoria {} on {} {}\nat {}s: {}\n{}\n",
+            env!("CARGO_PKG_VERSION"),
+            std::env::consts::OS,
+            std::env::consts::ARCH,
+            stamp,
+            info,
+            std::backtrace::Backtrace::force_capture(),
+        );
+        eprintln!("{report}");
+        if std::fs::create_dir_all(&dir).is_ok() {
+            if let Ok(mut file) = OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(dir.join("crash.log"))
+            {
+                let _ = file.write_all(report.as_bytes());
+            }
+        }
+    }));
+}
+
 fn main() {
+    install_crash_log();
+    if std::env::args().any(|arg| arg == "--crash-test") {
+        panic!("crash-test: the crash log must contain this line");
+    }
+
     application().run(|cx| {
         cx.text_system()
             .add_fonts(FONTS.iter().map(|font| Cow::Borrowed(*font)).collect())
