@@ -10,6 +10,13 @@ raises the patch and keeps the `-beta` suffix (`0.1.0-beta`, `0.1.1-beta`, ...).
 
 ## [Unreleased]
 
+### Added
+
+- The launcher UI is being rewritten in Rust on gpui-ce: one process, no Bun, no native addon.
+  `scoria-ui-kit` holds the HeroUI-shaped tokens and components, `scoria-ui` the window.
+- `cargo xtask` is the single entry point for checks, tests, pytest and the UI.
+- `uv` + pytest for the black-box suite; `pyproject.toml` pins the environment.
+
 ## [0.1.1-beta] — 2026-11-01
 
 ### Fixed

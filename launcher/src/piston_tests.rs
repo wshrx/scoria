@@ -152,7 +152,7 @@ fn downloads_the_version_json_client_libraries_and_assets() {
     .unwrap();
 
     assert!(files.installed, "{files:?}");
-    assert_eq!(files.client, true);
+    assert!(files.client);
     assert!(files.manifest);
     assert_eq!(files.libraries.done, 1, "only this OS's library");
     assert_eq!(files.assets.done, 1);

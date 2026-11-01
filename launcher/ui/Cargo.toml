@@ -1,0 +1,14 @@
+[package]
+name = "scoria-ui"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "scoria-ui"
+path = "src/main.rs"
+
+[dependencies]
+gpui-ce = { workspace = true }
+gpui_ce_platform = { workspace = true }
+scoria-ui-kit = { path = "../ui-kit" }

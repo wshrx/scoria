@@ -50,13 +50,13 @@ fn alive(pid: u32) -> bool {
         if !Path::new(&proc).exists() {
             return false;
         }
-        return match fs::read(format!("{proc}/comm")) {
+        match fs::read(format!("{proc}/comm")) {
             Ok(name) => {
                 let name = String::from_utf8_lossy(&name);
                 name.contains("horizon-client") || name.contains("scoria")
             }
             Err(_) => true,
-        };
+        }
     }
     #[cfg(all(unix, not(target_os = "linux")))]
     {

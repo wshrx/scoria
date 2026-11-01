@@ -61,6 +61,13 @@ no online-mode servers, no Minecraft assets.
 - **Engine patch queue**: `docs/fork/engine-patches/*.patch` (7 commits touching `crates/`);
   `tools/check_fork_surfaces.sh` fails if the input fallback, no-session rule, offline-only
   server, release key or icon disappears after a sync.
+- **Rewrite (2026-11-02)**: the launcher UI moves to Rust on gpui-ce in the same process;
+  `launcher/ui-kit` (tokens, Ember theme, components), `launcher/ui` (window, screens), and
+  `launcher/xtask` (the only entry point: check, test, pytest, gate, ui). The React UI stays the
+  shipped one until parity, then `launcher-ui/`, Bun and GPUIX are removed. See
+  `docs/adr/0001-gpui-ce-rewrite.md`.
+- **Design**: HeroUI semantic structure (4px rhythm, 8px radius, 12px fields, one primary action)
+  with Scoria's basalt surfaces and ember accent; dark by default, light at parity.
 - **Release state**: `v0.1.0-beta.1` is the only tag and the only release (pre-release, 8 assets,
   Linux `.tar.gz` + `.tar.zst`, Windows `.zip`, signed). The Horizon-numbered `v0.2.98`/`v0.2.99`
   releases and tags were deleted; `latest` now resolves to the beta. GitHub `main` == `staging`

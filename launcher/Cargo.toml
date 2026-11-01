@@ -6,6 +6,13 @@ license = "MIT"
 description = "Downloads, prepares and starts Scoria builds"
 
 [workspace]
+members = [".", "xtask", "ui-kit", "ui"]
+resolver = "2"
+
+# The new launcher UI: one process, gpui-ce, no Bun or native addon.
+[workspace.dependencies]
+gpui-ce = { version = "0.3.0" }
+gpui_ce_platform = { version = "0.3.0" }
 
 [dependencies]
 ureq = { version = "2", features = ["json", "tls"], default-features = false }

@@ -2330,7 +2330,7 @@ pub fn self_update(release: &Release, progress: impl Fn(f32)) -> Result<(), Stri
         progress(1.0);
         return Ok(());
     }
-    let sha256 = signed_digest(&release.tag, &asset_name(&release))?;
+    let sha256 = signed_digest(&release.tag, &asset_name(release))?;
     let work = data_dir().join(".launcher-update");
     let _ = fs::remove_dir_all(&work);
     fs::create_dir_all(&work).map_err(|e| e.to_string())?;
@@ -2986,13 +2986,22 @@ mod tests {
                 .and_then(|r| r.asset.as_ref())
                 .map(|(url, size)| (url.as_str(), *size))
         };
-        assert_eq!(asset("v2026.10.20"), Some(("https://e/horizon-linux-x86_64.tar.zst", 7)));
-        assert_eq!(asset("v2026.10.19"), Some(("https://e/horizon-linux-x86_64.tar.gz", 9)));
+        assert_eq!(
+            asset("v2026.10.20"),
+            Some(("https://e/horizon-linux-x86_64.tar.zst", 7))
+        );
+        assert_eq!(
+            asset("v2026.10.19"),
+            Some(("https://e/horizon-linux-x86_64.tar.gz", 9))
+        );
         // The signature check looks the digest up by this name, so it must follow the chosen file.
         let names: Vec<_> = releases.iter().map(asset_name).collect();
         assert_eq!(
             names,
-            ["horizon-linux-x86_64.tar.zst", "horizon-linux-x86_64.tar.gz"]
+            [
+                "horizon-linux-x86_64.tar.zst",
+                "horizon-linux-x86_64.tar.gz"
+            ]
         );
     }
 
