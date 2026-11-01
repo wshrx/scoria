@@ -12,3 +12,4 @@ path = "src/main.rs"
 gpui-ce = { workspace = true }
 gpui_ce_platform = { workspace = true }
 scoria-ui-kit = { path = "../ui-kit" }
+scoria-core = { path = "..", package = "horizon-launcher" }

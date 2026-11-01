@@ -5603,6 +5603,7 @@ version = "0.1.0"
 dependencies = [
  "gpui-ce",
  "gpui_ce_platform",
+ "horizon-launcher",
  "scoria-ui-kit",
 ]
 

@@ -6,6 +6,9 @@ use gpui::{
     IntoElement, Render, Window, WindowBounds, WindowOptions,
 };
 use gpui_ce_platform::application;
+use scoria_core::account::{Accounts, Player};
+use scoria_core::backend::{Appearance, Settings};
+use scoria_core::i18n::Language;
 use scoria_ui_kit::{card, Button, ButtonSize, ButtonVariant, Theme};
 
 /// The bundled OFL fonts: Medeo Sans for text, Medeo Mono for versions and numbers.
@@ -45,17 +48,80 @@ impl Screen {
     }
 }
 
+/// A segmented-control option: the selected one carries the accent.
+fn segment(
+    theme: Theme,
+    label: &'static str,
+    selected: bool,
+    on_click: impl Fn(&gpui::ClickEvent, &mut Window, &mut gpui::App) + 'static,
+) -> impl IntoElement {
+    div()
+        .id(label)
+        .flex()
+        .items_center()
+        .h(px(32.0))
+        .px(px(theme.spacing.md))
+        .rounded(px(theme.radii.lg))
+        .border_1()
+        .border_color(if selected {
+            theme.colors.accent
+        } else {
+            theme.colors.border
+        })
+        .bg(if selected {
+            theme.colors.accent_soft
+        } else {
+            theme.colors.surface
+        })
+        .text_color(if selected {
+            theme.colors.accent
+        } else {
+            theme.colors.foreground
+        })
+        .text_size(px(theme.type_scale.body))
+        .cursor_pointer()
+        .on_click(on_click)
+        .child(label)
+}
+
+fn label(theme: &Theme, text: &'static str) -> impl IntoElement {
+    div().text_size(px(theme.type_scale.subtitle)).child(text)
+}
+
 struct Shell {
     theme: Theme,
     screen: Screen,
+    settings: Settings,
 }
 
 impl Shell {
     fn new() -> Self {
+        let settings = Settings::load();
+        let theme = match settings.appearance {
+            Appearance::Light => Theme::light(),
+            _ => Theme::dark(),
+        };
         Self {
-            theme: Theme::dark(),
+            theme,
             screen: Screen::Home,
+            settings,
         }
+    }
+
+    fn set_appearance(&mut self, cx: &mut Context<Self>, appearance: Appearance) {
+        self.settings.appearance = appearance;
+        self.theme = match appearance {
+            Appearance::Light => Theme::light(),
+            _ => Theme::dark(),
+        };
+        self.settings.save();
+        cx.notify();
+    }
+
+    fn set_language(&mut self, cx: &mut Context<Self>, language: Option<Language>) {
+        self.settings.language = language;
+        self.settings.save();
+        cx.notify();
     }
 
     fn mark() -> impl IntoElement {
@@ -181,6 +247,99 @@ impl Shell {
             ))
     }
 
+    fn settings(&self, cx: &mut Context<Self>) -> impl IntoElement {
+        let theme = self.theme;
+
+        let mut appearance = div().flex().gap(px(theme.spacing.xs));
+        for (value, label) in [
+            (Appearance::Dark, "Dark"),
+            (Appearance::Light, "Light"),
+            (Appearance::System, "System"),
+        ] {
+            let selected = self.settings.appearance == value;
+            let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
+                this.set_appearance(cx, value)
+            });
+            appearance = appearance.child(segment(theme, label, selected, on_click));
+        }
+
+        let mut language = div().flex().gap(px(theme.spacing.xs));
+        for (value, label) in [
+            (None, "System"),
+            (Some(Language::English), "English"),
+            (Some(Language::Russian), "Русский"),
+        ] {
+            let selected = self.settings.language == value;
+            let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
+                this.set_language(cx, value)
+            });
+            language = language.child(segment(theme, label, selected, on_click));
+        }
+
+        let player = match Accounts::load().player() {
+            Player::Offline(name) => name,
+            Player::GameName => "the game's own name".to_string(),
+        };
+
+        card(
+            &theme,
+            div()
+                .flex()
+                .flex_col()
+                .gap(px(theme.spacing.lg))
+                .child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(theme.spacing.xs))
+                        .child(
+                            div()
+                                .text_size(px(theme.type_scale.title))
+                                .child("Settings"),
+                        )
+                        .child(
+                            div()
+                                .text_size(px(theme.type_scale.body))
+                                .text_color(theme.colors.muted)
+                                .child(
+                                    "Appearance and language are saved to the launcher's settings.",
+                                ),
+                        ),
+                )
+                .child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(theme.spacing.sm))
+                        .child(label(&theme, "Appearance"))
+                        .child(appearance),
+                )
+                .child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(theme.spacing.sm))
+                        .child(label(&theme, "Language"))
+                        .child(language),
+                )
+                .child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(theme.spacing.xs))
+                        .child(label(&theme, "Player"))
+                        .child(div().text_size(px(theme.type_scale.body)).child(player))
+                        .child(
+                            div()
+                                .text_size(px(theme.type_scale.caption))
+                                .text_color(theme.colors.muted)
+                                .child("Editing the offline name arrives with the text input."),
+                        ),
+                ),
+        )
+        .max_w(px(880.0))
+    }
+
     fn placeholder(&self, title: &'static str) -> impl IntoElement {
         let theme = self.theme;
         card(
@@ -206,7 +365,7 @@ impl Render for Shell {
             Screen::Home => div().child(self.home()),
             Screen::Mods => div().child(self.placeholder("Mods")),
             Screen::Servers => div().child(self.placeholder("Servers")),
-            Screen::Settings => div().child(self.placeholder("Settings")),
+            Screen::Settings => div().child(self.settings(cx)),
         };
 
         div()
