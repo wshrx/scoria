@@ -1,10 +1,23 @@
 //! Scoria's launcher window: one process, gpui-ce, no Bun and no native addon.
+use std::{borrow::Cow, sync::Arc};
+
 use gpui::{
-    div, point, prelude::*, px, size, Bounds, Context, IntoElement, Render, Window, WindowBounds,
-    WindowOptions,
+    div, img, point, prelude::*, px, size, Bounds, Context, Image, ImageFormat, ImageSource,
+    IntoElement, Render, Window, WindowBounds, WindowOptions,
 };
 use gpui_ce_platform::application;
 use scoria_ui_kit::{card, Button, ButtonSize, ButtonVariant, Theme};
+
+/// The bundled OFL fonts: Medeo Sans for text, Medeo Mono for versions and numbers.
+const FONTS: [&[u8]; 6] = [
+    include_bytes!("../assets/fonts/MedeoSans-Regular.ttf"),
+    include_bytes!("../assets/fonts/MedeoSans-Medium.ttf"),
+    include_bytes!("../assets/fonts/MedeoSans-SemiBold.ttf"),
+    include_bytes!("../assets/fonts/MedeoSans-Bold.ttf"),
+    include_bytes!("../assets/fonts/MedeoMono-Regular.ttf"),
+    include_bytes!("../assets/fonts/MedeoMono-Medium.ttf"),
+];
+const MARK: &[u8] = include_bytes!("../assets/scoria-mark.png");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Screen {
@@ -45,7 +58,16 @@ impl Shell {
         }
     }
 
-    fn rail(&self) -> impl IntoElement {
+    fn mark() -> impl IntoElement {
+        img(ImageSource::Image(Arc::new(Image::from_bytes(
+            ImageFormat::Png,
+            MARK.to_vec(),
+        ))))
+        .w(px(26.0))
+        .h(px(26.0))
+    }
+
+    fn rail(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = self.theme;
         let mut rail = div()
             .flex()
@@ -59,17 +81,28 @@ impl Shell {
             .border_color(theme.colors.separator)
             .child(
                 div()
+                    .flex()
+                    .items_center()
+                    .gap(px(theme.spacing.sm))
                     .px(px(theme.spacing.sm))
                     .py(px(theme.spacing.md))
-                    .text_size(px(theme.type_scale.subtitle))
-                    .child("Scoria"),
+                    .child(Self::mark())
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.subtitle))
+                            .child("Scoria"),
+                    ),
             );
 
-        // Navigation is static for now; clicks arrive with the screen state in the next slice.
         for screen in Screen::ALL {
             let selected = screen == self.screen;
+            let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
+                this.screen = screen;
+                cx.notify();
+            });
             rail = rail.child(
                 div()
+                    .id(("rail", screen as usize))
                     .flex()
                     .items_center()
                     .h(px(36.0))
@@ -86,6 +119,9 @@ impl Shell {
                         theme.colors.muted
                     })
                     .text_size(px(theme.type_scale.body))
+                    .cursor_pointer()
+                    .hover(move |style| style.bg(theme.colors.surface_tertiary))
+                    .on_click(on_click)
                     .child(screen.label()),
             );
         }
@@ -106,6 +142,7 @@ impl Shell {
             .flex()
             .flex_col()
             .gap(px(theme.spacing.lg))
+            .max_w(px(880.0))
             .child(
                 div()
                     .flex()
@@ -163,7 +200,7 @@ impl Shell {
 }
 
 impl Render for Shell {
-    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = self.theme;
         let body = match self.screen {
             Screen::Home => div().child(self.home()),
@@ -175,9 +212,10 @@ impl Render for Shell {
         div()
             .flex()
             .size_full()
+            .font_family(theme.type_scale.sans)
             .bg(theme.colors.background)
             .text_color(theme.colors.foreground)
-            .child(self.rail())
+            .child(self.rail(cx))
             .child(
                 div()
                     .flex()
@@ -193,6 +231,10 @@ impl Render for Shell {
 
 fn main() {
     application().run(|cx| {
+        cx.text_system()
+            .add_fonts(FONTS.iter().map(|font| Cow::Borrowed(*font)).collect())
+            .expect("the bundled Medeo fonts");
+
         cx.activate(true);
         cx.on_window_closed(|cx, _| {
             if cx.windows().is_empty() {

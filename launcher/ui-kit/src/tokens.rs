@@ -57,6 +57,10 @@ pub struct Spacing {
 /// Type sizes and weights.
 #[derive(Clone, Copy, Debug)]
 pub struct Typography {
+    /// The family registered from `launcher/ui/assets/fonts`.
+    pub sans: &'static str,
+    /// Monospace, for versions, paths and numbers.
+    pub mono: &'static str,
     pub caption: f32,
     pub body: f32,
     pub subtitle: f32,
@@ -114,6 +118,8 @@ impl Theme {
                 xl: 24.0,
             },
             type_scale: Typography {
+                sans: "Medeo Sans",
+                mono: "Medeo Mono",
                 caption: 12.0,
                 body: 14.0,
                 subtitle: 16.0,
@@ -163,6 +169,8 @@ impl Theme {
                 xl: 24.0,
             },
             type_scale: Typography {
+                sans: "Medeo Sans",
+                mono: "Medeo Mono",
                 caption: 12.0,
                 body: 14.0,
                 subtitle: 16.0,
