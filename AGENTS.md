@@ -1,8 +1,14 @@
 # Horizon: a map for agents
 
-> **Scoria fork:** read [`PROJECT_STATE.md`](PROJECT_STATE.md) and
-> [`docs/agents/project-map.md`](docs/agents/project-map.md) first. The map below is Horizon's
-> engine reference; Scoria's launcher and offline changes are in the state file.
+> **Scoria fork:** read [`PROJECT_STATE.md`](PROJECT_STATE.md),
+> [`docs/agents/project-map.md`](docs/agents/project-map.md) and
+> [`docs/agents/lessons.md`](docs/agents/lessons.md) first. The last one is the registry of
+> mistakes this fork already made, each with the rule and test that prevent it: releases, Windows
+> packaging, CI and the design system. The map below is Horizon's engine reference; Scoria's
+> launcher, UI and offline changes are in the state file.
+>
+> Commands: `cargo xtask check | test | pytest | gate | ui` (from the repository root). Development
+> branches live in Entire; GitHub gets exported snapshots only.
 
 Minecraft: Java Edition 26.3 rewritten in Rust (wgpu). Vanilla is the specification wherever it has the
 feature. Read [CONTRIBUTING.md](CONTRIBUTING.md) once; this page tells you where things are.
