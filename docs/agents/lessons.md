@@ -11,6 +11,12 @@ while fixing Windows, publishing, then the digest check. Users cannot tell the b
 signature is bound to the tag.
 Rule: one tag = one published build. A failed release is deleted and the next number is used.
 
+**L5 — Tag only after the staging CI is green.** Every tag run built from a commit whose CI
+had not finished yet, so a platform-only failure (xkbcommon-x11, a Windows `&str`, a macOS
+clippy note) was discovered after the release had already started. One evening went into
+re-tagging the same version.
+Rule: export, wait for the staging CI to pass, then tag. `xtask release` must do both in that order.
+
 **L2 — The tag belongs to the commit CI tested.** Tag after the staging run is green, on that
 commit; never move `main` first.
 Rule: `cargo xtask release` sets the tag itself and refuses a dirty tree or a missing CHANGELOG
