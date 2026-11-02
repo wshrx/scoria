@@ -426,6 +426,7 @@ impl Shell {
             let summary = project["summary"].as_str().unwrap_or("");
             let author = project["author"].as_str().unwrap_or("");
             let support = project["support"].as_str().unwrap_or("");
+            let source = project["source"].as_str().unwrap_or("catalogue");
             results = results.child(soft_card(
                 &theme,
                 div()
@@ -459,7 +460,7 @@ impl Shell {
                         div()
                             .text_size(px(theme.type_scale.caption))
                             .text_color(theme.colors.muted)
-                            .child(format!("by {author} · Modrinth")),
+                            .child(format!("by {author} · {source}")),
                     ),
             ));
         }
@@ -481,7 +482,7 @@ impl Shell {
                                 .text_size(px(theme.type_scale.body))
                                 .text_color(theme.colors.muted)
                                 .child(
-                                    "Modrinth catalogue. Java mods show whether they run on Scoria before installing.",
+                                    "Horizon's registry first, then Modrinth. Every result says how it runs on Scoria.",
                                 ),
                         ),
                 )

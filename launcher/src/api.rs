@@ -492,6 +492,7 @@ fn project_json(project: &browser::Project) -> Value {
         "author": project.author,
         "page": project.page,
         "kind": project.kind,
+        "source": project.source.label(),
         "support": support.label(),
         "reason": support.reason(),
         "installable": support.installable(),
@@ -513,11 +514,13 @@ fn mod_kind(name: &str) -> Result<Kind, String> {
 }
 
 fn mod_source() -> Result<Box<dyn browser::Source>, String> {
-    browser::source(SourceId::Modrinth).ok_or_else(|| "Modrinth is not available.".to_string())
+    browser::source(SourceId::Horizon)
+        .or_else(|| browser::source(SourceId::Modrinth))
+        .ok_or_else(|| "No mod catalogue is available.".to_string())
 }
 
-/// Search the catalogue for the in-process UI: Modrinth today (the Horizon registry is not
-/// Scoria's to call), as the same JSON `search_mods` serves.
+/// Search the catalogue for the in-process UI: Horizon's registry first, then Modrinth, as the
+/// same JSON `search_mods` serves.
 pub fn search_catalog(query: &str) -> Result<Value, String> {
     search_mods(&json!({ "query": query, "kind": "mod" }))
 }
