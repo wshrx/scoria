@@ -498,9 +498,13 @@ impl Shell {
                 .id(("rail", screen as usize))
                 .flex()
                 .items_center()
+                .justify_center()
                 .gap(px(theme.spacing.sm))
                 .h(px(40.0))
                 .px(px(theme.spacing.sm))
+                .when(compact, |item| {
+                    item.w(px(44.0)).h(px(44.0)).px(px(0.0)).self_center()
+                })
                 .rounded(px(theme.radii.lg))
                 .bg(if selected {
                     theme.colors.accent_soft
