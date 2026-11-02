@@ -37,6 +37,7 @@ const FONTS: [&[u8]; 6] = [
 ];
 const MARK: &[u8] = include_bytes!("../assets/scoria-mark.png");
 const BACKDROP: &[u8] = include_bytes!("../assets/backdrop.jpg");
+const BACKDROP_LIGHT: &[u8] = include_bytes!("../assets/backdrop-light.jpg");
 const ICON_PLAY: &[u8] = include_bytes!("../assets/icons/play.svg");
 const ICON_MODS: &[u8] = include_bytes!("../assets/icons/mods.svg");
 const ICON_SERVERS: &[u8] = include_bytes!("../assets/icons/servers.svg");
@@ -453,7 +454,7 @@ impl Shell {
             .flex()
             .flex_col()
             .gap(px(2.0))
-            .w(px(if compact { 72.0 } else { 248.0 }))
+            .w(px(if compact { 64.0 } else { 196.0 }))
             .m(px(theme.spacing.md))
             .p(px(theme.spacing.md))
             .rounded(px(theme.radii.xl))
@@ -505,11 +506,11 @@ impl Shell {
                 .items_center()
                 .justify_start()
                 .gap(px(theme.spacing.sm))
-                .h(px(38.0))
+                .h(px(34.0))
                 .px(px(theme.spacing.sm))
                 .when(compact, |item| {
-                    item.w(px(44.0))
-                        .h(px(44.0))
+                    item.w(px(40.0))
+                        .h(px(40.0))
                         .px(px(0.0))
                         .justify_center()
                         .self_center()
@@ -532,7 +533,7 @@ impl Shell {
                 .child(
                     gpui::svg()
                         .data(screen.icon())
-                        .size(px(16.0))
+                        .size(px(15.0))
                         .text_color(tint),
                 )
                 .children((!compact).then(|| screen.label()));
@@ -1214,7 +1215,11 @@ impl Render for Shell {
             .child(
                 img(ImageSource::Image(Arc::new(Image::from_bytes(
                     ImageFormat::Jpeg,
-                    BACKDROP.to_vec(),
+                    if theme.dark {
+                        BACKDROP.to_vec()
+                    } else {
+                        BACKDROP_LIGHT.to_vec()
+                    },
                 ))))
                 .absolute()
                 .top(px(0.0))
@@ -1230,9 +1235,9 @@ impl Render for Shell {
                     .w_full()
                     .h_full()
                     .bg(if theme.dark {
-                        rgba(0x09080A66)
+                        rgba(0x09080A4D)
                     } else {
-                        rgba(0xFBF5EEF2)
+                        rgba(0xFFFFFF2E)
                     }),
             )
             .child(
@@ -1255,8 +1260,10 @@ impl Render for Shell {
                                     .flex_col()
                                     .flex_1()
                                     .min_h(px(0.0))
+                                    .id("screen")
                                     .p(px(if compact { 20.0 } else { 32.0 }))
                                     .gap(px(theme.spacing.lg))
+                                    .overflow_y_scroll()
                                     .child(body),
                             ),
                     ),
