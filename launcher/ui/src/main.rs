@@ -208,6 +208,8 @@ struct Shell {
     mods_loading: bool,
     installing: Option<String>,
     preparing: bool,
+    prepare_status: Option<String>,
+    prepare_percent: Option<f32>,
     mods_source: ModsSource,
     appearance_open: bool,
     language_open: bool,
@@ -245,6 +247,8 @@ impl Shell {
             mods_loading: false,
             installing: None,
             preparing: false,
+            prepare_status: None,
+            prepare_percent: None,
             mods_source: ModsSource::Horizon,
             appearance_open: false,
             language_open: false,
@@ -257,6 +261,9 @@ impl Shell {
         };
         if screen == Screen::Mods && query.is_none() {
             shell.search_mods(cx);
+        }
+        if std::env::var("SCORIA_AUTO_PREPARE").is_ok() {
+            shell.prepare(cx);
         }
         if let Some(query) = query {
             if !query.is_empty() {
@@ -393,33 +400,98 @@ impl Shell {
         .detach();
     }
 
+    fn log_line(&self, line: &str) {
+        let dir = scoria_core::backend::data_dir();
+        if std::fs::create_dir_all(&dir).is_ok() {
+            if let Ok(mut file) = OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(dir.join("ui.log"))
+            {
+                let _ = writeln!(file, "{line}");
+            }
+        }
+    }
+
     fn prepare(&mut self, cx: &mut Context<Self>) {
         if self.preparing {
             return;
         }
         self.preparing = true;
+        self.prepare_status = Some("Starting…".to_string());
+        self.prepare_percent = None;
+        self.log_line("prepare: start");
         cx.notify();
+
         let needs_bundle = self.snapshot.is_err();
-        cx.spawn(async move |this, cx| {
-            let result = cx
-                .background_spawn(async move {
-                    // Nothing installed: fetch Scoria's game bundle from the release first, then
-                    // let the engine prepare Mojang's files.
-                    if needs_bundle {
-                        scoria_core::api::install_latest_game()?;
-                    }
-                    scoria_core::api::prepare_game()
-                })
-                .await;
-            this.update(cx, |this, cx| {
-                this.preparing = false;
-                this.snapshot = scoria_core::api::snapshot();
-                match result {
-                    Ok(_) => this.show_toast(Tone::Success, "26.3 is prepared.", cx),
-                    Err(error) => this.show_toast(Tone::Danger, error, cx),
+        let (sender, receiver) = std::sync::mpsc::channel::<serde_json::Value>();
+        std::thread::spawn(move || {
+            let result = (|| -> Result<(), String> {
+                if needs_bundle {
+                    scoria_core::api::install_latest_game()?;
                 }
+                let events = sender.clone();
+                scoria_core::api::prepare_game_with_progress(move |event| {
+                    let _ = events.send(event);
+                })?;
+                Ok(())
+            })();
+            let _ = sender.send(serde_json::json!({
+                "ui_done": true,
+                "error": result.err(),
+            }));
+        });
+
+        cx.spawn(async move |this, cx| loop {
+            cx.background_executor()
+                .timer(std::time::Duration::from_millis(150))
+                .await;
+            let (mut finished, mut failure) = (false, None);
+            let (mut percent, mut line) = (None, None);
+            while let Ok(event) = receiver.try_recv() {
+                if event.get("ui_done").is_some() {
+                    finished = true;
+                    failure = event["error"].as_str().map(str::to_string);
+                } else if event["event"] == "progress" {
+                    if let (Some(done), Some(total)) =
+                        (event["done"].as_f64(), event["total"].as_f64())
+                    {
+                        if total > 0.0 {
+                            percent = Some((done / total) as f32);
+                        }
+                    }
+                } else if event["event"] == "log" {
+                    line = event["line"].as_str().map(str::to_string);
+                }
+            }
+            this.update(cx, |this, cx| {
+                if let Some(percent) = percent {
+                    this.prepare_percent = Some(percent);
+                }
+                if let Some(line) = line {
+                    this.prepare_status = Some(line);
+                }
+                if finished {
+                    this.preparing = false;
+                    this.prepare_percent = None;
+                    this.snapshot = scoria_core::api::snapshot();
+                    match failure {
+                        Some(error) => {
+                            this.log_line(&format!("prepare: failed: {error}"));
+                            this.show_toast(Tone::Danger, error, cx);
+                        }
+                        None => {
+                            this.log_line("prepare: done");
+                            this.show_toast(Tone::Success, "26.3 is prepared.", cx);
+                        }
+                    }
+                }
+                cx.notify();
             })
             .ok();
+            if finished {
+                break;
+            }
         })
         .detach();
     }
@@ -852,6 +924,20 @@ impl Shell {
                     .child(play),
             )
             .child(chips)
+            .children(self.preparing.then(|| {
+                div().flex().items_center().gap(px(theme.spacing.sm)).child(
+                    div()
+                        .text_size(px(theme.type_scale.caption))
+                        .text_color(theme.colors.muted)
+                        .child(format!(
+                            "{} {}",
+                            self.prepare_status.clone().unwrap_or_default(),
+                            self.prepare_percent
+                                .map(|p| format!("{:.0}%", p * 100.0))
+                                .unwrap_or_default()
+                        )),
+                )
+            }))
             .child(status)
             .children((!worlds.is_empty()).then(|| {
                 div()

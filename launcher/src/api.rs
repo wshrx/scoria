@@ -519,6 +519,13 @@ fn mod_source() -> Result<Box<dyn browser::Source>, String> {
         .ok_or_else(|| "No mod catalogue is available.".to_string())
 }
 
+/// Prepare with the engine's progress events forwarded to `emit` (used by the window).
+pub fn prepare_game_with_progress(
+    mut emit: impl FnMut(Value) + Send + 'static,
+) -> Result<Value, String> {
+    prepare(&Value::Null, &json!({ "download": true }), &mut emit)
+}
+
 /// Install the newest published game bundle (the GitHub release asset), for the window.
 pub fn install_latest_game() -> Result<Value, String> {
     install_latest()
