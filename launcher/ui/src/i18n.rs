@@ -26,6 +26,7 @@ fn russian(english: &'static str) -> &'static str {
         "Download 26.3" => "Скачать 26.3",
         "Prepared" => "Готово",
         "Not prepared" => "Не готово",
+        "Game build" => "Сборка игры",
         "Search" => "Поиск",
         "Search mods" => "Поиск модов",
         "Install" => "Установить",

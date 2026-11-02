@@ -1,7 +1,9 @@
 # Changelog
 
 All notable changes to Scoria. The release workflow takes the section whose heading matches the
-tag (`v0.1.1-beta` → `## [0.1.0-beta] — 2026-11-02
+tag (`v0.1.0-beta` → `## [0.1.0-beta]`).
+
+## [0.1.0-beta] — 2026-11-02
 
 The launcher is one Rust binary on gpui-ce. Bun, the GPUIX native addon and every
 `.exe`/`.node`/`vcruntime140.dll` combination are gone; a launcher archive is a single

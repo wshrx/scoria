@@ -1861,10 +1861,18 @@ pub fn resolve_version(requested: Option<&str>) -> Result<String, String> {
             .cloned()
             .ok_or_else(|| format!("{tag} is not installed."));
     }
-    let selected = Settings::load().selected.filter(|s| installed.contains(s));
-    selected
-        .or_else(|| installed.first().cloned())
+    pick_selected(Settings::load().selected.as_deref(), &installed)
         .ok_or_else(|| "No version is installed yet.".into())
+}
+
+/// The selection among `installed`: the saved tag when that build is still on disk, else the
+/// newest one. A deleted beta (or a folder the player removed) must not stay selected, or the
+/// window shows a version Play cannot start.
+pub fn pick_selected(selected: Option<&str>, installed: &[String]) -> Option<String> {
+    selected
+        .filter(|tag| installed.iter().any(|t| t == *tag))
+        .map(str::to_string)
+        .or_else(|| installed.first().cloned())
 }
 
 /// Removes an installed version and moves the selection to the newest one left if needed.
@@ -3308,6 +3316,22 @@ mod tests {
             sorted,
             ["v0.2.1", "v0.2.0", "v2026.10.21", "v2026.10.19.15"]
         );
+    }
+
+    #[test]
+    fn a_deleted_build_is_not_still_selected() {
+        let installed = ["v0.2.93".to_string(), "v0.2.92".to_string()];
+        // The old beta is gone, so the saved selection must fall back to the newest build on disk.
+        assert_eq!(
+            pick_selected(Some("v0.1.2-beta"), &installed).as_deref(),
+            Some("v0.2.93")
+        );
+        assert_eq!(
+            pick_selected(Some("v0.2.92"), &installed).as_deref(),
+            Some("v0.2.92")
+        );
+        assert_eq!(pick_selected(None, &installed).as_deref(), Some("v0.2.93"));
+        assert_eq!(pick_selected(Some("v0.1.2-beta"), &[]), None);
     }
 
     #[test]

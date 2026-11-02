@@ -772,7 +772,7 @@ impl Shell {
                 .text_size(px(theme.type_scale.caption))
                 .text_color(theme.colors.muted)
                 .child(format!(
-                    "v{} · {} {}",
+                    "Scoria v{} · {} {}",
                     env!("SCORIA_VERSION"),
                     env!("SCORIA_TARGET_OS"),
                     env!("SCORIA_TARGET_ARCH")
@@ -834,9 +834,24 @@ impl Shell {
             Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| this.prepare(cx))),
         );
 
+        let game_version = if version == "No version installed" {
+            "—".to_string()
+        } else {
+            version.clone()
+        };
+
         let mut chips = div().flex().items_center().gap(px(theme.spacing.xs));
         chips = chips
-            .child(badge(&theme, version.clone(), Tone::Neutral))
+            .child(badge(
+                &theme,
+                format!("Scoria v{}", env!("SCORIA_VERSION")),
+                Tone::Accent,
+            ))
+            .child(badge(
+                &theme,
+                format!("{} {game_version}", self.t("Game build")),
+                Tone::Neutral,
+            ))
             .child(badge(
                 &theme,
                 if prepared {

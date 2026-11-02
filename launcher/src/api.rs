@@ -95,11 +95,10 @@ fn dispatch(
 }
 
 fn selected_tag() -> Result<String, String> {
-    let settings = backend::Settings::load();
-    settings
-        .selected
-        .or_else(|| backend::installed().last().cloned())
-        .ok_or_else(|| "No version is installed yet.".to_string())
+    // `settings.selected` may name a build this machine no longer has (an old beta, a folder the
+    // player deleted). The engine resolves the selection against `versions/`, so the window must
+    // show the same version the game would actually run.
+    backend::resolve_version(None)
 }
 
 /// The window's snapshot: the same JSON `state` serves the CLI and MCP, for the in-process UI.
