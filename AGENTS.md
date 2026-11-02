@@ -65,7 +65,7 @@ Game workspace (root `Cargo.toml`); `launcher/` and `crates/horizon-telemetry-se
 | `horizon-theme` | Design tokens and fonts for the launcher, the game's own menus and the website |
 | `horizon-telemetry`, `horizon-telemetry-server`, `horizon-bench` | Opt-in data collection, its ingest server, the benchmark report format |
 | `horizon-dualsense`, `horizon-threads`, `horizon-release-sign`, `horizon-bots`, `xtask` | DualSense output, thread priorities, signed release checksums, load-test bots, repo tasks |
-| `launcher/` | Scoria launcher engine: `cli.rs`, `mcp.rs`, `main.rs` (CLI/API only, no window), `backend/` (installs, updates, prepare). The window is `launcher-ui/` (Bun + GPUIX). |
+| `launcher/` | Scoria launcher engine: `cli.rs`, `mcp.rs`, `main.rs` (CLI/API only, no window), `backend/` (installs, updates, prepare). The window is `launcher/ui/` (gpui-ce) with `launcher/ui-kit/`; `launcher/xtask/` is the only entry point. |
 
 Other top-level folders: `tools/` (harnesses and dev scripts), `tests/` (Python unit tests: `python3 -m
 unittest discover -s tests`), `mods/horizon/src/test/java/dev/horizonlab/parity/` (Java oracles),

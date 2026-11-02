@@ -1,14 +1,16 @@
 # Branches
 
-Scoria uses three long-lived branches. `main` is what players get; `dev` is where work is tried;
-`nightly` is disposable.
+Scoria keeps two long-lived branches on both remotes. Nothing else is needed.
 
-| Branch | Purpose | Rules |
-|---|---|---|
-| `main` | Stable Scoria. Releases are cut from here. | Only fast-forward/merge from `dev` after the full check below. No direct work. |
-| `dev` | Integration and testing. Everything lands here first. | Build, `cargo test`, clippy, fmt and the Python tests must pass before merging into `main`. |
-| `nightly` | Tested `dev`, built into a nightly launcher artifact. | Only fast-forwarded from `dev` after the checks pass. Never a base for feature work. |
-| `lab` | Shared sandbox on Entire for "try whatever". | May be broken; nothing is promoted from it directly — move useful parts into `feat/*`. |
+| Branch | Where | Purpose | Rules |
+|---|---|---|---|
+| `main` | Entire + GitHub | Stable Scoria / the public snapshot | Fast-forward only, after the full gate; no direct work |
+| `dev` | Entire | Integration and testing; everything lands here first | Build, `cargo xtask gate` green before merging into `main` |
+| `staging` | GitHub | Exported public snapshot used by public CI | Pushed by `tools/publish_public.sh`; promoted to `main` only when green |
+
+There is no `nightly`, `lab`, `test/instances` or `feat/*` branch right now. Feature work may use a
+short-lived `feat/*` branch on Entire; merge it into `dev` and delete it. Do not publish WIP
+branches to GitHub.
 
 ## Working
 
@@ -23,8 +25,7 @@ Merging into `main`:
 
 ```sh
 git switch dev && git pull --ff-only
-cargo test --manifest-path launcher/Cargo.toml
-python3 -m unittest discover -s tests
+cargo xtask gate
 git switch main && git merge --ff-only dev && git push origin main
 ```
 
@@ -35,27 +36,21 @@ A change that cannot fast-forward (because `main` moved) goes back to `dev` with
 
 | Remote | Where | Carries |
 |---|---|---|
-| `origin` | Entire, `/et/redmoon/scoria` (private) | everything: `main`, `dev`, `nightly`, feature branches, tags |
-| `github` | `git@github.com:wshrx/scoria.git` (public) | only `main` and `nightly` |
-| `upstream` | Horizon | the engine, for merges |
+| `origin` | Entire, `/et/redmoon/scoria` (private) | everything: `main`, `dev`, private docs, checkpoints |
+| `github` | `git@github.com:wshrx/scoria.git` (public) | only `main` and `staging` |
+| `upstream` | Horizon | the engine, fetch-only |
 
-- `lab` and `feat/*`/`fix/*`/`exp/*` live only on Entire.
 - `git push` goes to **Entire** (`remote.pushDefault = origin`).
-- `git push github` sends exactly `main` and `nightly` (the configured `remote.github.push`
-  refspecs), from any branch; it never publishes `dev`.
+- `git push github` sends the configured refspecs; it never publishes `dev`.
 - Tags stay on Entire; push one to GitHub only when a release needs it.
-- `flint-ui` is a different repository (the UI), on GitHub and Entire; it is not the launcher.
+- `flint-ui` is a different repository (the UI project), not the launcher.
 
-## Nightly build
+## Releases
 
-`.github/workflows/nightly.yml` runs on every push to `nightly` and builds **the launcher only**
-(`launcher/` workspace, Linux x86-64) into the `scoria-launcher-linux-x86_64` artifact. The game
-is not built there: it needs a copy of Minecraft 26.3 and takes far longer. Nightly is promoted
-from `dev` after `checks` passed.
+The public release is cut from a tag on the GitHub `main` snapshot. The release workflow publishes
+two GitHub Releases from one launcher tag:
 
-## Notes
+- `vX.Y.Z-beta` — the launcher, `SHA256SUMS`, signature; Latest.
+- `vX.Y.Z-beta-game` — the engine bundle, `SHA256SUMS`, signature; pre-release, “do not download”.
 
-- `nightly` is a branch name only: Scoria has no Nightly build channel (P2 removed it). Do not
-  expect auto-published builds from it.
-- A tag named `nightly` exists from upstream, so push the branch with
-  `git push origin refs/heads/nightly` (or delete the local tag).
+The launcher finds the engine release and installs it. See `docs/public/RELEASE.md`.
