@@ -206,7 +206,7 @@ fn parse_ratings(text: &str) -> HashMap<String, Rating> {
 /// (kinds newer than this launcher).
 fn kind_of(kind: &index::Kind) -> Option<Kind> {
     match kind {
-        index::Kind::Mod => Some(Kind::Mod),
+        index::Kind::Mod | index::Kind::NativeMod => Some(Kind::Mod),
         index::Kind::ResourcePack => Some(Kind::ResourcePack),
         index::Kind::Modpack => Some(Kind::Modpack),
         index::Kind::Shader => Some(Kind::Shader),

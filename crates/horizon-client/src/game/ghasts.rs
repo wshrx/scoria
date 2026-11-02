@@ -11,7 +11,8 @@ use horizon_world::registry::BlockStateId;
 
 impl Game<'_> {
     /// Client `EntityGetter.getEntityCollisions` for the player: the
-    /// entities that `canBeCollidedWith` it, solid happy ghasts and boats
+    /// entities that `canBeCollidedWith` it, solid happy ghasts, living
+    /// shulkers (`Shulker.canBeCollidedWith`) and boats
     /// (`AbstractBoat.canBeCollidedWith`), except the player's own vehicle.
     pub(super) fn player_entity_collisions(&self) -> Vec<Aabb> {
         let Some(p) = &self.player else {
@@ -20,9 +21,10 @@ impl Game<'_> {
         self.mobs
             .iter()
             .filter(|m| {
-                m.species() == horizon_client::mobs::Species::HappyGhast
+                (m.species() == horizon_client::mobs::Species::HappyGhast
                     && Some(m.id) != self.riding
-                    && happy_ghast::collides_with_player(m, p.position.y)
+                    && happy_ghast::collides_with_player(m, p.position.y))
+                    || (m.species() == horizon_client::mobs::Species::Shulker && m.alive())
             })
             .map(|m| m.bounds())
             .chain(
@@ -31,6 +33,25 @@ impl Game<'_> {
                     .filter(|b| Some(b.id) != self.riding)
                     .map(super::boats::Boat::bounds),
             )
+            .collect()
+    }
+    /// `EntityGetter.getEntityCollisions` for a dropped item: the entities whose
+    /// `canBeCollidedWith(item)` is true. A boat and a minecart always, a living shulker,
+    /// and a happy ghast only while it is held still (`isOnStillTimeout`): a player on its
+    /// back keeps it still, so an item dropped there stays on top.
+    pub(super) fn item_entity_collisions(&self) -> Vec<Aabb> {
+        self.mobs
+            .iter()
+            .filter(|m| {
+                (m.species() == horizon_client::mobs::Species::HappyGhast
+                    && m.alive()
+                    && !m.is_baby()
+                    && happy_ghast::on_still_timeout(m))
+                    || (m.species() == horizon_client::mobs::Species::Shulker && m.alive())
+            })
+            .map(|m| m.bounds())
+            .chain(self.boats.iter().map(super::boats::Boat::bounds))
+            .chain(self.carts.iter().map(|c| c.bounds()))
             .collect()
     }
     /// `HappyGhast.mobInteract`. Returns whether the click was used.
@@ -69,6 +90,9 @@ impl Game<'_> {
         if harnessed && !sneaking {
             // doPlayerRide.
             let id = self.mobs[index].id;
+            if !self.native_may_board(id) {
+                return true;
+            }
             self.break_leash(id, true, false);
             let was_empty = self.mobs[index].rider.is_none();
             // addPassenger: the rider is not standing on top, so no still

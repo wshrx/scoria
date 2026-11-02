@@ -45,7 +45,7 @@ fn reads_the_sample_and_keeps_unknown_kinds() {
 }
 
 #[test]
-fn reads_the_renamed_native_mods_and_hnmod_files() {
+fn reads_native_mods_and_hnmod_files() {
     let mut value: serde_json::Value =
         serde_json::from_str(&std::fs::read_to_string(fixtures().join("index-v1.json")).unwrap())
             .unwrap();
@@ -58,7 +58,7 @@ fn reads_the_renamed_native_mods_and_hnmod_files() {
     project["versions"][0]["file"]["name"] = name.clone().into();
 
     let index = Index::parse(&value.to_string()).unwrap();
-    assert_eq!(index.projects[0].kind, Kind::Mod);
+    assert_eq!(index.projects[0].kind, Kind::NativeMod);
     assert_eq!(index.projects[0].versions[0].file.name, name);
 }
 

@@ -41,8 +41,11 @@ pub struct Index {
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(from = "String", into = "String")]
 pub enum Kind {
-    /// A `.hmod`.
+    /// A `.hmod` of content only.
     Mod,
+    /// A source-only native mixin bundle, compiled into an isolated game build. Published as an
+    /// `.hnmod` until launchers and the game read native `.hmod`s (#5865, docs/api/mod-files.md).
+    NativeMod,
     /// A `.hpack`: registry mods played together as a profile.
     Modpack,
     /// A resource pack (`.zip` with `pack.mcmeta`) made or tested for Horizon.
@@ -57,6 +60,7 @@ impl Kind {
     pub fn name(&self) -> &str {
         match self {
             Kind::Mod => "mod",
+            Kind::NativeMod => "native-mod",
             Kind::Modpack => "modpack",
             Kind::ResourcePack => "resourcepack",
             Kind::Shader => "shader",
@@ -68,6 +72,7 @@ impl Kind {
     pub fn extension(&self) -> Option<&'static str> {
         match self {
             Kind::Mod => Some("hmod"),
+            Kind::NativeMod => Some("hnmod"),
             Kind::Modpack => Some("hpack"),
             Kind::ResourcePack => Some("zip"),
             Kind::Shader => Some(horizon_shader_api::EXTENSION),
@@ -79,8 +84,8 @@ impl Kind {
 impl From<String> for Kind {
     fn from(name: String) -> Kind {
         match name.as_str() {
-            // The registry renamed Java-port mods to `native-mod`; both are `.hmod` mods here.
-            "mod" | "native-mod" => Kind::Mod,
+            "mod" => Kind::Mod,
+            "native-mod" => Kind::NativeMod,
             "modpack" => Kind::Modpack,
             "resourcepack" => Kind::ResourcePack,
             "shader" => Kind::Shader,
@@ -268,14 +273,10 @@ impl Index {
                     return Err(at("empty or repeated version".into()));
                 }
                 let f = &v.file;
-                // The registry moved native mods from `.hmod` to `.hnmod`; both ship.
-                let extension_ok = match p.kind {
-                    Kind::Mod => f.name.ends_with(".hmod") || f.name.ends_with(".hnmod"),
-                    _ => p
-                        .kind
-                        .extension()
-                        .is_none_or(|e| f.name.ends_with(&format!(".{e}"))),
-                };
+                let extension_ok = p
+                    .kind
+                    .extension()
+                    .is_none_or(|e| f.name.ends_with(&format!(".{e}")));
                 if !plain_name(&f.name) || !extension_ok {
                     return Err(at(format!(
                         "{:?} is not a plain file name for a {}",
@@ -557,7 +558,22 @@ impl Facts {
 /// this build doesn't know are refused: their checks come with their formats.
 pub fn inspect(kind: &Kind, path: &Path) -> Result<Facts, String> {
     match kind {
+        Kind::NativeMod => {
+            let facts = native::Bundle::read(path)?.manifest.facts();
+            // A `.hmod` with content too: checked as the game reads it.
+            if Package::has_manifest(path) {
+                let m = Package::read(path)?.manifest;
+                crate::Content::read(path, &m)?;
+            }
+            Ok(facts)
+        }
         Kind::Mod => {
+            if native::holds(path) {
+                return Err(format!(
+                    "it has native code ({}): it is a native-mod",
+                    native::MANIFEST
+                ));
+            }
             let Package { manifest: m, wasm } = Package::read(path)?;
             crate::Content::read(path, &m)?;
             let api_level = match wasm {
@@ -624,7 +640,8 @@ fn check_resource_pack(path: &Path) -> Result<String, String> {
             .by_index_raw(i)
             .map_err(|e| e.to_string())?
             .name()
-            .to_owned();
+            .map_err(|e| e.to_string())?
+            .into_owned();
         if name.starts_with('/') || name.split('/').any(|part| part == "..") || name.contains('\\')
         {
             return Err(format!("{name:?} is not a plain path"));
@@ -661,7 +678,7 @@ fn check_resource_pack(path: &Path) -> Result<String, String> {
 /// formats.
 pub fn open(kind: &Kind) -> Result<(), String> {
     match kind {
-        Kind::Mod | Kind::Modpack | Kind::ResourcePack | Kind::Shader => Ok(()),
+        Kind::Mod | Kind::NativeMod | Kind::Modpack | Kind::ResourcePack | Kind::Shader => Ok(()),
         Kind::Other(name) => Err(format!("the registry doesn't take {name} yet")),
     }
 }
@@ -671,6 +688,7 @@ fn names(caps: &[Capability]) -> String {
     format!("[{}]", names.join(", "))
 }
 
+pub mod native;
 pub mod registry;
 #[cfg(test)]
 mod tests;

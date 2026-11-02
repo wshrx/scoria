@@ -3,6 +3,27 @@
 All notable changes to Scoria. The release workflow takes the section whose heading matches the
 tag (`v0.1.0-beta` → `## [0.1.0-beta]`).
 
+## [0.1.1-beta] — 2026-11-02
+
+The first engine sync since the beta. The game now runs Horizon's `main` at `b53cfcd14`
+(9 770 commits newer) with Scoria's engine changes re-applied, and the launcher stays Scoria's.
+
+### Changed
+
+- Non-Latin typing still works on every text field: the game reads `KeyEvent.text` and falls back to
+  the logical key for Cyrillic and other layouts.
+- No Microsoft session anywhere: `--session-file`, `--session-stdin`, `HORIZON_SESSION_FILE` and
+  their Launch API entries are gone. Online-mode servers are refused with the Scoria message.
+- `native-mod` / `.hnmod` is upstream's `Kind::NativeMod` now; Scoria's old alias is gone.
+- The launcher keeps its gpui-ce window, offline profiles, piston-meta downloads and Modrinth
+  browser. Two engine API changes were adapted (`horizon_prepare::Options`, `Kind::NativeMod`).
+
+### Known limitations
+
+- Windows first-run download/prepare/play is still untested on real hardware.
+- A runtime smoke test of an installed `.hnmod` is still pending.
+- macOS is deferred until signing/notarization.
+
 ## [0.1.0-beta] — 2026-11-02
 
 The launcher is one Rust binary on gpui-ce. Bun, the GPUIX native addon and every
