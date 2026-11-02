@@ -11,7 +11,7 @@ use std::{
 
 use gpui::{
     div, img, linear_color_stop, linear_gradient, point, prelude::*, px, rgb, rgba, size, Bounds,
-    Context, Image, ImageFormat, ImageSource, IntoElement, MouseButton, Render, Window,
+    Context, Image, ImageFormat, ImageSource, IntoElement, MouseButton, Render, ResizeEdge, Window,
     WindowBounds, WindowControlArea, WindowDecorations, WindowOptions,
 };
 use gpui_ce_elements::editable_text::{
@@ -84,12 +84,13 @@ impl Screen {
 /// A segmented-control option: the selected one carries the accent.
 fn segment(
     theme: Theme,
+    id: &'static str,
     label: &'static str,
     selected: bool,
     on_click: impl Fn(&gpui::ClickEvent, &mut Window, &mut gpui::App) + 'static,
 ) -> impl IntoElement {
     div()
-        .id(label)
+        .id(id)
         .flex()
         .items_center()
         .h(px(32.0))
@@ -855,7 +856,7 @@ impl Shell {
                         .child(
                             text_input("mods-query")
                                 .state(self.mods_query.downgrade())
-                                .w(px(360.0))
+                                .flex_1()
                                 .px(px(theme.spacing.md))
                                 .py(px(theme.spacing.sm))
                                 .placeholder_color(theme.colors.muted)
@@ -982,7 +983,7 @@ impl Shell {
                         .child(
                             text_input("server-name")
                                 .state(self.server_name.downgrade())
-                                .w(px(200.0))
+                                .flex_1()
                                 .px(px(theme.spacing.md))
                                 .py(px(theme.spacing.sm))
                                 .placeholder("Name")
@@ -1000,7 +1001,7 @@ impl Shell {
                         .child(
                             text_input("server-ip")
                                 .state(self.server_ip.downgrade())
-                                .w(px(240.0))
+                                .flex_1()
                                 .px(px(theme.spacing.md))
                                 .py(px(theme.spacing.sm))
                                 .placeholder("host:port")
@@ -1026,29 +1027,29 @@ impl Shell {
         let theme = self.theme;
 
         let mut appearance = div().flex().gap(px(theme.spacing.xs));
-        for (value, label) in [
-            (Appearance::Dark, "Dark"),
-            (Appearance::Light, "Light"),
-            (Appearance::System, "System"),
+        for (id, value, label) in [
+            ("seg-dark", Appearance::Dark, "Dark"),
+            ("seg-light", Appearance::Light, "Light"),
+            ("seg-appearance-system", Appearance::System, "System"),
         ] {
             let selected = self.settings.appearance == value;
             let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
                 this.set_appearance(cx, value)
             });
-            appearance = appearance.child(segment(theme, label, selected, on_click));
+            appearance = appearance.child(segment(theme, id, label, selected, on_click));
         }
 
         let mut language = div().flex().gap(px(theme.spacing.xs));
-        for (value, label) in [
-            (None, "System"),
-            (Some(Language::English), "English"),
-            (Some(Language::Russian), "Русский"),
+        for (id, value, label) in [
+            ("seg-language-system", None, "System"),
+            ("seg-english", Some(Language::English), "English"),
+            ("seg-russian", Some(Language::Russian), "Русский"),
         ] {
             let selected = self.settings.language == value;
             let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
                 this.set_language(cx, value)
             });
-            language = language.child(segment(theme, label, selected, on_click));
+            language = language.child(segment(theme, id, label, selected, on_click));
         }
 
         card(
@@ -1208,19 +1209,78 @@ impl Render for Shell {
                                     .flex_col()
                                     .flex_1()
                                     .min_h(px(0.0))
-                                    .m(px(theme.spacing.md))
-                                    .ml(px(0.0))
                                     .p(px(if compact { 20.0 } else { 32.0 }))
                                     .gap(px(theme.spacing.lg))
-                                    .rounded(px(theme.radii.xl))
-                                    .bg(rgba(0x1210149E))
-                                    .backdrop_blur(px(28.0))
-                                    .border_1()
-                                    .border_color(rgba(0xFFFFFF10))
                                     .child(body),
                             ),
                     ),
             );
+        let edge = |id: &'static str, edge: ResizeEdge| {
+            div()
+                .id(id)
+                .absolute()
+                .on_mouse_down(MouseButton::Left, move |_, window, _| {
+                    window.start_window_resize(edge)
+                })
+        };
+        root = root
+            .child(
+                edge("rz-n", ResizeEdge::Top)
+                    .top(px(0.))
+                    .left(px(8.))
+                    .right(px(8.))
+                    .h(px(6.)),
+            )
+            .child(
+                edge("rz-s", ResizeEdge::Bottom)
+                    .bottom(px(0.))
+                    .left(px(8.))
+                    .right(px(8.))
+                    .h(px(6.)),
+            )
+            .child(
+                edge("rz-w", ResizeEdge::Left)
+                    .left(px(0.))
+                    .top(px(8.))
+                    .bottom(px(8.))
+                    .w(px(6.)),
+            )
+            .child(
+                edge("rz-e", ResizeEdge::Right)
+                    .right(px(0.))
+                    .top(px(8.))
+                    .bottom(px(8.))
+                    .w(px(6.)),
+            )
+            .child(
+                edge("rz-nw", ResizeEdge::TopLeft)
+                    .top(px(0.))
+                    .left(px(0.))
+                    .w(px(10.))
+                    .h(px(10.)),
+            )
+            .child(
+                edge("rz-ne", ResizeEdge::TopRight)
+                    .top(px(0.))
+                    .right(px(0.))
+                    .w(px(10.))
+                    .h(px(10.)),
+            )
+            .child(
+                edge("rz-sw", ResizeEdge::BottomLeft)
+                    .bottom(px(0.))
+                    .left(px(0.))
+                    .w(px(10.))
+                    .h(px(10.)),
+            )
+            .child(
+                edge("rz-se", ResizeEdge::BottomRight)
+                    .bottom(px(0.))
+                    .right(px(0.))
+                    .w(px(10.))
+                    .h(px(10.)),
+            );
+
         if let Some((tone, message)) = &self.toast {
             root = root.child(
                 div()
