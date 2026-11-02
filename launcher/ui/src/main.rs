@@ -11,8 +11,8 @@ use std::{
 
 use gpui::{
     div, img, linear_color_stop, linear_gradient, point, prelude::*, px, rgb, rgba, size, Bounds,
-    Context, Image, ImageFormat, ImageSource, IntoElement, Render, Window, WindowBounds,
-    WindowControlArea, WindowDecorations, WindowOptions,
+    Context, Image, ImageFormat, ImageSource, IntoElement, MouseButton, Render, Window,
+    WindowBounds, WindowControlArea, WindowDecorations, WindowOptions,
 };
 use gpui_ce_elements::editable_text::{
     actions::{default_bindings, DEFAULT_INPUT_CONTEXT},
@@ -410,6 +410,7 @@ impl Shell {
                     .flex_1()
                     .h_full()
                     .window_control_area(WindowControlArea::Drag)
+                    .on_mouse_down(MouseButton::Left, |_, window, _| window.start_window_move())
                     .child(Self::mark())
                     .child(
                         div()
@@ -451,7 +452,6 @@ impl Shell {
             .flex_col()
             .gap(px(2.0))
             .w(px(if compact { 72.0 } else { 248.0 }))
-            .h_full()
             .m(px(theme.spacing.md))
             .p(px(theme.spacing.md))
             .rounded(px(theme.radii.xl))
