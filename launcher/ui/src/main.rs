@@ -423,7 +423,7 @@ impl Shell {
         self.log_line("prepare: start");
         cx.notify();
 
-        let needs_bundle = self.snapshot.is_err();
+        let needs_bundle = scoria_core::api::installed_version().is_none();
         let (sender, receiver) = std::sync::mpsc::channel::<serde_json::Value>();
         std::thread::spawn(move || {
             let result = (|| -> Result<(), String> {
@@ -617,9 +617,21 @@ impl Shell {
                     .child(Self::mark())
                     .child(
                         div()
-                            .text_size(px(13.0))
-                            .font_weight(gpui::FontWeight::SEMIBOLD)
-                            .child("Scoria"),
+                            .flex()
+                            .items_center()
+                            .gap(px(theme.spacing.xs))
+                            .child(
+                                div()
+                                    .text_size(px(13.0))
+                                    .font_weight(gpui::FontWeight::SEMIBOLD)
+                                    .child("Scoria"),
+                            )
+                            .child(
+                                div()
+                                    .text_size(px(11.0))
+                                    .text_color(theme.colors.muted)
+                                    .child(env!("SCORIA_VERSION")),
+                            ),
                     ),
             )
             .child(
@@ -745,7 +757,12 @@ impl Shell {
                 .flex()
                 .items_center()
                 .justify_center()
-                .h(px(30.0))
+                .when(compact, |button| {
+                    button.w(px(40.0)).h(px(40.0)).self_center()
+                })
+                .when(!compact, |button| {
+                    button.w(px(34.0)).h(px(34.0)).self_start()
+                })
                 .rounded(px(theme.radii.md))
                 .text_color(theme.colors.muted)
                 .cursor_pointer()
@@ -764,31 +781,17 @@ impl Shell {
                         .text_color(theme.colors.muted),
                 ),
         );
-        rail.child(
-            div()
-                .when(compact, |line| line.hidden())
-                .px(px(theme.spacing.sm))
-                .pb(px(theme.spacing.sm))
-                .text_size(px(theme.type_scale.caption))
-                .text_color(theme.colors.muted)
-                .child(format!(
-                    "v{} · {} {}",
-                    env!("SCORIA_VERSION"),
-                    env!("SCORIA_TARGET_OS"),
-                    env!("SCORIA_TARGET_ARCH")
-                )),
-        )
+        rail
     }
 
     fn home(&self, cx: &mut Context<Self>, compact: bool) -> impl IntoElement {
         let theme = self.theme;
-        let (version, prepared, playing) = match &self.snapshot {
+        let (prepared, playing) = match &self.snapshot {
             Ok(snapshot) => (
-                snapshot["version"].as_str().unwrap_or("—").to_string(),
                 snapshot["prepared"].as_bool().unwrap_or(false),
                 snapshot["playing"].as_bool().unwrap_or(false),
             ),
-            Err(_) => ("No version installed".to_string(), false, false),
+            Err(_) => (false, false),
         };
         let worlds: Vec<serde_json::Value> = match &self.snapshot {
             Ok(snapshot) => snapshot["worlds"].as_array().cloned().unwrap_or_default(),
@@ -835,21 +838,19 @@ impl Shell {
         );
 
         let mut chips = div().flex().items_center().gap(px(theme.spacing.xs));
-        chips = chips
-            .child(badge(&theme, version.clone(), Tone::Neutral))
-            .child(badge(
-                &theme,
-                if prepared {
-                    self.t("Prepared")
-                } else {
-                    self.t("Not prepared")
-                },
-                if prepared {
-                    Tone::Success
-                } else {
-                    Tone::Warning
-                },
-            ));
+        chips = chips.child(badge(
+            &theme,
+            if prepared {
+                self.t("Prepared")
+            } else {
+                self.t("Not prepared")
+            },
+            if prepared {
+                Tone::Success
+            } else {
+                Tone::Warning
+            },
+        ));
 
         let mut tiles = div().flex().gap(px(theme.spacing.md));
         for world in worlds.iter().take(4) {
@@ -1311,9 +1312,6 @@ impl Shell {
             Appearance::System => self.t("System"),
         };
         let mut appearance_menu = div()
-            .absolute()
-            .top(px(38.0))
-            .left(px(0.0))
             .w(px(220.0))
             .flex()
             .flex_col()
@@ -1335,19 +1333,24 @@ impl Shell {
             appearance_menu =
                 appearance_menu.child(menu_item(theme, id, self.t(label), selected, on_click));
         }
-        let mut appearance = div().relative().w(px(220.0)).child(
-            Button::new("appearance-trigger", format!("{appearance_label}   ▾"))
-                .variant(ButtonVariant::Secondary)
-                .size(ButtonSize::Md)
-                .render(
-                    &theme,
-                    Some(cx.listener(|this, _, _window, cx| {
-                        this.appearance_open = !this.appearance_open;
-                        this.language_open = false;
-                        cx.notify();
-                    })),
-                ),
-        );
+        let mut appearance = div()
+            .flex()
+            .flex_col()
+            .gap(px(theme.spacing.xs))
+            .w(px(220.0))
+            .child(
+                Button::new("appearance-trigger", format!("{appearance_label}   ▾"))
+                    .variant(ButtonVariant::Secondary)
+                    .size(ButtonSize::Md)
+                    .render(
+                        &theme,
+                        Some(cx.listener(|this, _, _window, cx| {
+                            this.appearance_open = !this.appearance_open;
+                            this.language_open = false;
+                            cx.notify();
+                        })),
+                    ),
+            );
         if self.appearance_open {
             appearance = appearance.child(appearance_menu);
         }
@@ -1359,9 +1362,6 @@ impl Shell {
             Some(Language::French) => "Français".to_string(),
         };
         let mut language_menu = div()
-            .absolute()
-            .top(px(38.0))
-            .left(px(0.0))
             .w(px(220.0))
             .flex()
             .flex_col()
@@ -1387,19 +1387,24 @@ impl Shell {
             };
             language_menu = language_menu.child(menu_item(theme, id, text, selected, on_click));
         }
-        let mut language = div().relative().w(px(220.0)).child(
-            Button::new("language-trigger", format!("{language_label}   ▾"))
-                .variant(ButtonVariant::Secondary)
-                .size(ButtonSize::Md)
-                .render(
-                    &theme,
-                    Some(cx.listener(|this, _, _window, cx| {
-                        this.language_open = !this.language_open;
-                        this.appearance_open = false;
-                        cx.notify();
-                    })),
-                ),
-        );
+        let mut language = div()
+            .flex()
+            .flex_col()
+            .gap(px(theme.spacing.xs))
+            .w(px(220.0))
+            .child(
+                Button::new("language-trigger", format!("{language_label}   ▾"))
+                    .variant(ButtonVariant::Secondary)
+                    .size(ButtonSize::Md)
+                    .render(
+                        &theme,
+                        Some(cx.listener(|this, _, _window, cx| {
+                            this.language_open = !this.language_open;
+                            this.appearance_open = false;
+                            cx.notify();
+                        })),
+                    ),
+            );
         if self.language_open {
             language = language.child(language_menu);
         }
