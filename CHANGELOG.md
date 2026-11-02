@@ -15,8 +15,8 @@ The launcher is one Rust binary on gpui-ce. Bun, the GPUIX native addon and ever
   and MCP.
 - **Settings** edits the offline name through the engine's account file, and switches the Ember
   theme and the language live.
-- **Home** shows the selected version, whether resources are prepared, the world count and
-  starts the game, with the engine's error under the button.
+- **Home** shows whether resources are prepared and the world count, and starts the game, with
+  the engine's error under the button.
 - **Mods** searches Horizon's registry first and Modrinth second, labels each result with its
   source and support level, and installs with a background task.
 - **Servers** lists, adds and removes offline-mode servers.
@@ -27,6 +27,11 @@ The launcher is one Rust binary on gpui-ce. Bun, the GPUIX native addon and ever
 
 - **HeroUI-shaped design**: 4px spacing, 8px cards, 12px fields, one primary action, matte
   buttons, 120/180 ms transitions, dark by default and light at parity.
+- The launcher's own version sits beside the Scoria name in the titlebar. The engine build tag is
+  no longer shown: players see one version, the launcher's.
+- Settings dropdowns expand in place instead of covering the next field.
+- On the release page the launcher archives come first, and the README says to download
+  `scoria-launcher-*` only; the launcher installs `scoria-game-*` itself.
 - The Linux archive is a `.tar.zst` of a 47 MB binary (14 MB compressed); Windows ships one
   `scoria.exe`; macOS follows after signing.
 - `cargo xtask` is the single entry point: check, test, build, pytest, gate, ui.

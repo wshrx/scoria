@@ -25,12 +25,27 @@
   <img alt="No assets" src="https://img.shields.io/badge/ships%20no%20Minecraft%20assets-2f855a">
 </p>
 
-## Builds
+## Download
+
+**Download only the launcher.** `scoria-launcher-*` is the file a player needs.
+`scoria-game-*` is the engine bundle: the launcher downloads and installs it itself, so you do
+**not** download it by hand.
+
+| Platform | File to download | Start |
+|---|---|---|
+| Linux x86_64 | `scoria-launcher-linux-x86_64.tar.zst` | unpack, then `./scoria` |
+| Windows 10/11 x64 | `scoria-launcher-windows-x64.zip` | unzip, then `scoria.exe` |
+
+1. Download the launcher for your system and start it.
+2. Press **Download 26.3** once. Scoria installs the matching game bundle and fetches Mojang's
+   26.3 files into its own folder: about 600 MB on the first run, with a percentage on screen.
+3. Press **Play**.
+
+The release page also lists `scoria-game-*` for transparency, plus `SHA256SUMS` and its signature.
+Those are not player downloads: leave them to the launcher. SmartScreen warns about `scoria.exe`
+until the build is code-signed.
 
 **The first beta is out:** [v0.1.0-beta](https://github.com/wshrx/scoria/releases/tag/v0.1.0-beta).
-Linux and Windows archives are attached with a game client bundle, `SHA256SUMS` and its signature.
-A launcher archive alone cannot play: it installs the matching game bundle on first run and prepares
-26.3 locally from your own files or Mojang's servers. No Minecraft assets are shipped.
 
 | Platform | Status |
 |---|---|
@@ -92,9 +107,11 @@ no Minecraft assets.
 
 ## Install
 
-Linux: unpack the tarball and run `./scoria`. Windows: unzip and run `scoria.exe`
-(SmartScreen warns until signed). macOS is deferred: there is no archive yet. The first launch asks for nothing; press **Download and prepare**
-once and Scoria prepares 26.3 locally from your own files or Mojang's servers.
+Linux: unpack `scoria-launcher-linux-x86_64.tar.zst` and run `./scoria`. Windows: unzip
+`scoria-launcher-windows-x64.zip` and run `scoria.exe` (SmartScreen warns until signed). macOS is
+deferred: there is no archive yet. The first launch asks for nothing; press **Download 26.3** once
+and Scoria installs the game bundle and prepares 26.3 locally from your own files or Mojang's
+servers.
 
 ## Release channels
 
@@ -148,7 +165,7 @@ support, the new UI and its branding. Roadmap and known gaps are in
 - Engine: [Horizon](https://github.com/horizon-rust/horizon), MIT.
 - Typefaces: **Medeo Sans** and **Medeo Mono** by the Medeo Project Authors (DNFDEVS), SIL OFL.
   The Scoria wordmark is outlined from Medeo Sans Bold.
-- UI: GPUIX and flint-ui.
+- UI: gpui-ce and Scoria's own `scoria-ui-kit`.
 
 ## License
 

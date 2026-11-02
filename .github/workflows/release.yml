@@ -165,16 +165,23 @@ jobs:
             echo "See CHANGELOG.md in the repository for the full history." > dist/release-notes.md
           fi
           head -20 dist/release-notes.md
-      - uses: softprops/action-gh-release@v2
-        with:
-          body_path: dist/release-notes.md
-          generate_release_notes: false
-          files: |
-            dist/scoria-launcher-*.tar.zst
-            dist/scoria-launcher-*.zip
-            dist/scoria-game-*.tar.zst
-            dist/scoria-game-*.zip
-            dist/SHA256SUMS
-            dist/SHA256SUMS.sig
-          prerelease: false
-          fail_on_unmatched_files: true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          # A re-tag replaces the old release, so the asset order is rebuilt from scratch.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release delete "$TAG" -y
+          fi
+          gh release create "$TAG" \
+            --title "Scoria $TAG" \
+            --notes-file dist/release-notes.md \
+            --latest
+          # Players download only the launcher. Upload it first: GitHub lists assets in upload
+          # order, and the game bundle must not be the first thing on the page.
+          gh release upload "$TAG" --clobber \
+            dist/scoria-launcher-*.tar.zst dist/scoria-launcher-*.zip
+          gh release upload "$TAG" --clobber \
+            dist/scoria-game-*.tar.zst dist/scoria-game-*.zip
+          gh release upload "$TAG" --clobber dist/SHA256SUMS dist/SHA256SUMS.sig
