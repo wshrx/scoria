@@ -61,29 +61,29 @@ cargo xtask ui        # run the window in development
 Current gate: **225 Rust tests** (2 skipped) and **15 pytest cases** in 3 files green. Every fixed bug
 gets a test that failed before the fix.
 
-## Engine sync (blocked)
+## Engine sync (done 2026-11-02)
 
-- `upstream/main` = `b53cfcd14` (2026-11-02); Scoria is **9 770 commits behind** and 163 ahead on
-  `dev`.
-- The fork's engine delta is the 7 patches in `docs/fork/engine-patches/`: typed non-Latin input,
-  Scoria icons/motion mark, the Scoria release key, Scoria wording, and removal of the Microsoft
-  account/session surfaces.
-- `tools/check_upstream_patches.sh` does not pass: patch `0001` conflicts on `game.rs`,
-  `command_blocks.rs`, `lan_screen.rs`, `native_panel.rs` (upstream renamed it `mod_browser.rs`)
-  and `recipe_book.rs`.
-- A merge was attempted in a throwaway worktree (`sync/upstream-20261102`) and removed without
-  pushing. The conflict list is known: 7 engine files, plus launcher/workflow/docs conflicts (keep
-  Scoria's launcher and deletions, take upstream for `crates/`, then re-apply the 7 patches).
-- Do the sync as a Trail, not on `dev`: branch from `upstream/main`, merge `dev`, resolve, re-apply
-  the patches, run `check_fork_surfaces.sh`, the Launcher gate, and the client Cyrillic test.
+- Branch `sync/upstream-20261102` merged `dev` onto `upstream/main` = `b53cfcd14` (2026-11-02).
+  The engine is **0 commits behind** that base.
+- The engine delta is now 2 patches in `docs/fork/engine-patches/`: non-Latin input + offline
+  (no Microsoft session options), and the Scoria release key/icon. Both apply cleanly to
+  `b53cfcd14`; `tools/check_upstream_patches.sh` passes.
+- The launcher stays Scoria's: the sync restored `launcher/` from `dev` and fixed only the engine
+  API changes (`horizon_prepare::Options.inputs`/`output`, `Kind::NativeMod`).
+- Upstream now knows `native-mod`/`.hnmod` itself, so Scoria's old alias was dropped.
+- Verified: `check_fork_surfaces.sh`, `cargo check -p horizon-client`, `cargo test -p
+  horizon-client --lib` (694 passed), launcher `cargo test` (204 passed), the Cyrillic and
+  native-mod tests.
+- Stray upstream files `argparse`, `subprocess`, `sys` (PostScript dumps) and tracked launcher
+  logs were removed at this sync.
 
 ## Known gaps
 
 - Windows: release artifacts build in CI, but first-run download/prepare/play has not been tested on
   a Windows machine. Ask for `%LOCALAPPDATA%\horizon-launcher\ui.log` and `crash.log` if it stalls.
 - macOS: deferred until signing and notarization.
-- `.hnmod` / `native-mod` files install in the launcher, but the engine does not run them until the
-  engine sync lands.
+- `.hnmod` / `native-mod` files now have upstream's `Kind::NativeMod` and install; a runtime smoke
+  test of an installed native mod is still pending.
 - Engine update button, launcher auto-update, and macOS signing are not implemented.
 - Modpacks and shaders: engine support exists; no launcher screen for them. CurseForge unsupported.
 

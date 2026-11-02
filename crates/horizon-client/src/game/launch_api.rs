@@ -208,7 +208,9 @@ mod tests {
 
     #[test]
     fn launch_api_flags_are_read() {
-        let o = parse(&["--fullscreen", "--game-dir", "g"]).unwrap().unwrap();
+        let o = parse(&["--fullscreen", "--game-dir", "g"])
+            .unwrap()
+            .unwrap();
         assert!(o.fullscreen);
         assert_eq!(o.game_dir.as_deref(), Some(std::path::Path::new("g")));
         assert!(parse(&["--launch-api"]).unwrap().is_none());
