@@ -519,6 +519,11 @@ fn mod_source() -> Result<Box<dyn browser::Source>, String> {
         .ok_or_else(|| "No mod catalogue is available.".to_string())
 }
 
+/// Install the newest published game bundle (the GitHub release asset), for the window.
+pub fn install_latest_game() -> Result<Value, String> {
+    install_latest()
+}
+
 /// Download Mojang files and prepare the selected version, for the window. Progress is dropped
 /// until the Home screen shows a bar.
 pub fn prepare_game() -> Result<Value, String> {

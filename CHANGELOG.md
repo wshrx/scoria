@@ -10,6 +10,14 @@ raises the patch and keeps the `-beta` suffix (`0.1.0-beta`, `0.1.1-beta`, ...).
 
 ## [Unreleased]
 
+## [0.1.2-beta] — 2026-11-02
+
+### Fixed
+
+- **Download 26.3 did nothing on a fresh machine.** The window asked the engine to prepare a
+  version that was never installed, so the engine refused before touching piston. Home now
+  installs Scoria's game bundle from the release first, then prepares Mojang's files.
+
 ## [0.1.1-beta] — 2026-11-02
 
 The first beta with the rewritten window: glass over an original basalt-and-ember

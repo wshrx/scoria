@@ -399,9 +399,17 @@ impl Shell {
         }
         self.preparing = true;
         cx.notify();
+        let needs_bundle = self.snapshot.is_err();
         cx.spawn(async move |this, cx| {
             let result = cx
-                .background_spawn(async { scoria_core::api::prepare_game() })
+                .background_spawn(async move {
+                    // Nothing installed: fetch Scoria's game bundle from the release first, then
+                    // let the engine prepare Mojang's files.
+                    if needs_bundle {
+                        scoria_core::api::install_latest_game()?;
+                    }
+                    scoria_core::api::prepare_game()
+                })
                 .await;
             this.update(cx, |this, cx| {
                 this.preparing = false;
