@@ -113,7 +113,7 @@ struct Shell {
 }
 
 impl Shell {
-    fn new(cx: &mut Context<Self>) -> Self {
+    fn new(cx: &mut Context<Self>, screen: Screen, query: Option<String>) -> Self {
         let settings = Settings::load();
         let theme = match settings.appearance {
             Appearance::Light => Theme::light(),
@@ -124,9 +124,9 @@ impl Shell {
             Player::GameName => String::new(),
         };
         let name = cx.new(|cx| EditableTextState::new(StringStorage::from(current), cx));
-        Self {
+        let mut shell = Self {
             theme,
-            screen: Screen::Home,
+            screen,
             settings,
             name,
             name_message: None,
@@ -136,7 +136,16 @@ impl Shell {
             mods_results: Vec::new(),
             mods_error: None,
             mods_loading: false,
+        };
+        if let Some(query) = query {
+            if !query.is_empty() {
+                shell
+                    .mods_query
+                    .update(cx, |state, cx| state.emplace(&query, cx));
+            }
+            shell.search_mods(cx);
         }
+        shell
     }
 
     fn search_mods(&mut self, cx: &mut Context<Self>) {
@@ -503,6 +512,9 @@ impl Shell {
                                 .bg(theme.colors.surface_secondary)
                                 .text_color(theme.colors.foreground)
                                 .text_size(px(theme.type_scale.body))
+                                .whitespace_nowrap()
+                                .min_h_auto()
+                                .max_h_auto()
                                 .placeholder("sodium, shaders, …"),
                         )
                         .child(search),
@@ -610,7 +622,10 @@ impl Shell {
                                         .border_color(theme.colors.border)
                                         .bg(theme.colors.surface_secondary)
                                         .text_color(theme.colors.foreground)
-                                        .text_size(px(theme.type_scale.body)),
+                                        .text_size(px(theme.type_scale.body))
+                                        .whitespace_nowrap()
+                                        .min_h_auto()
+                                        .max_h_auto(),
                                 )
                                 .child(
                                     Button::new("save-name", "Save")
@@ -718,13 +733,38 @@ fn install_crash_log() {
     }));
 }
 
+/// A dev flag for reproducible screenshots: `--screen mods --query "compass"`.
+fn start_screen() -> (Screen, Option<String>, bool) {
+    let mut args = std::env::args().skip(1);
+    let mut screen = Screen::Home;
+    let mut query = None;
+    let mut fullscreen = false;
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "--screen" => {
+                screen = match args.next().as_deref() {
+                    Some("mods") => Screen::Mods,
+                    Some("servers") => Screen::Servers,
+                    Some("settings") => Screen::Settings,
+                    _ => Screen::Home,
+                };
+            }
+            "--query" => query = args.next(),
+            "--fullscreen" => fullscreen = true,
+            _ => {}
+        }
+    }
+    (screen, query, fullscreen)
+}
+
 fn main() {
     install_crash_log();
     if std::env::args().any(|arg| arg == "--crash-test") {
         panic!("crash-test: the crash log must contain this line");
     }
 
-    application().run(|cx| {
+    let (screen, query, fullscreen) = start_screen();
+    application().run(move |cx| {
         cx.text_system()
             .add_fonts(FONTS.iter().map(|font| Cow::Borrowed(*font)).collect())
             .expect("the bundled Medeo fonts");
@@ -740,12 +780,25 @@ fn main() {
         .detach();
 
         // A fixed origin keeps headless screenshots reproducible.
-        let bounds = Bounds::new(point(px(0.0), px(0.0)), size(px(1280.0), px(720.0)));
+        let window_bounds = if fullscreen {
+            let display = cx
+                .primary_display()
+                .map(|display| display.bounds())
+                .unwrap_or_else(|| {
+                    Bounds::new(point(px(0.0), px(0.0)), size(px(1280.0), px(720.0)))
+                });
+            WindowBounds::Fullscreen(display)
+        } else {
+            WindowBounds::Windowed(Bounds::new(
+                point(px(0.0), px(0.0)),
+                size(px(1280.0), px(720.0)),
+            ))
+        };
         cx.open_window(
             WindowOptions::new()
-                .window_bounds(Some(WindowBounds::Windowed(bounds)))
+                .window_bounds(Some(window_bounds))
                 .titlebar(None),
-            |_, cx| cx.new(Shell::new),
+            move |_, cx| cx.new(|cx| Shell::new(cx, screen, query.clone())),
         )
         .expect("the launcher window");
     });
