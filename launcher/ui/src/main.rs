@@ -1,6 +1,8 @@
 //! Scoria's launcher window: one process, gpui-ce, no Bun and no native addon.
 // The release build is a GUI app: no console window behind the launcher on Windows.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+mod i18n;
 use std::{
     borrow::Cow,
     fs::OpenOptions,
@@ -232,8 +234,8 @@ impl Shell {
         self.settings.language.unwrap_or_else(Language::system)
     }
 
-    fn t(&self, english: &str) -> String {
-        scoria_core::i18n::tr_in(self.language(), english).to_string()
+    fn t(&self, english: &'static str) -> String {
+        i18n::tr(self.language(), english).to_string()
     }
 
     fn toggle_rail(&mut self, cx: &mut Context<Self>) {
