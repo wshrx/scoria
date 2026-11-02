@@ -45,7 +45,7 @@ fn russian(english: &'static str) -> &'static str {
         }
         "Appearance" => "Оформление",
         "Language" => "Язык",
-        "Offline name" => "Офлайн-имя",
+        "Nickname" => "Никнейм",
         "Save" => "Сохранить",
         "Your offline name" => "Ваше офлайн-имя",
         "No Microsoft account: this name is what servers see." => {

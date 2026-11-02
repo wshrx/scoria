@@ -1216,13 +1216,32 @@ impl Shell {
             Appearance::Light => self.t("Light"),
             Appearance::System => self.t("System"),
         };
-        let mut appearance = div()
+        let mut appearance_menu = div()
+            .absolute()
+            .top(px(38.0))
+            .left(px(0.0))
+            .w(px(220.0))
             .flex()
             .flex_col()
-            .gap(px(theme.spacing.xs))
-            .self_start()
-            .w(px(220.0));
-        appearance = appearance.child(
+            .gap(px(2.0))
+            .p(px(4.0))
+            .rounded(px(theme.radii.xl))
+            .bg(theme.colors.overlay)
+            .border_1()
+            .border_color(theme.colors.border);
+        for (id, value, label) in [
+            ("opt-dark", Appearance::Dark, "Dark"),
+            ("opt-light", Appearance::Light, "Light"),
+            ("opt-appearance-system", Appearance::System, "System"),
+        ] {
+            let selected = self.settings.appearance == value;
+            let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
+                this.set_appearance(cx, value)
+            });
+            appearance_menu =
+                appearance_menu.child(menu_item(theme, id, self.t(label), selected, on_click));
+        }
+        let mut appearance = div().relative().w(px(220.0)).child(
             Button::new("appearance-trigger", format!("{appearance_label}   ▾"))
                 .variant(ButtonVariant::Secondary)
                 .size(ButtonSize::Md)
@@ -1230,23 +1249,13 @@ impl Shell {
                     &theme,
                     Some(cx.listener(|this, _, _window, cx| {
                         this.appearance_open = !this.appearance_open;
+                        this.language_open = false;
                         cx.notify();
                     })),
                 ),
         );
         if self.appearance_open {
-            for (id, value, label) in [
-                ("opt-dark", Appearance::Dark, "Dark"),
-                ("opt-light", Appearance::Light, "Light"),
-                ("opt-appearance-system", Appearance::System, "System"),
-            ] {
-                let selected = self.settings.appearance == value;
-                let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
-                    this.set_appearance(cx, value)
-                });
-                appearance =
-                    appearance.child(menu_item(theme, id, self.t(label), selected, on_click));
-            }
+            appearance = appearance.child(appearance_menu);
         }
 
         let language_label = match self.settings.language {
@@ -1255,13 +1264,36 @@ impl Shell {
             Some(Language::Russian) => "Русский".to_string(),
             Some(Language::French) => "Français".to_string(),
         };
-        let mut language = div()
+        let mut language_menu = div()
+            .absolute()
+            .top(px(38.0))
+            .left(px(0.0))
+            .w(px(220.0))
             .flex()
             .flex_col()
-            .gap(px(theme.spacing.xs))
-            .self_start()
-            .w(px(220.0));
-        language = language.child(
+            .gap(px(2.0))
+            .p(px(4.0))
+            .rounded(px(theme.radii.xl))
+            .bg(theme.colors.overlay)
+            .border_1()
+            .border_color(theme.colors.border);
+        for (id, value, label) in [
+            ("opt-language-system", None, "System"),
+            ("opt-english", Some(Language::English), "English"),
+            ("opt-russian", Some(Language::Russian), "Русский"),
+        ] {
+            let selected = self.settings.language == value;
+            let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
+                this.set_language(cx, value)
+            });
+            let text = if label == "System" {
+                self.t("System")
+            } else {
+                label.to_string()
+            };
+            language_menu = language_menu.child(menu_item(theme, id, text, selected, on_click));
+        }
+        let mut language = div().relative().w(px(220.0)).child(
             Button::new("language-trigger", format!("{language_label}   ▾"))
                 .variant(ButtonVariant::Secondary)
                 .size(ButtonSize::Md)
@@ -1269,23 +1301,13 @@ impl Shell {
                     &theme,
                     Some(cx.listener(|this, _, _window, cx| {
                         this.language_open = !this.language_open;
+                        this.appearance_open = false;
                         cx.notify();
                     })),
                 ),
         );
         if self.language_open {
-            for (id, value, label) in [
-                ("opt-language-system", None, "System"),
-                ("opt-english", Some(Language::English), "English"),
-                ("opt-russian", Some(Language::Russian), "Русский"),
-            ] {
-                let selected = self.settings.language == value;
-                let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
-                    this.set_language(cx, value)
-                });
-                language =
-                    language.child(menu_item(theme, id, label.to_string(), selected, on_click));
-            }
+            language = language.child(language_menu);
         }
 
         card(
@@ -1334,7 +1356,7 @@ impl Shell {
                         .flex()
                         .flex_col()
                         .gap(px(theme.spacing.sm))
-                        .child(label(&theme, &self.t("Offline name")))
+                        .child(label(&theme, &self.t("Nickname")))
                         .child(
                             div()
                                 .text_size(px(theme.type_scale.caption))
@@ -1387,10 +1409,7 @@ impl Shell {
                                     theme.colors.danger
                                 })
                                 .child(text.clone()),
-                            None => div()
-                                .text_size(px(theme.type_scale.caption))
-                                .text_color(theme.colors.muted)
-                                .child(self.t("3 to 16 letters, digits or _ (any script).")),
+                            None => div(),
                         }),
                 ),
         )

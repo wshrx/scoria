@@ -541,7 +541,7 @@ pub fn search_catalog(query: &str) -> Result<Value, String> {
     for source in browser::sources() {
         let mut search = browser::Query::new(query, browser::Kind::Mod);
         search.everything = true;
-        search.limit = 16;
+        search.limit = 40;
         match source.search(&search) {
             Ok(found) => results.extend(found.iter().map(project_json)),
             Err(error) => errors.push(format!("{}: {error}", source.id().label())),
@@ -550,7 +550,7 @@ pub fn search_catalog(query: &str) -> Result<Value, String> {
     if results.is_empty() && !errors.is_empty() {
         return Err(errors.join("; "));
     }
-    results.truncate(24);
+    results.truncate(60);
     Ok(json!({ "results": results }))
 }
 

@@ -79,7 +79,8 @@ impl Kind {
 impl From<String> for Kind {
     fn from(name: String) -> Kind {
         match name.as_str() {
-            "mod" => Kind::Mod,
+            // The registry renamed Java-port mods to `native-mod`; both are `.hmod` mods here.
+            "mod" | "native-mod" => Kind::Mod,
             "modpack" => Kind::Modpack,
             "resourcepack" => Kind::ResourcePack,
             "shader" => Kind::Shader,
@@ -267,10 +268,14 @@ impl Index {
                     return Err(at("empty or repeated version".into()));
                 }
                 let f = &v.file;
-                let extension_ok = p
-                    .kind
-                    .extension()
-                    .is_none_or(|e| f.name.ends_with(&format!(".{e}")));
+                // The registry moved native mods from `.hmod` to `.hnmod`; both ship.
+                let extension_ok = match p.kind {
+                    Kind::Mod => f.name.ends_with(".hmod") || f.name.ends_with(".hnmod"),
+                    _ => p
+                        .kind
+                        .extension()
+                        .is_none_or(|e| f.name.ends_with(&format!(".{e}"))),
+                };
                 if !plain_name(&f.name) || !extension_ok {
                     return Err(at(format!(
                         "{:?} is not a plain file name for a {}",
