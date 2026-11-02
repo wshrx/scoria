@@ -11,7 +11,7 @@ rm -rf "$out"
 mkdir -p "$stage"
 
 echo "Building the game binaries…"
-(cd "$root" && cargo build --release -p horizon-client -p horizon-prepare -p horizon-server --bins)
+(cd "$root" && cargo build --release -p horizon-client -p horizon-client-lib -p horizon-prepare -p horizon-server --bins)
 
 for binary in horizon-client horizon-ctl horizon-prepare horizon-server; do
   cp "$root/target/release/$binary" "$stage/"

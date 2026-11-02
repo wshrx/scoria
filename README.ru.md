@@ -33,16 +33,16 @@
    26.3 с серверов Mojang в свою папку: около 600 МБ при первом запуске, с процентом на экране.
 3. Нажмите **Играть**.
 
-Бандл движка лежит в отдельном **pre-release** (`v0.1.1-beta-game`) с пометкой «не скачивать»:
+Бандл движка лежит в отдельном **pre-release** (`v0.1.2-beta-game`) с пометкой «не скачивать»:
 Scoria сама забирает его при первом запуске. `SHA256SUMS` и подпись приложены к обоим релизам.
 SmartScreen предупредит о `scoria.exe`, пока сборка не подписана.
 
-**Последняя beta:** [v0.1.1-beta](https://github.com/wshrx/scoria/releases/tag/v0.1.1-beta).
+**Последняя beta:** [v0.1.2-beta](https://github.com/wshrx/scoria/releases/tag/v0.1.2-beta).
 
 | Платформа | Статус |
 |---|---|
-| Linux x86_64 (Wayland, Vulkan) | `v0.1.1-beta` |
-| Windows 10/11 x64 (Vulkan) | `v0.1.1-beta` |
+| Linux x86_64 (Wayland, Vulkan) | `v0.1.2-beta` |
+| Windows 10/11 x64 (Vulkan) | `v0.1.2-beta` |
 | macOS 14+, Apple silicon | отложена до подписи и нотаризации |
 
 ## Что это

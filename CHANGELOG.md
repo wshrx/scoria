@@ -3,7 +3,7 @@
 All notable changes to Scoria. The release workflow takes the section whose heading matches the
 tag (`v0.1.0-beta` → `## [0.1.0-beta]`).
 
-## [0.1.1-beta] — 2026-11-02
+## [0.1.2-beta] — 2026-11-02
 
 The first engine sync since the beta. The game now runs Horizon's `main` at `b53cfcd14`
 (9 770 commits newer) with Scoria's engine changes re-applied, and the launcher stays Scoria's.
