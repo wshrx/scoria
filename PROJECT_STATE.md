@@ -66,6 +66,12 @@ no online-mode servers, no Minecraft assets.
   `launcher/xtask` (the only entry point: check, test, pytest, gate, ui). The React UI stays the
   shipped one until parity, then `launcher-ui/`, Bun and GPUIX are removed. See
   `docs/adr/0001-gpui-ce-rewrite.md`.
+- **Rewrite progress**: `scoria-ui` runs on gpui-ce with Medeo fonts, the Scoria mark, working
+  rail navigation, Settings bound to `settings.json`/`accounts.json`, Home reading
+  `api::snapshot` (version, prepared, playing, worlds) and starting the game, and a crash log
+  proven by pytest. `cargo xtask gate` is green (220 Rust tests, 9 pytest).
+- **Next**: async prepare with progress, Mods (Modrinth), Servers (saved + LAN), then packaging
+  and the `v0.1.0-beta` cutover.
 - **Design**: HeroUI semantic structure (4px rhythm, 8px radius, 12px fields, one primary action)
   with Scoria's basalt surfaces and ember accent; dark by default, light at parity.
 - **Release state**: `v0.1.0-beta.1` is the only tag and the only release (pre-release, 8 assets,
