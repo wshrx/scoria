@@ -470,15 +470,7 @@ impl Shell {
             } else {
                 rgba(0x1D151010)
             })
-            .children((!compact).then(|| {
-                div()
-                    .px(px(theme.spacing.sm))
-                    .pt(px(theme.spacing.sm))
-                    .pb(px(theme.spacing.xs))
-                    .text_size(px(theme.type_scale.caption))
-                    .text_color(theme.colors.muted)
-                    .child("MENU")
-            }));
+            .child(div().h(px(theme.spacing.xs)));
 
         for screen in Screen::ALL {
             let selected = screen == self.screen;
