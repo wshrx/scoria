@@ -80,11 +80,11 @@ jobs:
           - name: linux-x86_64
             os: ubuntu-latest
             script: sh tools/package_game.sh
-            file: dist/horizon-linux-x86_64.tar.*
+            file: dist/scoria-game-linux-x86_64.tar.*
           - name: windows-x64
             os: windows-latest
             script: sh tools/package_game_windows.sh
-            file: dist/horizon-windows-x64.zip
+            file: dist/scoria-game-windows-x64.zip
             # Same static C runtime as the launcher: the game runs on a machine
             # without the Visual C++ redistributable.
             rustflags: -C target-feature=+crt-static
@@ -146,7 +146,7 @@ jobs:
             echo "Set the release environment secret RELEASE_SIGNING_KEY (base64 PKCS#8 Ed25519)." >&2
             exit 1
           fi
-          bash tools/ci/sign_release.sh "${{ github.ref_name }}" dist/scoria-launcher-* dist/horizon-*
+          bash tools/ci/sign_release.sh "${{ github.ref_name }}" dist/scoria-launcher-* dist/scoria-game-*
       - name: Verify signatures
         run: cargo run --quiet -p horizon-release-sign -- verify --tag "${{ github.ref_name }}" dist
       - name: Release notes from CHANGELOG.md
@@ -172,8 +172,8 @@ jobs:
           files: |
             dist/scoria-launcher-*.tar.zst
             dist/scoria-launcher-*.zip
-            dist/horizon-*.tar.zst
-            dist/horizon-*.zip
+            dist/scoria-game-*.tar.zst
+            dist/scoria-game-*.zip
             dist/SHA256SUMS
             dist/SHA256SUMS.sig
           prerelease: false

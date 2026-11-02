@@ -153,10 +153,10 @@ def test_checksums_cover_every_archive():
 
 
 def _game_zip() -> Path:
-    direct = ARTIFACTS / "horizon-windows-x64.zip"
+    direct = ARTIFACTS / "scoria-game-windows-x64.zip"
     if direct.is_file():
         return direct
-    found = sorted(ARTIFACTS.glob("**/horizon-windows-x64.zip"))
+    found = sorted(ARTIFACTS.glob("**/scoria-game-windows-x64.zip"))
     if not found:
         pytest.skip(f"no Windows game archive in {ARTIFACTS}")
     return found[0]
@@ -184,8 +184,8 @@ def test_windows_game_archive_has_the_client_and_clean_imports(tmp_path):
 
 
 def test_linux_game_archive_has_the_client():
-    archives = sorted(ARTIFACTS.glob("horizon-linux-x86_64.tar.*")) + sorted(
-        ARTIFACTS.glob("**/horizon-linux-x86_64.tar.*")
+    archives = sorted(ARTIFACTS.glob("scoria-game-linux-x86_64.tar.*")) + sorted(
+        ARTIFACTS.glob("**/scoria-game-linux-x86_64.tar.*")
     )
     if not archives:
         pytest.skip(f"no Linux game archive in {ARTIFACTS}")

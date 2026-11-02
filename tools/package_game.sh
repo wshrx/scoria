@@ -24,5 +24,5 @@ mkdir -p "$stage/mods"
 cp -a "$root/mods/horizon" "$stage/mods/horizon"
 
 (cd "$out" && tar -cf - horizon-linux-x86_64 \
-  | zstd -19 -T0 -q -o "$root/dist/horizon-linux-x86_64.tar.zst")
-echo "Wrote $root/dist/horizon-linux-x86_64.tar.zst"
+  | zstd -19 -T0 -q -o "$root/dist/scoria-game-linux-x86_64.tar.zst")
+echo "Wrote $root/dist/scoria-game-linux-x86_64.tar.zst"

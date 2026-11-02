@@ -42,11 +42,11 @@ pub struct Release {
 }
 
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
-pub const ASSET: Option<&str> = Some("horizon-linux-x86_64.tar.gz");
+pub const ASSET: Option<&str> = Some("scoria-game-linux-x86_64.tar.gz");
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
-pub const ASSET: Option<&str> = Some("horizon-macos-arm64.zip");
+pub const ASSET: Option<&str> = Some("scoria-game-macos-arm64.zip");
 #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
-pub const ASSET: Option<&str> = Some("horizon-windows-x64.zip");
+pub const ASSET: Option<&str> = Some("scoria-game-windows-x64.zip");
 #[cfg(not(any(
     all(target_os = "linux", target_arch = "x86_64"),
     all(target_os = "macos", target_arch = "aarch64"),
@@ -2951,7 +2951,7 @@ mod tests {
         assert_eq!(launcher_version("v2026.10.13"), None);
         assert_eq!(launcher_version("launcher-vx"), None);
         let list = serde_json::json!([
-            {"tag_name": "v2026.10.12", "assets": [{"name": "horizon-linux-x86_64.tar.gz", "browser_download_url": "u", "size": 1}]},
+            {"tag_name": "v2026.10.12", "assets": [{"name": "scoria-game-linux-x86_64.tar.gz", "browser_download_url": "u", "size": 1}]},
             {"tag_name": "launcher-v9.0.0", "assets": [{"name": "horizon-launcher-linux-x86_64.tar.gz", "browser_download_url": "u", "size": 1}]},
             {"tag_name": "v2026.10.13", "assets": []},
             {"tag_name": "launcher-v0.0.1", "draft": true, "assets": []},
@@ -2974,14 +2974,14 @@ mod tests {
     fn zstd_twin_is_preferred_when_the_release_ships_it() {
         let list = serde_json::json!([
             {"tag_name": "v2026.10.20", "assets": [
-                {"name": "horizon-linux-x86_64.tar.gz", "browser_download_url": "https://e/horizon-linux-x86_64.tar.gz", "size": 9},
-                {"name": "horizon-linux-x86_64.tar.zst", "browser_download_url": "https://e/horizon-linux-x86_64.tar.zst", "size": 7},
+                {"name": "scoria-game-linux-x86_64.tar.gz", "browser_download_url": "https://e/scoria-game-linux-x86_64.tar.gz", "size": 9},
+                {"name": "scoria-game-linux-x86_64.tar.zst", "browser_download_url": "https://e/scoria-game-linux-x86_64.tar.zst", "size": 7},
             ]},
             {"tag_name": "v2026.10.19", "assets": [
-                {"name": "horizon-linux-x86_64.tar.gz", "browser_download_url": "https://e/horizon-linux-x86_64.tar.gz", "size": 9},
+                {"name": "scoria-game-linux-x86_64.tar.gz", "browser_download_url": "https://e/scoria-game-linux-x86_64.tar.gz", "size": 9},
             ]},
         ]);
-        let releases = parse_releases(&list, Some("horizon-linux-x86_64.tar.gz"), is_game_tag);
+        let releases = parse_releases(&list, Some("scoria-game-linux-x86_64.tar.gz"), is_game_tag);
         let asset = |tag: &str| {
             releases
                 .iter()
@@ -2991,19 +2991,19 @@ mod tests {
         };
         assert_eq!(
             asset("v2026.10.20"),
-            Some(("https://e/horizon-linux-x86_64.tar.zst", 7))
+            Some(("https://e/scoria-game-linux-x86_64.tar.zst", 7))
         );
         assert_eq!(
             asset("v2026.10.19"),
-            Some(("https://e/horizon-linux-x86_64.tar.gz", 9))
+            Some(("https://e/scoria-game-linux-x86_64.tar.gz", 9))
         );
         // The signature check looks the digest up by this name, so it must follow the chosen file.
         let names: Vec<_> = releases.iter().map(asset_name).collect();
         assert_eq!(
             names,
             [
-                "horizon-linux-x86_64.tar.zst",
-                "horizon-linux-x86_64.tar.gz"
+                "scoria-game-linux-x86_64.tar.zst",
+                "scoria-game-linux-x86_64.tar.gz"
             ]
         );
     }
@@ -3012,7 +3012,7 @@ mod tests {
     /// previous one the newest again: it is what `install latest` and the update check offer.
     #[test]
     fn withdrawn_release_is_never_offered() {
-        let asset = ASSET.unwrap_or("horizon-linux-x86_64.tar.gz");
+        let asset = ASSET.unwrap_or("scoria-game-linux-x86_64.tar.gz");
         let list = serde_json::json!([
             {"tag_name": "v2026.10.15.1", "draft": true, "assets": [{"name": asset, "browser_download_url": "bad", "size": 1}]},
             {"tag_name": "v2026.10.15", "assets": [{"name": asset, "browser_download_url": "good", "size": 1}]},
@@ -3039,7 +3039,7 @@ mod tests {
     /// had one installed waits for the next release instead of going back.
     #[test]
     fn updates_follow_every_release_and_leave_the_old_alpha_ones_out() {
-        let asset = ASSET.unwrap_or("horizon-linux-x86_64.tar.gz");
+        let asset = ASSET.unwrap_or("scoria-game-linux-x86_64.tar.gz");
         let list = serde_json::json!([
             {"tag_name": "v0.2.13", "assets": [{"name": asset, "browser_download_url": "n", "size": 1}]},
             {"tag_name": "v0.2.12", "prerelease": true, "assets": [{"name": asset, "browser_download_url": "a", "size": 1}]},
@@ -3272,7 +3272,7 @@ mod tests {
         );
         assert_eq!(compare_versions("launcher@0.2.0", "v0.2.0"), Equal);
 
-        let asset = ASSET.unwrap_or("horizon-linux-x86_64.tar.gz");
+        let asset = ASSET.unwrap_or("scoria-game-linux-x86_64.tar.gz");
         let list = serde_json::json!([
             {"tag_name": "v0.2.0", "prerelease": true, "assets": [{"name": asset, "browser_download_url": "b", "size": 1}]},
             {"tag_name": "v2026.10.21", "prerelease": true, "assets": [{"name": asset, "browser_download_url": "d", "size": 1}]},

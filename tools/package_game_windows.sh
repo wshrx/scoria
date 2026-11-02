@@ -23,8 +23,8 @@ mkdir -p "$stage/mods"
 cp -a "$root/mods/horizon" "$stage/mods/horizon"
 
 if command -v 7z >/dev/null 2>&1; then
-  (cd "$out" && 7z a -tzip -mx=9 "$root/dist/horizon-windows-x64.zip" ./horizon-windows-x64 >/dev/null)
+  (cd "$out" && 7z a -tzip -mx=9 "$root/dist/scoria-game-windows-x64.zip" ./horizon-windows-x64 >/dev/null)
 else
-  (cd "$out" && powershell.exe -NoProfile -Command "Compress-Archive -Path 'horizon-windows-x64' -DestinationPath 'horizon-windows-x64.zip' -Force" && mv horizon-windows-x64.zip "$root/dist/")
+  (cd "$out" && powershell.exe -NoProfile -Command "Compress-Archive -Path 'horizon-windows-x64' -DestinationPath 'scoria-game-windows-x64.zip' -Force" && mv scoria-game-windows-x64.zip "$root/dist/")
 fi
-echo "Wrote $root/dist/horizon-windows-x64.zip"
+echo "Wrote $root/dist/scoria-game-windows-x64.zip"

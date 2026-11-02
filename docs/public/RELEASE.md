@@ -28,8 +28,8 @@ there is no Bun, no native addon and no Visual C++ redistributable. Windows buil
 
 ## The game client is not in these archives
 
-A fresh launcher installs a **game version** from a release asset (`horizon-linux-x86_64.tar.zst`,
-`horizon-macos-arm64.zip`, `horizon-windows-x64.zip`) and prepares Mojang resources locally. Scoria
+A fresh launcher installs a **game version** from a release asset (`scoria-game-linux-x86_64.tar.zst`,
+`scoria-game-macos-arm64.zip`, `scoria-game-windows-x64.zip`) and prepares Mojang resources locally. Scoria
 must therefore publish its own client bundles before the downloads above can play on a clean
 machine:
 
