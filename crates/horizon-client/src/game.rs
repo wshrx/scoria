@@ -423,9 +423,11 @@ use std::{
 use winit::{
     application::ApplicationHandler,
     error::EventLoopError,
-    event::{DeviceEvent, DeviceId, ElementState, MouseButton, MouseScrollDelta, WindowEvent},
+    event::{
+        DeviceEvent, DeviceId, ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent,
+    },
     event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
-    keyboard::{KeyCode, PhysicalKey},
+    keyboard::{Key, KeyCode, PhysicalKey},
     window::{CursorGrabMode, Window, WindowId},
 };
 
@@ -505,9 +507,6 @@ struct Options {
     game_dir: Option<PathBuf>,
     /// `--quickPlaySingleplayer`, checked once the game folder is known.
     quick_play: Option<String>,
-    session_file: Option<String>,
-    /// `--session-stdin`: the session file's JSON comes on standard input instead.
-    session_stdin: bool,
 }
 impl Options {
     /// The name to join servers with: the one given, else the offline name kept
@@ -524,7 +523,7 @@ impl Options {
             )
         })
     }
-    /// The command line, then what it asks of the process: the game folder, the account.
+    /// The command line, then what it asks of the process: the game folder.
     /// A bad command line is a [`launch_api::UsageError`] (exit code 2, no crash report).
     fn read() -> Result<Option<Self>> {
         let Some(mut o) = Self::parse(std::env::args().skip(1))
@@ -532,31 +531,8 @@ impl Options {
         else {
             return Ok(None);
         };
-        // The launcher's account: online-mode servers need it. A bad file
-        // only leaves the game offline.
-        let session = if o.session_stdin {
-            let mut text = String::new();
-            std::io::Read::read_to_string(&mut std::io::stdin(), &mut text)
-                .map_err(|e| e.to_string())
-                .and_then(|_| horizon_client::auth::AuthSession::parse(&text))
-                .map(Some)
-        } else {
-            o.session_file
-                .take()
-                .filter(|p| !p.is_empty())
-                .map(|path| horizon_client::auth::AuthSession::load(path.as_ref()))
-                .transpose()
-        };
-        match session {
-            Ok(Some(session)) => {
-                o.player_name = Some(session.name.clone());
-                horizon_client::auth::set_current(session);
-                // The chat key pair, ready before the first join.
-                horizon_client::auth::prepare_chat_keys(true);
-            }
-            Ok(None) => {}
-            Err(e) => eprintln!("Horizon: not signed in: {e}"),
-        }
+        // No account file: Scoria has no Microsoft session, and online-mode servers are refused
+        // with NOT_SIGNED_IN instead of trying to sign in.
         if let Some(dir) = o.game_dir.take() {
             // Paths given on the command line stay relative to where the game was started.
             o.resources = std::path::absolute(&o.resources)?;
@@ -632,14 +608,12 @@ impl Options {
             fullscreen: false,
             game_dir: None,
             quick_play: None,
-            session_file: std::env::var("HORIZON_SESSION_FILE").ok(),
-            session_stdin: false,
         };
         while let Some(arg) = args.next() {
             match arg.as_str() {
                 "--help" | "-h" => {
                     println!(
-                        "Horizon — Minecraft Java Edition {} in Rust\n\n  --resources PATH        Prepared resources (horizon-prepare)\n  --render-distance N     Chunks, 2..128 (default 12)\n  --world NAME            World folder under saves/ (default \"New World\")\n  --seed N                World seed for new worlds (default 0)\n  --width N, --height N   Window size (default 1280 x 720)\n  --creative              Creative mode (default survival)\n  --test-terrain          Simple test terrain instead of vanilla generation\n  --frames N              Exit after N frames (testing)\n  --world-frames N        Exit after N frames drawn in the world (testing)\n  --smoke-report PATH     Write a JSON report on exit\n  --benchmark SCENARIO    Run a benchmark (standard, village, forest, ocean, mountain), write its report to benchmarks/ and quit\n  --control               Accept horizon-ctl commands on a local socket\n  --control-socket PATH   Control socket path (default $XDG_RUNTIME_DIR/horizon-control.sock)\n  --server HOST[:PORT]    Join a multiplayer server (offline mode) at start\n  --quickPlaySingleplayer WORLD  Open this world of saves/ at start, only if it exists (vanilla's)\n  --quickPlayMultiplayer HOST[:PORT]  The same as --server (vanilla's name)\n  --name NAME             Player name for multiplayer (default: generated once, kept in horizon-player.txt)\n  --session-file PATH     Signed-in account from the launcher (read once, then deleted)\n  --session-stdin         The same account as JSON on standard input\n  --game-dir DIR          Game folder: saves, options.txt, packs, mods (default: the working directory)\n  --home DIR              Logs and crash reports (default $HORIZON_HOME, else the platform data folder)\n  --player-dir DIR        This player's own files when several play in one game folder: options.txt, logs, horizon-player.txt, servers.dat, screenshots\n  --fullscreen            Open the window fullscreen\n  --launch-api            Print the Launch API version and options as JSON (docs/api/launch.md)\n  --dev-mod PATH          A content mod (.hmod or folder) to develop: always on\n  --pregen                Add Horizon's /pregen command (docs/pregeneration.md)\n\nControls: mouse look, WASD move, Space jump, Left Shift sneak, Left Ctrl sprint,\nleft click break, right click place/use, 1-9/scroll hotbar, E inventory,\nQ drop, F3 debug, Esc pause.",
+                        "Horizon — Minecraft Java Edition {} in Rust\n\n  --resources PATH        Prepared resources (horizon-prepare)\n  --render-distance N     Chunks, 2..128 (default 12)\n  --world NAME            World folder under saves/ (default \"New World\")\n  --seed N                World seed for new worlds (default 0)\n  --width N, --height N   Window size (default 1280 x 720)\n  --creative              Creative mode (default survival)\n  --test-terrain          Simple test terrain instead of vanilla generation\n  --frames N              Exit after N frames (testing)\n  --world-frames N        Exit after N frames drawn in the world (testing)\n  --smoke-report PATH     Write a JSON report on exit\n  --benchmark SCENARIO    Run a benchmark (standard, village, forest, ocean, mountain), write its report to benchmarks/ and quit\n  --control               Accept horizon-ctl commands on a local socket\n  --control-socket PATH   Control socket path (default $XDG_RUNTIME_DIR/horizon-control.sock)\n  --server HOST[:PORT]    Join a multiplayer server (offline mode) at start\n  --quickPlaySingleplayer WORLD  Open this world of saves/ at start, only if it exists (vanilla's)\n  --quickPlayMultiplayer HOST[:PORT]  The same as --server (vanilla's name)\n  --name NAME             Player name for multiplayer (default: generated once, kept in horizon-player.txt)\n  --game-dir DIR          Game folder: saves, options.txt, packs, mods (default: the working directory)\n  --home DIR              Logs and crash reports (default $HORIZON_HOME, else the platform data folder)\n  --player-dir DIR        This player's own files when several play in one game folder: options.txt, logs, horizon-player.txt, servers.dat, screenshots\n  --fullscreen            Open the window fullscreen\n  --launch-api            Print the Launch API version and options as JSON (docs/api/launch.md)\n  --dev-mod PATH          A content mod (.hmod or folder) to develop: always on\n  --pregen                Add Horizon's /pregen command (docs/pregeneration.md)\n\nControls: mouse look, WASD move, Space jump, Left Shift sneak, Left Ctrl sprint,\nleft click break, right click place/use, 1-9/scroll hotbar, E inventory,\nQ drop, F3 debug, Esc pause.",
                         horizon_core::VANILLA_VERSION
                     );
                     return Ok(None);
@@ -649,7 +623,6 @@ impl Options {
                     return Ok(None);
                 }
                 "--fullscreen" => o.fullscreen = true,
-                "--session-stdin" => o.session_stdin = true,
                 "--dedicated" => {
                     o.execution_role = execution_role::ExecutionRole::DedicatedServer;
                     o.dedicated = Some(args.by_ref().collect());
@@ -740,7 +713,6 @@ impl Options {
                             }
                             "--server" | "--quickPlayMultiplayer" => o.server = Some(value),
                             "--name" => o.player_name = Some(value),
-                            "--session-file" => o.session_file = Some(value),
                             "--control-socket" => o.control = Some(value.into()),
                             "--time" => o.time = Some(value.parse()?),
                             "--weather" => o.weather = Some(value),
@@ -2171,6 +2143,35 @@ fn follow_keymap(event: &mut WindowEvent) {
 /// screens read (`has_control_down`), never a latched sprint toggle.
 fn drop_whole_stack(modifiers: winit::keyboard::ModifiersState) -> bool {
     modifiers.control_key()
+}
+
+/// The text a key typed.
+///
+/// `KeyEvent.text` is empty for non-Latin layouts on Linux backends that never
+/// set up a text input (XIM on X11, text-input on some compositors). The
+/// logical key already has the layout applied, so it still carries "ф" where
+/// `text` carries nothing; without this every Cyrillic keystroke is dropped.
+fn typed_text(event: &KeyEvent, ctrl: bool) -> Option<String> {
+    if event.state != ElementState::Pressed || ctrl {
+        return None;
+    }
+    if let Some(text) = &event.text
+        && !text.is_empty()
+    {
+        return Some(text.to_string());
+    }
+    typed_character(&event.logical_key)
+}
+
+/// The printable part of a logical key: the character a non-Latin layout put on it.
+fn typed_character(key: &Key) -> Option<String> {
+    match key {
+        Key::Character(chars) => {
+            let text: String = chars.chars().filter(|c| !c.is_control()).collect();
+            (!text.is_empty()).then_some(text)
+        }
+        _ => None,
+    }
 }
 
 /// The modifier `modifiers` stands for, as GLFW words it in the native mods'
@@ -10028,6 +10029,10 @@ impl Game<'_> {
     pub(super) fn has_control_down(&self) -> bool {
         self.modifiers.control_key()
     }
+    /// The text this key typed, with the layout fallback (`typed_text`).
+    pub(super) fn typed(&self, event: &KeyEvent) -> Option<String> {
+        typed_text(event, !self.types_text())
+    }
     /// Real events word the modifiers by their own `ModifiersChanged`; a
     /// control socket's `key` is synthesized, so it words the bit directly
     /// and every reader can ask the one live state.
@@ -16931,7 +16936,7 @@ impl Game<'_> {
                 && self.screen != Screen::Options
                 && !control::title_owns_text(&self.screen, self.title.is_some())
             {
-                typed = key_event.text.take().map(|text| text.to_string());
+                typed = self.typed(key_event);
             }
             let canceled = match key_event.physical_key {
                 PhysicalKey::Code(key) => self.screen_key_pressed(key, key_event.repeat),
@@ -17574,10 +17579,11 @@ impl Game<'_> {
                 }
                 WindowEvent::KeyboardInput { event, .. } if self.dialog_open() => {
                     let shortcut = self.edit_shortcut(&event);
+                    let typed = self.typed(&event);
                     if event.state == ElementState::Pressed
                         && let PhysicalKey::Code(key) = event.physical_key
                     {
-                        self.dialog_key(key, shortcut, event.text.as_deref())?
+                        self.dialog_key(key, shortcut, typed.as_deref())?
                     }
                 }
                 WindowEvent::KeyboardInput { event, .. }
@@ -17621,10 +17627,12 @@ impl Game<'_> {
                                 self.creative_screen.scroll = 0.0;
                             }
                         } else {
-                            self.creative_search_edit(event.text.as_deref());
+                            let typed = self.typed(&event);
+                            self.creative_search_edit(typed.as_deref());
                         }
                     } else {
-                        self.creative_search_edit(event.text.as_deref());
+                        let typed = self.typed(&event);
+                        self.creative_search_edit(typed.as_deref());
                     }
                 }
                 WindowEvent::KeyboardInput { event, .. }
@@ -17656,7 +17664,8 @@ impl Game<'_> {
                     {
                     } else {
                         let backspace = event.physical_key == PhysicalKey::Code(KeyCode::Backspace);
-                        self.station_text(event.text.as_deref(), backspace);
+                        let typed = self.typed(&event);
+                        self.station_text(typed.as_deref(), backspace);
                     }
                 }
                 WindowEvent::KeyboardInput { event, .. }
@@ -17691,7 +17700,8 @@ impl Game<'_> {
                         return Ok(());
                     }
                     if let PhysicalKey::Code(key) = event.physical_key {
-                        self.options_key(key, event.text.as_deref())?;
+                        let typed = self.typed(&event);
+                        self.options_key(key, typed.as_deref())?;
                     }
                 }
                 WindowEvent::KeyboardInput { event, .. }
@@ -17804,7 +17814,10 @@ impl Game<'_> {
                                     t.refresh_servers();
                                 }
                             }
-                            _ => self.title_edit(event.text.as_deref(), false),
+                            _ => {
+                                let typed = self.typed(&event);
+                                self.title_edit(typed.as_deref(), false)
+                            }
                         }
                     }
                 }
@@ -21558,6 +21571,21 @@ mod tests {
             assert!(!container_key_clones(button, KeyAction::Press));
         }
     }
+    #[test]
+    fn a_cyrillic_logical_key_is_text() {
+        use winit::keyboard::{Key, NamedKey};
+        assert_eq!(
+            typed_character(&Key::Character("ф".into())).as_deref(),
+            Some("ф")
+        );
+        assert_eq!(
+            typed_character(&Key::Character("Ж".into())).as_deref(),
+            Some("Ж")
+        );
+        assert_eq!(typed_character(&Key::Named(NamedKey::Enter)), None);
+        assert_eq!(typed_character(&Key::Character("\u{7f}".into())), None);
+    }
+
     #[test]
     fn sleep_fade_lasts_ten_ticks_after_waking() {
         let alpha = |timer| match hud_overlays::sleep_overlay(320, 240, timer).first() {

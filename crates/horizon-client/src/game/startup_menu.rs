@@ -322,8 +322,8 @@ impl StartupMenu {
                     if !cleared {
                         title.backspace();
                     }
-                } else if let Some(text) = &event.text {
-                    title.type_text(text);
+                } else if let Some(text) = super::typed_text(event, self.modifiers.control_key()) {
+                    title.type_text(&text);
                 }
             }
         }
@@ -1088,6 +1088,7 @@ impl Loading {
                     self.save_menu_settings();
                 } else if self.menu.options_open {
                     let shortcut = self.menu.shortcut(&event);
+                    let typed = super::typed_text(&event, self.menu.modifiers.control_key());
                     let atlas = &self.gui.as_ref().unwrap().atlas;
                     let handled = shortcut.is_some_and(|s| {
                         self.menu
@@ -1095,12 +1096,10 @@ impl Loading {
                             .shortcut(atlas, s, &mut self.menu.clipboard)
                     });
                     if !handled && let PhysicalKey::Code(key) = event.physical_key {
-                        let events = self.menu.options.key(
-                            &mut self.settings,
-                            atlas,
-                            key,
-                            event.text.as_deref(),
-                        );
+                        let events =
+                            self.menu
+                                .options
+                                .key(&mut self.settings, atlas, key, typed.as_deref());
                         self.menu_option_events(events);
                     }
                 } else {

@@ -241,7 +241,7 @@ mod tests {
             "unknown server reasons are not retried"
         );
         assert!(!allowed(
-            "This server is in online mode. Horizon only joins offline-mode servers.",
+            "This server is in online mode. Scoria only joins offline-mode servers.",
             Some("horizon.multiplayer.not_signed_in"),
             true
         ));

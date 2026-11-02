@@ -1200,6 +1200,7 @@ impl Game<'_> {
         };
         let ctrl = self.has_control_down_with_quirk();
         let shortcut = self.edit_shortcut(event);
+        let typed = self.typed(event);
         let types_text = self.types_text();
         let shift = self.has_shift_down();
         let (w, h) = self.gui_size();
@@ -1220,7 +1221,7 @@ impl Game<'_> {
                     // control socket's `\b`, not a key's.
                     if !handled
                         && types_text
-                        && let Some(text) = event.text.as_deref()
+                        && let Some(text) = typed.as_deref()
                     {
                         self.world_options_text(Some(text));
                     }
@@ -1332,7 +1333,7 @@ impl Game<'_> {
             // `world_options_text`, the control socket's `\b`).
             if !o.port.key(key, ctrl, false)
                 && types_text
-                && let Some(text) = event.text.as_deref()
+                && let Some(text) = typed.as_deref()
             {
                 self.world_options_text(Some(text));
             }

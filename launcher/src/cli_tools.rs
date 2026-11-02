@@ -2,29 +2,19 @@
 //! two can't drift: the tool `mods_search` is `horizon-launcher mods search`, its arguments are the
 //! command's (snake_case), and a call runs that command with `--json` as a child process and
 //! returns what it printed. A few commands keep a process or a sign-in going for the session;
-//! mcp.rs runs those itself under the same names (`play`, `server`, `account_sign_in`...).
+//! mcp.rs runs those itself under the same names (`play`, `server`, `account_list`...).
 use clap::{ArgAction, Command};
 use serde_json::{json, Map, Value};
 
 /// CLI commands that are not generated tools: the MCP server itself; No AI, the player's switch
-/// and never an agent's; trusting native mods' code, the player's decision too; the ones
-/// mcp.rs runs in the session; and the game's session handoff, a file holding a token.
+/// and never an agent's; and the ones mcp.rs runs in the session.
 const NOT_TOOLS: &[&str] = &[
     "mcp",
-    "completions",
     "agent-config",
     "no-ai",
-    "native-build",
-    // It installs a program nothing signed: the player's decision.
-    "import-build",
-    // They install native code nobody reviewed, and say it first: the player's decision.
-    "mods add-github",
-    "mods update-github",
     "play",
     "server",
-    "account sign-in",
     "account list",
-    "account session",
 ];
 
 /// Commands that delete the player's things: their tools need `confirm: true`.
@@ -33,8 +23,6 @@ pub const DESTRUCTIVE: &[&str] = &[
     "modpack remove",
     "mods remove",
     "servers forget",
-    "account sign-out",
-    "data delete",
     "worlds delete",
     "multiplayer remove",
     "screenshots delete",
@@ -46,14 +34,7 @@ pub const DESTRUCTIVE: &[&str] = &[
 ];
 
 /// Commands that send something or reach other people: only when the player asks.
-pub const OPEN_WORLD: &[&str] = &[
-    "data allow",
-    "data send",
-    "data bug",
-    "data benchmark",
-    "servers create",
-    "share-log",
-];
+pub const OPEN_WORLD: &[&str] = &["servers create", "share-log"];
 
 /// A generated tool: its name, the CLI words it runs and the clap command behind them.
 pub struct Tool {
@@ -257,11 +238,9 @@ fn session_tool(words: &str) -> &'static str {
     match words {
         "play" => "`play`, then the `game_*` tools",
         "server" => "`server`, `server_command`, `server_log`, `server_stop`",
-        "account sign-in" => "`account_sign_in`",
         "account list" => "`account_list`",
         "mcp" => "none: this command is the MCP server",
         "agent-config" => "none: it prints how to connect a client to `mcp`",
-        "account session" => "none: the game's own session handoff",
         _ => "none: the player's switch",
     }
 }
@@ -393,21 +372,12 @@ mod tests {
             "modpack_import",
             "servers_create",
             "servers_run",
-            "data_status",
-            "data_bug",
             "account_select",
             "benchmark",
         ] {
             assert!(names.iter().any(|n| n == want), "{want} missing: {names:?}");
         }
-        for not in [
-            "mcp",
-            "no_ai",
-            "play",
-            "server",
-            "account_sign_in",
-            "account_session",
-        ] {
+        for not in ["mcp", "no_ai", "play", "server"] {
             assert!(!names.iter().any(|n| n == not), "{not}");
         }
     }

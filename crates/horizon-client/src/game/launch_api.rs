@@ -61,16 +61,6 @@ pub const OPTIONS: &[LaunchOption] = &[
         "Opens the window fullscreen, whatever `options.txt` says; `options.txt` is not changed.",
     ),
     option(
-        "--session-file",
-        Some("PATH"),
-        "The signed-in account, as the session JSON below. Read once, then deleted.",
-    ),
-    option(
-        "--session-stdin",
-        None,
-        "The same JSON on standard input, so it never touches the disk.",
-    ),
-    option(
         "--quickPlaySingleplayer",
         Some("WORLD"),
         "Opens this world of `saves/` at start, only if it exists (else the title screen). WORLD is one folder name: a path is refused.",
@@ -218,10 +208,8 @@ mod tests {
 
     #[test]
     fn launch_api_flags_are_read() {
-        let o = parse(&["--fullscreen", "--game-dir", "g", "--session-stdin"])
-            .unwrap()
-            .unwrap();
-        assert!(o.fullscreen && o.session_stdin);
+        let o = parse(&["--fullscreen", "--game-dir", "g"]).unwrap().unwrap();
+        assert!(o.fullscreen);
         assert_eq!(o.game_dir.as_deref(), Some(std::path::Path::new("g")));
         assert!(parse(&["--launch-api"]).unwrap().is_none());
         assert!(parse(&["--no-such-option"]).is_err());

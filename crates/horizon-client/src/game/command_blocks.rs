@@ -793,7 +793,8 @@ impl Game<'_> {
             return;
         };
         let shortcut = self.edit_shortcut(event);
-        self.command_block_key_code(key, shortcut, event.text.as_deref());
+        let typed = self.typed(event);
+        self.command_block_key_code(key, shortcut, typed.as_deref());
     }
     /// A key pressed on the command block screen, with the edit shortcut it
     /// makes and the text it types.

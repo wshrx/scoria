@@ -15,8 +15,7 @@ import sys
 from pathlib import Path
 
 # DLLs that are part of Windows 10 and 11. api-ms-win-* and ext-ms-win-* API
-# sets resolve inside Windows too. uiautomationcore.dll (UI Automation, in System32
-# since Windows 7) is what the launcher's accessibility (accesskit_windows) imports.
+# sets resolve inside Windows too.
 WINDOWS_SYSTEM = {
     "advapi32.dll", "bcrypt.dll", "bcryptprimitives.dll", "cfgmgr32.dll", "combase.dll",
     "comctl32.dll", "comdlg32.dll", "crypt32.dll", "d2d1.dll", "d3d11.dll", "d3d12.dll",
@@ -25,8 +24,9 @@ WINDOWS_SYSTEM = {
     "kernelbase.dll", "mfplat.dll", "mmdevapi.dll", "msvcrt.dll", "ncrypt.dll", "ntdll.dll",
     "ole32.dll", "oleaut32.dll", "opengl32.dll", "propsys.dll", "secur32.dll", "setupapi.dll",
     "shcore.dll", "shell32.dll", "shlwapi.dll", "ucrtbase.dll", "user32.dll", "userenv.dll",
-    "uiautomationcore.dll", "uxtheme.dll", "version.dll", "winmm.dll", "ws2_32.dll",
-    "xinput1_4.dll",
+    "uxtheme.dll", "version.dll", "winmm.dll", "ws2_32.dll", "xinput1_4.dll",
+    # Shipped with Windows 10 and 11, imported by the Bun runtime and the GPUIX addon.
+    "uiautomationcore.dll", "wsock32.dll",
 }
 LINUX_LOADER = "/lib64/ld-linux-x86-64.so.2"
 LINUX_SYSTEM = {
@@ -37,9 +37,13 @@ LINUX_SYSTEM = {
 LINUX_DESKTOP_ONLY = {"libasound.so.2", "libudev.so.1"}
 
 
-def windows_allowed(name):
+def windows_allowed(name, shipped=()):
     name = name.lower()
-    return name in WINDOWS_SYSTEM or name.startswith(("api-ms-win-", "ext-ms-win-"))
+    return (
+        name in WINDOWS_SYSTEM
+        or name.startswith(("api-ms-win-", "ext-ms-win-"))
+        or name in shipped
+    )
 
 
 def pe_imports(data):
@@ -116,12 +120,16 @@ def elf_needs(data):
     return interpreter, needed, runpath
 
 
-def check(path, server=False):
+def check(path, server=False, shipped=()):
     data = Path(path).read_bytes()
     problems = []
     if data[:2] == b"MZ":
         names = pe_imports(data)
-        problems += [f"imports {n}, which Windows does not ship" for n in names if not windows_allowed(n)]
+        problems += [
+            f"imports {n}, which Windows does not ship and nothing beside it provides"
+            for n in names
+            if not windows_allowed(n, shipped)
+        ]
         summary = ", ".join(sorted(set(n.lower() for n in names)))
     else:
         interpreter, needed, runpath = elf_needs(data)
@@ -143,8 +151,13 @@ def main():
     parser.add_argument("binaries", nargs="+")
     parser.add_argument("--server", action="store_true",
                         help="a server build: not even ALSA or udev (the game's sound and controllers)")
+    parser.add_argument("--shipped", action="append", default=[], metavar="DIR",
+                        help="a directory whose DLLs ship with the build (app-local deployment)")
     args = parser.parse_args()
-    ok = all([check(path, args.server) for path in args.binaries])
+    shipped = set()
+    for folder in args.shipped:
+        shipped |= {entry.name.lower() for entry in Path(folder).iterdir() if entry.is_file()}
+    ok = all([check(path, args.server, shipped) for path in args.binaries])
     sys.exit(0 if ok else 1)
 
 

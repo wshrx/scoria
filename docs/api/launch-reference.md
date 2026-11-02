@@ -16,8 +16,6 @@ Any other option is refused with exit code 2, so ask `--launch-api` before passi
 | `--width N` | The window's starting width (default 1280). |
 | `--height N` | The window's starting height (default 720). |
 | `--fullscreen` | Opens the window fullscreen, whatever `options.txt` says; `options.txt` is not changed. |
-| `--session-file PATH` | The signed-in account, as the session JSON below. Read once, then deleted. |
-| `--session-stdin` | The same JSON on standard input, so it never touches the disk. |
 | `--quickPlaySingleplayer WORLD` | Opens this world of `saves/` at start, only if it exists (else the title screen). WORLD is one folder name: a path is refused. |
 | `--quickPlayMultiplayer HOST[:PORT]` | Joins this server at start. |
 | `--launch-api` | Prints the reply below and exits 0, before anything else runs. |
@@ -65,14 +63,6 @@ Prints one JSON object on stdout and exits 0. `horizon` is the build's version; 
     },
     {
       "name": "--fullscreen",
-      "value": null
-    },
-    {
-      "name": "--session-file",
-      "value": "PATH"
-    },
-    {
-      "name": "--session-stdin",
       "value": null
     },
     {

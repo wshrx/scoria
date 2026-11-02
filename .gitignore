@@ -35,3 +35,6 @@
 
 # Release-only compiled original exporter bundle.
 /exporters/
+
+# The launcher writes its own logs here; never commit them.
+/launcher/logs/

@@ -1,5 +1,15 @@
 # Horizon: a map for agents
 
+> **Scoria fork:** read [`PROJECT_STATE.md`](PROJECT_STATE.md),
+> [`docs/agents/project-map.md`](docs/agents/project-map.md) and
+> [`docs/agents/lessons.md`](docs/agents/lessons.md) first. The last one is the registry of
+> mistakes this fork already made, each with the rule and test that prevent it: releases, Windows
+> packaging, CI and the design system. The map below is Horizon's engine reference; Scoria's
+> launcher, UI and offline changes are in the state file.
+>
+> Commands: `cargo xtask check | test | pytest | gate | ui` (from the repository root). Development
+> branches live in Entire; GitHub gets exported snapshots only.
+
 Minecraft: Java Edition 26.3 rewritten in Rust (wgpu). Vanilla is the specification wherever it has the
 feature. Read [CONTRIBUTING.md](CONTRIBUTING.md) once; this page tells you where things are.
 Feature → files → harness for the most-changed areas: [docs/architecture.md](docs/architecture.md).
@@ -64,7 +74,7 @@ Game workspace (root `Cargo.toml`); `launcher/` and `crates/horizon-telemetry-se
 | `horizon-theme` | Design tokens and fonts for the launcher, the game's own menus and the website |
 | `horizon-telemetry`, `horizon-telemetry-server`, `horizon-bench` | Opt-in data collection, its ingest server, the benchmark report format |
 | `horizon-dualsense`, `horizon-threads`, `horizon-release-sign`, `horizon-bots`, `xtask` | DualSense output, thread priorities, signed release checksums, load-test bots, repo tasks |
-| `launcher/` | GPUI launcher: `main.rs` (UI), `backend.rs` (installs, updates), `cli.rs`, `mcp.rs`, `*_page.rs` |
+| `launcher/` | Scoria launcher engine: `cli.rs`, `mcp.rs`, `main.rs` (CLI/API only, no window), `backend/` (installs, updates, prepare). The window is `launcher/ui/` (gpui-ce) with `launcher/ui-kit/`; `launcher/xtask/` is the only entry point. |
 
 Other top-level folders: `tools/` (harnesses and dev scripts), `tests/` (Python unit tests: `python3 -m
 unittest discover -s tests`), `mods/horizon/src/test/java/dev/horizonlab/parity/` (Java oracles),

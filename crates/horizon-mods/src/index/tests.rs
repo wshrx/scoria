@@ -45,6 +45,24 @@ fn reads_the_sample_and_keeps_unknown_kinds() {
 }
 
 #[test]
+fn reads_native_mods_and_hnmod_files() {
+    let mut value: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(fixtures().join("index-v1.json")).unwrap())
+            .unwrap();
+    let project = &mut value["projects"][0];
+    project["kind"] = "native-mod".into();
+    let name = project["versions"][0]["file"]["name"]
+        .as_str()
+        .unwrap()
+        .replace(".hmod", ".hnmod");
+    project["versions"][0]["file"]["name"] = name.clone().into();
+
+    let index = Index::parse(&value.to_string()).unwrap();
+    assert_eq!(index.projects[0].kind, Kind::NativeMod);
+    assert_eq!(index.projects[0].versions[0].file.name, name);
+}
+
+#[test]
 fn files_pass_against_their_entries() {
     let index = sample();
     let hmod = fixtures().join("coords_hud-0.1.0.hmod");

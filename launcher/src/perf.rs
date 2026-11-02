@@ -229,11 +229,6 @@ pub struct Bench {
 }
 
 impl Bench {
-    /// Whether this launcher measures itself (`HORIZON_LAUNCHER_BENCH` set).
-    pub fn wanted() -> bool {
-        std::env::var_os(BENCH_ENV).is_some()
-    }
-
     pub fn from_env() -> Option<Bench> {
         let out = std::env::var_os(BENCH_ENV)?;
         Some(Bench {
@@ -405,15 +400,6 @@ pub fn benchmark(repeats: usize) -> Result<PathBuf, String> {
     report.metric("launcher.release_list_ms", &fetches);
     if let Some(bytes) = binary_bytes() {
         report.metric("launcher.binary_bytes", &[bytes]);
-    }
-    // Kept for upload only if the player allows benchmark uploads (the outbox checks).
-    if let Ok(data) = serde_json::to_value(report.for_upload()) {
-        let item = horizon_telemetry::Item::new(
-            horizon_telemetry::Source::Launcher,
-            crate::backend::VERSION,
-            horizon_telemetry::Payload::Benchmark(data),
-        );
-        let _ = horizon_telemetry::outbox::push(&crate::backend::game_home(), &item);
     }
     report
         .write_to(&crate::backend::data_dir().join("benchmarks"))
