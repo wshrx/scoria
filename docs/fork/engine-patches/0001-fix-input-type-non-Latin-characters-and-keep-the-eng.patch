@@ -1,12 +1,9 @@
-From 2fccc8d4e6531d42811132c6d0eb65ea29463985 Mon Sep 17 00:00:00 2001
+From ef66e00406bd09c82206bf51c1d851c25c709ded Mon Sep 17 00:00:00 2001
 From: Scoria <wshrx@users.noreply.github.com>
-Date: Mon, 2 Nov 2026 22:44:57 +0300
+Date: Mon, 2 Nov 2026 22:50:31 +0300
 Subject: [PATCH 1/2] fix(input): type non-Latin characters and keep the engine
  offline
 
-Scoria's engine delta after the 2026-11-02 upstream sync: the logical-key
-fallback for non-Latin layouts on every text field, no Microsoft session
-options, the Scoria online-mode message, and the native-mod index test.
 ---
  crates/horizon-client/src/game.rs             | 114 +++++++++++-------
  crates/horizon-client/src/game/books.rs       |   3 +-
@@ -14,7 +11,7 @@ options, the Scoria online-mode message, and the native-mod index test.
  .../horizon-client/src/game/command_blocks.rs |   3 +-
  crates/horizon-client/src/game/extras.rs      |   4 +-
  crates/horizon-client/src/game/lan_screen.rs  |   5 +-
- crates/horizon-client/src/game/launch_api.rs  |  16 +--
+ crates/horizon-client/src/game/launch_api.rs  |  14 +--
  .../horizon-client/src/game/native_panel.rs   |   6 +-
  crates/horizon-client/src/game/recipe_book.rs |   6 +-
  crates/horizon-client/src/game/sign_edit.rs   |   3 +-
@@ -22,7 +19,7 @@ options, the Scoria online-mode message, and the native-mod index test.
  crates/horizon-client/src/net.rs              |   2 +-
  crates/horizon-client/src/reconnect.rs        |   2 +-
  crates/horizon-mods/src/index/tests.rs        |  18 +++
- 14 files changed, 119 insertions(+), 81 deletions(-)
+ 14 files changed, 119 insertions(+), 79 deletions(-)
 
 diff --git a/crates/horizon-client/src/game.rs b/crates/horizon-client/src/game.rs
 index b1790c92f..28d2905a9 100644
@@ -353,7 +350,7 @@ index e2598cb5c..aeefaa60e 100644
                  self.world_options_text(Some(text));
              }
 diff --git a/crates/horizon-client/src/game/launch_api.rs b/crates/horizon-client/src/game/launch_api.rs
-index 6ec77eb62..addac9bd6 100644
+index 6ec77eb62..5fa2bed14 100644
 --- a/crates/horizon-client/src/game/launch_api.rs
 +++ b/crates/horizon-client/src/game/launch_api.rs
 @@ -60,16 +60,6 @@ pub const OPTIONS: &[LaunchOption] = &[
@@ -373,15 +370,15 @@ index 6ec77eb62..addac9bd6 100644
      option(
          "--quickPlaySingleplayer",
          Some("WORLD"),
-@@ -218,10 +208,8 @@ mod tests {
+@@ -218,10 +208,10 @@ mod tests {
  
      #[test]
      fn launch_api_flags_are_read() {
 -        let o = parse(&["--fullscreen", "--game-dir", "g", "--session-stdin"])
--            .unwrap()
--            .unwrap();
++        let o = parse(&["--fullscreen", "--game-dir", "g"])
+             .unwrap()
+             .unwrap();
 -        assert!(o.fullscreen && o.session_stdin);
-+        let o = parse(&["--fullscreen", "--game-dir", "g"]).unwrap().unwrap();
 +        assert!(o.fullscreen);
          assert_eq!(o.game_dir.as_deref(), Some(std::path::Path::new("g")));
          assert!(parse(&["--launch-api"]).unwrap().is_none());
