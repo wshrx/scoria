@@ -12,6 +12,13 @@ pub fn tr(language: Language, english: &'static str) -> &'static str {
 fn russian(english: &'static str) -> &'static str {
     match english {
         "Play" => "Играть",
+        "Dark" => "Тёмная",
+        "Light" => "Светлая",
+        "System" => "Системная",
+        "Preparing…" => "Подготовка…",
+        "Works" => "Работает",
+        "Partly" => "Частично",
+        "Doesn't run" => "Не работает",
         "Playing" => "Играет",
         "Mods" => "Моды",
         "Servers" => "Серверы",

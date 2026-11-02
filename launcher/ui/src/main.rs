@@ -120,6 +120,40 @@ fn catalogue_tabs(shell: &Shell, cx: &mut Context<Shell>) -> impl IntoElement {
     tabs
 }
 
+/// One row of a dropdown: the selected option is tinted and marked.
+fn menu_item(
+    theme: Theme,
+    id: &'static str,
+    label: String,
+    selected: bool,
+    on_click: impl Fn(&gpui::ClickEvent, &mut Window, &mut gpui::App) + 'static,
+) -> impl IntoElement {
+    div()
+        .id(id)
+        .flex()
+        .items_center()
+        .justify_between()
+        .h(px(34.0))
+        .px(px(theme.spacing.md))
+        .rounded(px(theme.radii.md))
+        .border_1()
+        .border_color(theme.colors.border)
+        .bg(if selected {
+            theme.colors.accent_soft
+        } else {
+            theme.colors.surface
+        })
+        .text_color(if selected {
+            theme.colors.accent
+        } else {
+            theme.colors.foreground
+        })
+        .cursor_pointer()
+        .on_click(on_click)
+        .child(label)
+        .children(selected.then(|| div().text_size(px(theme.type_scale.caption)).child("✓")))
+}
+
 /// A segmented-control option: the selected one carries the accent.
 fn segment(
     theme: Theme,
@@ -176,6 +210,9 @@ struct Shell {
     installing: Option<String>,
     preparing: bool,
     mods_source: ModsSource,
+    appearance_open: bool,
+    language_open: bool,
+    fade: f32,
     servers: Result<serde_json::Value, String>,
     server_name: gpui::Entity<EditableTextState>,
     server_ip: gpui::Entity<EditableTextState>,
@@ -210,6 +247,9 @@ impl Shell {
             installing: None,
             preparing: false,
             mods_source: ModsSource::Horizon,
+            appearance_open: false,
+            language_open: false,
+            fade: 0.0,
             servers: scoria_core::api::saved_servers(),
             server_name: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
             server_ip: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
@@ -228,6 +268,15 @@ impl Shell {
             shell.search_mods(cx);
         }
         shell
+    }
+
+    fn support_label(&self, support: &str) -> String {
+        match support {
+            "Works" => self.t("Works"),
+            "Partly" => self.t("Partly"),
+            "Doesn't run" => self.t("Doesn't run"),
+            other => other.to_string(),
+        }
     }
 
     fn language(&self) -> Language {
@@ -413,12 +462,28 @@ impl Shell {
             _ => Theme::dark(),
         };
         self.settings.save();
+        self.appearance_open = false;
+        self.fade = 0.45;
         cx.notify();
+        cx.spawn(async move |this, cx| {
+            for _ in 0..9 {
+                cx.background_executor()
+                    .timer(std::time::Duration::from_millis(20))
+                    .await;
+                this.update(cx, |this, cx| {
+                    this.fade = (this.fade - 0.05).max(0.0);
+                    cx.notify();
+                })
+                .ok();
+            }
+        })
+        .detach();
     }
 
     fn set_language(&mut self, cx: &mut Context<Self>, language: Option<Language>) {
         self.settings.language = language;
         self.settings.save();
+        self.language_open = false;
         cx.notify();
     }
 
@@ -885,7 +950,11 @@ impl Shell {
                                     .text_size(px(theme.type_scale.subtitle))
                                     .child(title.to_string()),
                             )
-                            .child(badge(&theme, support, tone_for_support(support))),
+                            .child(badge(
+                                &theme,
+                                self.support_label(support),
+                                tone_for_support(support),
+                            )),
                     )
                     .child(
                         div()
@@ -1143,50 +1212,81 @@ impl Shell {
     fn settings(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = self.theme;
 
+        let appearance_label = match self.settings.appearance {
+            Appearance::Dark => self.t("Dark"),
+            Appearance::Light => self.t("Light"),
+            Appearance::System => self.t("System"),
+        };
         let mut appearance = div()
             .flex()
+            .flex_col()
+            .gap(px(theme.spacing.xs))
             .self_start()
-            .gap(px(2.0))
-            .p(px(3.0))
-            .rounded(px(theme.radii.lg))
-            .bg(if theme.dark {
-                rgba(0xFFFFFF08)
-            } else {
-                rgba(0x1D15100A)
-            });
-        for (id, value, label) in [
-            ("seg-dark", Appearance::Dark, "Dark"),
-            ("seg-light", Appearance::Light, "Light"),
-            ("seg-appearance-system", Appearance::System, "System"),
-        ] {
-            let selected = self.settings.appearance == value;
-            let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
-                this.set_appearance(cx, value)
-            });
-            appearance = appearance.child(segment(theme, id, label, selected, on_click));
+            .w(px(220.0));
+        appearance = appearance.child(
+            Button::new("appearance-trigger", format!("{appearance_label}   ▾"))
+                .variant(ButtonVariant::Secondary)
+                .size(ButtonSize::Md)
+                .render(
+                    &theme,
+                    Some(cx.listener(|this, _, _window, cx| {
+                        this.appearance_open = !this.appearance_open;
+                        cx.notify();
+                    })),
+                ),
+        );
+        if self.appearance_open {
+            for (id, value, label) in [
+                ("opt-dark", Appearance::Dark, "Dark"),
+                ("opt-light", Appearance::Light, "Light"),
+                ("opt-appearance-system", Appearance::System, "System"),
+            ] {
+                let selected = self.settings.appearance == value;
+                let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
+                    this.set_appearance(cx, value)
+                });
+                appearance =
+                    appearance.child(menu_item(theme, id, self.t(label), selected, on_click));
+            }
         }
 
+        let language_label = match self.settings.language {
+            None => self.t("System"),
+            Some(Language::English) => "English".to_string(),
+            Some(Language::Russian) => "Русский".to_string(),
+            Some(Language::French) => "Français".to_string(),
+        };
         let mut language = div()
             .flex()
+            .flex_col()
+            .gap(px(theme.spacing.xs))
             .self_start()
-            .gap(px(2.0))
-            .p(px(3.0))
-            .rounded(px(theme.radii.lg))
-            .bg(if theme.dark {
-                rgba(0xFFFFFF08)
-            } else {
-                rgba(0x1D15100A)
-            });
-        for (id, value, label) in [
-            ("seg-language-system", None, "System"),
-            ("seg-english", Some(Language::English), "English"),
-            ("seg-russian", Some(Language::Russian), "Русский"),
-        ] {
-            let selected = self.settings.language == value;
-            let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
-                this.set_language(cx, value)
-            });
-            language = language.child(segment(theme, id, label, selected, on_click));
+            .w(px(220.0));
+        language = language.child(
+            Button::new("language-trigger", format!("{language_label}   ▾"))
+                .variant(ButtonVariant::Secondary)
+                .size(ButtonSize::Md)
+                .render(
+                    &theme,
+                    Some(cx.listener(|this, _, _window, cx| {
+                        this.language_open = !this.language_open;
+                        cx.notify();
+                    })),
+                ),
+        );
+        if self.language_open {
+            for (id, value, label) in [
+                ("opt-language-system", None, "System"),
+                ("opt-english", Some(Language::English), "English"),
+                ("opt-russian", Some(Language::Russian), "Русский"),
+            ] {
+                let selected = self.settings.language == value;
+                let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
+                    this.set_language(cx, value)
+                });
+                language =
+                    language.child(menu_item(theme, id, label.to_string(), selected, on_click));
+            }
         }
 
         card(
@@ -1436,6 +1536,19 @@ impl Render for Shell {
                     .w(px(10.))
                     .h(px(10.)),
             );
+
+        if self.fade > 0.0 {
+            root = root.child(
+                div()
+                    .absolute()
+                    .top(px(0.0))
+                    .left(px(0.0))
+                    .w_full()
+                    .h_full()
+                    .bg(theme.colors.background)
+                    .opacity(self.fade),
+            );
+        }
 
         if let Some((tone, message)) = &self.toast {
             root = root.child(
