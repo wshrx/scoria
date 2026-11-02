@@ -16,6 +16,8 @@ raises the patch and keeps the `-beta` suffix (`0.1.0-beta`, `0.1.1-beta`, ...).
   `scoria-ui-kit` holds the HeroUI-shaped tokens and components, `scoria-ui` the window.
 - `cargo xtask` is the single entry point for checks, tests, pytest and the UI.
 - `uv` + pytest for the black-box suite; `pyproject.toml` pins the environment.
+- Settings edits the offline name through the engine's accounts file, with the same
+  3–16 letter validation as the CLI.
 
 ## [0.1.1-beta] — 2026-11-01
 

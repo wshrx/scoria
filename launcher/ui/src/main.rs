@@ -11,6 +11,10 @@ use gpui::{
     div, img, point, prelude::*, px, size, Bounds, Context, Image, ImageFormat, ImageSource,
     IntoElement, Render, Window, WindowBounds, WindowOptions,
 };
+use gpui_ce_elements::editable_text::{
+    actions::{default_bindings, DEFAULT_INPUT_CONTEXT},
+    text_input, EditableTextState, StringStorage,
+};
 use gpui_ce_platform::application;
 use scoria_core::account::{Accounts, Player};
 use scoria_core::backend::{Appearance, Settings};
@@ -98,20 +102,51 @@ struct Shell {
     theme: Theme,
     screen: Screen,
     settings: Settings,
+    name: gpui::Entity<EditableTextState>,
+    name_message: Option<(bool, String)>,
 }
 
 impl Shell {
-    fn new() -> Self {
+    fn new(cx: &mut Context<Self>) -> Self {
         let settings = Settings::load();
         let theme = match settings.appearance {
             Appearance::Light => Theme::light(),
             _ => Theme::dark(),
         };
+        let current = match Accounts::load().player() {
+            Player::Offline(name) => name,
+            Player::GameName => String::new(),
+        };
+        let name = cx.new(|cx| EditableTextState::new(StringStorage::from(current), cx));
         Self {
             theme,
             screen: Screen::Home,
             settings,
+            name,
+            name_message: None,
         }
+    }
+
+    fn save_name(&mut self, cx: &mut Context<Self>) {
+        let name = self.name.read(cx).as_str().trim().to_string();
+        if !scoria_core::account::valid_offline_name(&name) {
+            self.name_message = Some((
+                false,
+                "3 to 16 letters, digits or _ (any script)".to_string(),
+            ));
+            cx.notify();
+            return;
+        }
+        let result = (|| {
+            let mut accounts = Accounts::load();
+            accounts.play_as(Player::Offline(name.clone()))?;
+            accounts.save()
+        })();
+        self.name_message = Some(match result {
+            Ok(()) => (true, format!("Now playing as {name}.")),
+            Err(error) => (false, error),
+        });
+        cx.notify();
     }
 
     fn set_appearance(&mut self, cx: &mut Context<Self>, appearance: Appearance) {
@@ -282,11 +317,6 @@ impl Shell {
             language = language.child(segment(theme, label, selected, on_click));
         }
 
-        let player = match Accounts::load().player() {
-            Player::Offline(name) => name,
-            Player::GameName => "the game's own name".to_string(),
-        };
-
         card(
             &theme,
             div()
@@ -332,15 +362,54 @@ impl Shell {
                     div()
                         .flex()
                         .flex_col()
-                        .gap(px(theme.spacing.xs))
-                        .child(label(&theme, "Player"))
-                        .child(div().text_size(px(theme.type_scale.body)).child(player))
+                        .gap(px(theme.spacing.sm))
+                        .child(label(&theme, "Offline name"))
                         .child(
                             div()
                                 .text_size(px(theme.type_scale.caption))
                                 .text_color(theme.colors.muted)
-                                .child("Editing the offline name arrives with the text input."),
-                        ),
+                                .child("No Microsoft account: this name is what servers see."),
+                        )
+                        .child(
+                            div()
+                                .flex()
+                                .items_center()
+                                .gap(px(theme.spacing.sm))
+                                .child(
+                                    text_input("offline-name")
+                                        .state(self.name.downgrade())
+                                        .w(px(280.0))
+                                        .h(px(36.0))
+                                        .px(px(theme.spacing.sm))
+                                        .rounded(px(theme.radii.field))
+                                        .border_1()
+                                        .border_color(theme.colors.border)
+                                        .bg(theme.colors.surface_secondary)
+                                        .text_color(theme.colors.foreground)
+                                        .text_size(px(theme.type_scale.body)),
+                                )
+                                .child(
+                                    Button::new("save-name", "Save")
+                                        .variant(ButtonVariant::Secondary)
+                                        .render(
+                                            &theme,
+                                            Some(cx.listener(|this, _, _window, cx| {
+                                                this.save_name(cx)
+                                            })),
+                                        ),
+                                ),
+                        )
+                        .child(match &self.name_message {
+                            Some((ok, text)) => div()
+                                .text_size(px(theme.type_scale.caption))
+                                .text_color(if *ok {
+                                    theme.colors.success
+                                } else {
+                                    theme.colors.danger
+                                })
+                                .child(text.clone()),
+                            None => div(),
+                        }),
                 ),
         )
         .max_w(px(880.0))
@@ -436,6 +505,8 @@ fn main() {
             .add_fonts(FONTS.iter().map(|font| Cow::Borrowed(*font)).collect())
             .expect("the bundled Medeo fonts");
 
+        cx.bind_keys(default_bindings().as_keybindings(Some(DEFAULT_INPUT_CONTEXT)));
+
         cx.activate(true);
         cx.on_window_closed(|cx, _| {
             if cx.windows().is_empty() {
@@ -450,7 +521,7 @@ fn main() {
             WindowOptions::new()
                 .window_bounds(Some(WindowBounds::Windowed(bounds)))
                 .titlebar(None),
-            |_, cx| cx.new(|_| Shell::new()),
+            |_, cx| cx.new(Shell::new),
         )
         .expect("the launcher window");
     });
