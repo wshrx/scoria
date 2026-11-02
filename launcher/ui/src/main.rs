@@ -436,6 +436,7 @@ impl Shell {
         let theme = self.theme;
         let search = Button::new("search-mods", "Search")
             .variant(ButtonVariant::Secondary)
+            .size(ButtonSize::Lg)
             .render(
                 &theme,
                 Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| this.search_mods(cx))),
@@ -534,9 +535,10 @@ impl Shell {
                         .child(
                             text_input("mods-query")
                                 .state(self.mods_query.downgrade())
-                                .w(px(320.0))
-                                .h(px(36.0))
-                                .px(px(theme.spacing.sm))
+                                .w(px(360.0))
+                                .px(px(theme.spacing.md))
+                                .py(px(theme.spacing.sm))
+                                .placeholder_color(theme.colors.muted)
                                 .rounded(px(theme.radii.field))
                                 .border_1()
                                 .border_color(theme.colors.border)
@@ -546,7 +548,7 @@ impl Shell {
                                 .whitespace_nowrap()
                                 .min_h_auto()
                                 .max_h_auto()
-                                .placeholder("sodium, shaders, …"),
+                                .placeholder("Search mods"),
                         )
                         .child(search),
                 )
@@ -646,8 +648,9 @@ impl Shell {
                                     text_input("offline-name")
                                         .state(self.name.downgrade())
                                         .w(px(280.0))
-                                        .h(px(36.0))
-                                        .px(px(theme.spacing.sm))
+                                        .px(px(theme.spacing.md))
+                                        .py(px(theme.spacing.sm))
+                                        .placeholder_color(theme.colors.muted)
                                         .rounded(px(theme.radii.field))
                                         .border_1()
                                         .border_color(theme.colors.border)
@@ -661,6 +664,7 @@ impl Shell {
                                 .child(
                                     Button::new("save-name", "Save")
                                         .variant(ButtonVariant::Secondary)
+                                        .size(ButtonSize::Lg)
                                         .render(
                                             &theme,
                                             Some(cx.listener(|this, _, _window, cx| {
@@ -827,6 +831,7 @@ fn main() {
         cx.open_window(
             WindowOptions::new()
                 .window_bounds(Some(window_bounds))
+                .focus(true)
                 .titlebar(None),
             move |_, cx| cx.new(|cx| Shell::new(cx, screen, query.clone())),
         )

@@ -8,6 +8,7 @@ use crate::{Theme, Variant};
 pub enum ButtonSize {
     Sm,
     Md,
+    Lg,
 }
 
 /// A button's visual weight. The caller owns the click handler.
@@ -81,6 +82,7 @@ impl Button {
         let (height, padding, text) = match self.size {
             ButtonSize::Sm => (28.0, 10.0, theme.type_scale.caption),
             ButtonSize::Md => (36.0, 14.0, theme.type_scale.body),
+            ButtonSize::Lg => (40.0, 16.0, theme.type_scale.body),
         };
 
         let mut button = div()
