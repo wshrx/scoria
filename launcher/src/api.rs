@@ -519,6 +519,12 @@ fn mod_source() -> Result<Box<dyn browser::Source>, String> {
         .ok_or_else(|| "No mod catalogue is available.".to_string())
 }
 
+/// Install a catalogue project for the window. Progress events are dropped until the UI shows a
+/// per-download bar; the result is the same JSON `install_mod` returns.
+pub fn install_project(project_id: &str) -> Result<Value, String> {
+    install_mod(&Value::Null, &json!({ "id": project_id }), &mut |_| {})
+}
+
 /// Search the catalogue for the in-process UI: Horizon's registry first, then Modrinth, as the
 /// same JSON `search_mods` serves.
 pub fn search_catalog(query: &str) -> Result<Value, String> {

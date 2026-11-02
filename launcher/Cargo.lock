@@ -5621,6 +5621,7 @@ dependencies = [
  "horizon-launcher",
  "scoria-ui-kit",
  "serde_json",
+ "winresource",
 ]
 
 [[package]]

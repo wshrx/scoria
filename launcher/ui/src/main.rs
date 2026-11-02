@@ -112,6 +112,8 @@ struct Shell {
     mods_results: Vec<serde_json::Value>,
     mods_error: Option<String>,
     mods_loading: bool,
+    installing: Option<String>,
+    install_message: Option<(bool, String)>,
 }
 
 impl Shell {
@@ -138,6 +140,8 @@ impl Shell {
             mods_results: Vec::new(),
             mods_error: None,
             mods_loading: false,
+            installing: None,
+            install_message: None,
         };
         if let Some(query) = query {
             if !query.is_empty() {
@@ -148,6 +152,30 @@ impl Shell {
             shell.search_mods(cx);
         }
         shell
+    }
+
+    fn install(&mut self, project_id: String, cx: &mut Context<Self>) {
+        if self.installing.is_some() {
+            return;
+        }
+        self.installing = Some(project_id.clone());
+        self.install_message = None;
+        cx.notify();
+        cx.spawn(async move |this, cx| {
+            let result = cx
+                .background_spawn(async move { scoria_core::api::install_project(&project_id) })
+                .await;
+            this.update(cx, |this, cx| {
+                this.installing = None;
+                this.install_message = Some(match result {
+                    Ok(_) => (true, "Installed into the selected instance.".to_string()),
+                    Err(error) => (false, error),
+                });
+                cx.notify();
+            })
+            .ok();
+        })
+        .detach();
     }
 
     fn search_mods(&mut self, cx: &mut Context<Self>) {
@@ -315,7 +343,19 @@ impl Shell {
                     .child(screen.label()),
             );
         }
-        rail.child(div().flex_1())
+        rail.child(div().flex_1()).child(
+            div()
+                .px(px(theme.spacing.sm))
+                .pb(px(theme.spacing.sm))
+                .text_size(px(theme.type_scale.caption))
+                .text_color(theme.colors.muted)
+                .child(format!(
+                    "v{} · {} {}",
+                    env!("SCORIA_VERSION"),
+                    env!("SCORIA_TARGET_OS"),
+                    env!("SCORIA_TARGET_ARCH")
+                )),
+        )
     }
 
     fn home(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -473,6 +513,9 @@ impl Shell {
             let author = project["author"].as_str().unwrap_or("");
             let support = project["support"].as_str().unwrap_or("");
             let source = project["source"].as_str().unwrap_or("catalogue");
+            let id = project["id"].as_str().unwrap_or("").to_string();
+            let installable = project["installable"].as_bool().unwrap_or(false);
+            let installing = self.installing.as_deref() == Some(id.as_str());
             results = results.child(soft_card(
                 &theme,
                 div()
@@ -499,11 +542,55 @@ impl Shell {
                     )
                     .child(
                         div()
-                            .text_size(px(theme.type_scale.caption))
-                            .text_color(theme.colors.muted)
-                            .child(format!("by {author} · {source}")),
+                            .flex()
+                            .items_center()
+                            .justify_between()
+                            .child(
+                                div()
+                                    .text_size(px(theme.type_scale.caption))
+                                    .text_color(theme.colors.muted)
+                                    .child(format!("by {author} · {source}")),
+                            )
+                            .child(if installing {
+                                div()
+                                    .text_size(px(theme.type_scale.caption))
+                                    .text_color(theme.colors.muted)
+                                    .child("Installing…")
+                                    .into_any_element()
+                            } else if installable {
+                                let id = id.clone();
+                                Button::new(format!("install-{id}"), "Install")
+                                    .variant(ButtonVariant::Secondary)
+                                    .size(ButtonSize::Sm)
+                                    .render(
+                                        &theme,
+                                        Some(cx.listener(move |this, _, _window, cx| {
+                                            this.install(id.clone(), cx)
+                                        })),
+                                    )
+                                    .into_any_element()
+                            } else {
+                                div()
+                                    .text_size(px(theme.type_scale.caption))
+                                    .text_color(theme.colors.muted)
+                                    .child("Not installable")
+                                    .into_any_element()
+                            }),
                     ),
             ));
+        }
+
+        if let Some((ok, text)) = &self.install_message {
+            results = results.child(
+                div()
+                    .text_size(px(theme.type_scale.body))
+                    .text_color(if *ok {
+                        theme.colors.success
+                    } else {
+                        theme.colors.danger
+                    })
+                    .child(text.clone()),
+            );
         }
 
         card(
