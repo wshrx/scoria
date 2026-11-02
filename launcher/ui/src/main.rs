@@ -81,14 +81,13 @@ impl Screen {
         }
     }
 
-    fn label(self, language: Language) -> String {
-        let english = match self {
+    fn label(self) -> &'static str {
+        match self {
             Screen::Home => "Play",
             Screen::Mods => "Mods",
             Screen::Servers => "Servers",
             Screen::Settings => "Settings",
-        };
-        scoria_core::i18n::tr_in(language, english).to_string()
+        }
     }
 }
 
@@ -649,7 +648,7 @@ impl Shell {
                         .size(px(15.0))
                         .text_color(tint),
                 )
-                .children((!compact).then(|| screen.label(self.language())));
+                .children((!compact).then(|| self.t(screen.label())));
             if !selected {
                 let hover = if theme.dark {
                     rgba(0xFFFFFF0A)
@@ -1303,7 +1302,7 @@ impl Shell {
                         .child(
                             div()
                                 .text_size(px(theme.type_scale.title))
-                                .child("Settings"),
+                                .child(self.t("Settings")),
                         )
                         .child(
                             div()
@@ -1340,7 +1339,9 @@ impl Shell {
                             div()
                                 .text_size(px(theme.type_scale.caption))
                                 .text_color(theme.colors.muted)
-                                .child("No Microsoft account: this name is what servers see."),
+                                .child(
+                                    self.t("No Microsoft account: this name is what servers see."),
+                                ),
                         )
                         .child(
                             div()

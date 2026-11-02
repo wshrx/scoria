@@ -14,7 +14,7 @@ fn russian(english: &'static str) -> &'static str {
         "Play" => "Играть",
         "Dark" => "Тёмная",
         "Light" => "Светлая",
-        "System" => "Системная",
+        "System" => "Система",
         "Preparing…" => "Подготовка…",
         "Works" => "Работает",
         "Partly" => "Частично",
@@ -48,6 +48,9 @@ fn russian(english: &'static str) -> &'static str {
         "Offline name" => "Офлайн-имя",
         "Save" => "Сохранить",
         "Your offline name" => "Ваше офлайн-имя",
+        "No Microsoft account: this name is what servers see." => {
+            "Без аккаунта Microsoft: это имя видят серверы."
+        }
         "3 to 16 letters, digits or _ (any script)." => "3–16 букв, цифр или _ (любой алфавит).",
         "Appearance and language are saved to the launcher's settings." => {
             "Оформление и язык сохраняются в настройках лаунчера."
