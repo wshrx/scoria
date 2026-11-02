@@ -45,8 +45,8 @@ def test_the_readme_tells_players_which_file_to_download():
     # In the public repository the Scoria READMEs are at the root; in the private
     # tree they live under docs/public and are exported from there.
     base = ROOT if (ROOT / "README.ru.md").exists() else ROOT / "docs" / "public"
-    english = (base / "README.md").read_text()
-    russian = (base / "README.ru.md").read_text()
+    english = (base / "README.md").read_text(encoding="utf-8")
+    russian = (base / "README.ru.md").read_text(encoding="utf-8")
     for text in (english, russian):
         lowered = text.lower()
         assert "scoria-launcher-" in lowered
