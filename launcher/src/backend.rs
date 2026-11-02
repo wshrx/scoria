@@ -2939,6 +2939,15 @@ mod tests {
     }
 
     #[test]
+    fn game_bundles_are_named_scoria_game() {
+        let asset = ASSET.expect("this platform ships a game bundle");
+        assert!(asset.starts_with("scoria-game-"), "{asset}");
+        assert!(LAUNCHER_ASSET
+            .expect("launcher asset")
+            .starts_with("scoria-launcher-"));
+    }
+
+    #[test]
     fn tags_never_mix() {
         assert!(is_game_tag("v2026.10.13"));
         assert!(!is_game_tag("launcher-v0.2.0"));

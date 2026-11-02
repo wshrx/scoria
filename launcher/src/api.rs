@@ -519,6 +519,25 @@ fn mod_source() -> Result<Box<dyn browser::Source>, String> {
         .ok_or_else(|| "No mod catalogue is available.".to_string())
 }
 
+/// What Home must do before preparing: install the game bundle, or just prepare.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PreparePlan {
+    DownloadBundle,
+    PrepareOnly,
+}
+
+pub fn prepare_plan(installed: Option<&str>) -> PreparePlan {
+    match installed {
+        Some(_) => PreparePlan::PrepareOnly,
+        None => PreparePlan::DownloadBundle,
+    }
+}
+
+/// The version a window would prepare, when one is installed.
+pub fn installed_version() -> Option<String> {
+    selected_tag().ok()
+}
+
 /// Prepare with the engine's progress events forwarded to `emit` (used by the window).
 pub fn prepare_game_with_progress(
     mut emit: impl FnMut(Value) + Send + 'static,
@@ -712,5 +731,16 @@ fn ago(time: SystemTime) -> String {
         60..=3599 => format!("{} min ago", seconds / 60),
         3600..=86399 => format!("{} h ago", seconds / 3600),
         _ => format!("{} days ago", seconds / 86400),
+    }
+}
+
+#[cfg(test)]
+mod window_api_tests {
+    use super::*;
+
+    #[test]
+    fn a_fresh_machine_installs_the_bundle_before_preparing() {
+        assert_eq!(prepare_plan(None), PreparePlan::DownloadBundle);
+        assert_eq!(prepare_plan(Some("v0.1.0-beta")), PreparePlan::PrepareOnly);
     }
 }

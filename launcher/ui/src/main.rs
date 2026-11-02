@@ -423,7 +423,7 @@ impl Shell {
         self.log_line("prepare: start");
         cx.notify();
 
-        let needs_bundle = self.snapshot.is_err();
+        let needs_bundle = scoria_core::api::installed_version().is_none();
         let (sender, receiver) = std::sync::mpsc::channel::<serde_json::Value>();
         std::thread::spawn(move || {
             let result = (|| -> Result<(), String> {
