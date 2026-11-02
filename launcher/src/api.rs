@@ -573,6 +573,21 @@ fn remove_mod(params: &Value) -> Result<Value, String> {
     Ok(json!({ "instance": instance.name, "entries": installed.entries }))
 }
 
+/// The saved servers, for the in-process UI.
+pub fn saved_servers() -> Result<Value, String> {
+    servers()
+}
+
+/// Add a saved server, with the same validation as the CLI.
+pub fn add_saved_server(name: &str, ip: &str) -> Result<Value, String> {
+    add_server(&json!({ "name": name, "ip": ip }))
+}
+
+/// Remove the saved server at `index`.
+pub fn remove_saved_server(index: usize) -> Result<Value, String> {
+    remove_server(&json!({ "index": index }))
+}
+
 fn servers() -> Result<Value, String> {
     let instance = crate::instances::selected();
     let list = crate::server_list::List::load(&instance.home);

@@ -114,6 +114,10 @@ struct Shell {
     mods_loading: bool,
     installing: Option<String>,
     install_message: Option<(bool, String)>,
+    servers: Result<serde_json::Value, String>,
+    server_name: gpui::Entity<EditableTextState>,
+    server_ip: gpui::Entity<EditableTextState>,
+    server_message: Option<(bool, String)>,
 }
 
 impl Shell {
@@ -142,6 +146,10 @@ impl Shell {
             mods_loading: false,
             installing: None,
             install_message: None,
+            servers: scoria_core::api::saved_servers(),
+            server_name: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
+            server_ip: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
+            server_message: None,
         };
         if let Some(query) = query {
             if !query.is_empty() {
@@ -152,6 +160,37 @@ impl Shell {
             shell.search_mods(cx);
         }
         shell
+    }
+
+    fn refresh_servers(&mut self) {
+        self.servers = scoria_core::api::saved_servers();
+    }
+
+    fn add_server(&mut self, cx: &mut Context<Self>) {
+        let name = self.server_name.read(cx).as_str().trim().to_string();
+        let ip = self.server_ip.read(cx).as_str().trim().to_string();
+        self.server_message = Some(match scoria_core::api::add_saved_server(&name, &ip) {
+            Ok(list) => {
+                self.servers = Ok(list);
+                self.server_name
+                    .update(cx, |state, cx| state.emplace("", cx));
+                self.server_ip.update(cx, |state, cx| state.emplace("", cx));
+                (true, format!("Added {name}."))
+            }
+            Err(error) => (false, error),
+        });
+        cx.notify();
+    }
+
+    fn remove_server(&mut self, index: usize, cx: &mut Context<Self>) {
+        self.server_message = Some(match scoria_core::api::remove_saved_server(index) {
+            Ok(list) => {
+                self.servers = Ok(list);
+                (true, "Removed.".to_string())
+            }
+            Err(error) => (false, error),
+        });
+        cx.notify();
     }
 
     fn install(&mut self, project_id: String, cx: &mut Context<Self>) {
@@ -304,6 +343,9 @@ impl Shell {
                 this.screen = screen;
                 if screen == Screen::Home {
                     this.snapshot = scoria_core::api::snapshot();
+                }
+                if screen == Screen::Servers {
+                    this.refresh_servers();
                 }
                 cx.notify();
             });
@@ -644,6 +686,164 @@ impl Shell {
         .max_w(px(880.0))
     }
 
+    fn servers_screen(&self, cx: &mut Context<Self>) -> impl IntoElement {
+        let theme = self.theme;
+        let (list, error) = match &self.servers {
+            Ok(value) => (
+                value["servers"].as_array().cloned().unwrap_or_default(),
+                None,
+            ),
+            Err(error) => (Vec::new(), Some(error.clone())),
+        };
+
+        let add = Button::new("add-server", "Add")
+            .variant(ButtonVariant::Primary)
+            .size(ButtonSize::Lg)
+            .render(
+                &theme,
+                Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| this.add_server(cx))),
+            );
+
+        let mut rows = div().flex().flex_col().gap(px(theme.spacing.sm));
+        if let Some(error) = &error {
+            rows = rows.child(
+                div()
+                    .text_size(px(theme.type_scale.body))
+                    .text_color(theme.colors.danger)
+                    .child(error.clone()),
+            );
+        }
+        if list.is_empty() && error.is_none() {
+            rows = rows.child(
+                div()
+                    .text_size(px(theme.type_scale.body))
+                    .text_color(theme.colors.muted)
+                    .child("No saved servers yet. Add the address of an offline-mode server."),
+            );
+        }
+        for server in &list {
+            let index = server["index"].as_u64().unwrap_or(0) as usize;
+            let name = server["name"].as_str().unwrap_or("Server");
+            let ip = server["ip"].as_str().unwrap_or("");
+            rows = rows.child(soft_card(
+                &theme,
+                div()
+                    .flex()
+                    .items_center()
+                    .justify_between()
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap(px(2.0))
+                            .child(
+                                div()
+                                    .text_size(px(theme.type_scale.body))
+                                    .child(name.to_string()),
+                            )
+                            .child(
+                                div()
+                                    .text_size(px(theme.type_scale.caption))
+                                    .text_color(theme.colors.muted)
+                                    .child(ip.to_string()),
+                            ),
+                    )
+                    .child(
+                        Button::new(format!("remove-{index}"), "Remove")
+                            .variant(ButtonVariant::Ghost)
+                            .size(ButtonSize::Sm)
+                            .render(
+                                &theme,
+                                Some(cx.listener(move |this, _, _window, cx| {
+                                    this.remove_server(index, cx)
+                                })),
+                            ),
+                    ),
+            ));
+        }
+
+        if let Some((ok, text)) = &self.server_message {
+            rows = rows.child(
+                div()
+                    .text_size(px(theme.type_scale.caption))
+                    .text_color(if *ok {
+                        theme.colors.success
+                    } else {
+                        theme.colors.danger
+                    })
+                    .child(text.clone()),
+            );
+        }
+
+        card(
+            &theme,
+            div()
+                .flex()
+                .flex_col()
+                .gap(px(theme.spacing.lg))
+                .child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(theme.spacing.xs))
+                        .child(div().text_size(px(theme.type_scale.title)).child("Servers"))
+                        .child(
+                            div()
+                                .text_size(px(theme.type_scale.body))
+                                .text_color(theme.colors.muted)
+                                .child(
+                                    "Saved servers for this instance. LAN worlds appear inside the game.",
+                                ),
+                        ),
+                )
+                .child(
+                    div()
+                        .flex()
+                        .items_center()
+                        .gap(px(theme.spacing.sm))
+                        .child(
+                            text_input("server-name")
+                                .state(self.server_name.downgrade())
+                                .w(px(200.0))
+                                .px(px(theme.spacing.md))
+                                .py(px(theme.spacing.sm))
+                                .placeholder("Name")
+                                .placeholder_color(theme.colors.muted)
+                                .rounded(px(theme.radii.field))
+                                .border_1()
+                                .border_color(theme.colors.border)
+                                .bg(theme.colors.surface_secondary)
+                                .text_color(theme.colors.foreground)
+                                .text_size(px(theme.type_scale.body))
+                                .whitespace_nowrap()
+                                .min_h_auto()
+                                .max_h_auto(),
+                        )
+                        .child(
+                            text_input("server-ip")
+                                .state(self.server_ip.downgrade())
+                                .w(px(240.0))
+                                .px(px(theme.spacing.md))
+                                .py(px(theme.spacing.sm))
+                                .placeholder("host:port")
+                                .placeholder_color(theme.colors.muted)
+                                .rounded(px(theme.radii.field))
+                                .border_1()
+                                .border_color(theme.colors.border)
+                                .bg(theme.colors.surface_secondary)
+                                .text_color(theme.colors.foreground)
+                                .text_size(px(theme.type_scale.body))
+                                .whitespace_nowrap()
+                                .min_h_auto()
+                                .max_h_auto(),
+                        )
+                        .child(add),
+                )
+                .child(rows),
+        )
+        .max_w(px(880.0))
+    }
+
     fn settings(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = self.theme;
 
@@ -779,23 +979,6 @@ impl Shell {
         )
         .max_w(px(880.0))
     }
-
-    fn placeholder(&self, title: &'static str) -> impl IntoElement {
-        let theme = self.theme;
-        card(
-            &theme,
-            div()
-                .flex()
-                .flex_col()
-                .gap(px(theme.spacing.xs))
-                .child(div().text_size(px(theme.type_scale.title)).child(title))
-                .child(
-                    div()
-                        .text_color(theme.colors.muted)
-                        .child("This screen is ported in the next slice."),
-                ),
-        )
-    }
 }
 
 impl Render for Shell {
@@ -804,7 +987,7 @@ impl Render for Shell {
         let body = match self.screen {
             Screen::Home => div().child(self.home(cx)),
             Screen::Mods => div().child(self.mods(cx)),
-            Screen::Servers => div().child(self.placeholder("Servers")),
+            Screen::Servers => div().child(self.servers_screen(cx)),
             Screen::Settings => div().child(self.settings(cx)),
         };
 
