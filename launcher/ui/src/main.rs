@@ -46,6 +46,13 @@ const ICON_SEARCH: &[u8] = include_bytes!("../assets/icons/search.svg");
 const ICON_WIN_MIN: &[u8] = include_bytes!("../assets/icons/win-min.svg");
 const ICON_WIN_MAX: &[u8] = include_bytes!("../assets/icons/win-max.svg");
 const ICON_WIN_CLOSE: &[u8] = include_bytes!("../assets/icons/win-close.svg");
+const ICON_MENU: &[u8] = include_bytes!("../assets/icons/menu.svg");
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ModsSource {
+    Horizon,
+    Modrinth,
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Screen {
@@ -72,14 +79,43 @@ impl Screen {
         }
     }
 
-    fn label(self) -> &'static str {
-        match self {
+    fn label(self, language: Language) -> String {
+        let english = match self {
             Screen::Home => "Play",
             Screen::Mods => "Mods",
             Screen::Servers => "Servers",
             Screen::Settings => "Settings",
-        }
+        };
+        scoria_core::i18n::tr_in(language, english).to_string()
     }
+}
+
+/// Horizon and Modrinth as two tabs above the search field.
+fn catalogue_tabs(shell: &Shell, cx: &mut Context<Shell>) -> impl IntoElement {
+    let theme = shell.theme;
+    let mut tabs = div()
+        .flex()
+        .self_start()
+        .gap(px(2.0))
+        .p(px(3.0))
+        .rounded(px(theme.radii.lg))
+        .bg(if theme.dark {
+            rgba(0xFFFFFF08)
+        } else {
+            rgba(0x1D15100A)
+        });
+    for (id, source, label) in [
+        ("tab-horizon", ModsSource::Horizon, "Horizon"),
+        ("tab-modrinth", ModsSource::Modrinth, "Modrinth"),
+    ] {
+        let selected = shell.mods_source == source;
+        let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
+            this.mods_source = source;
+            cx.notify();
+        });
+        tabs = tabs.child(segment(theme, id, label, selected, on_click));
+    }
+    tabs
 }
 
 /// A segmented-control option: the selected one carries the accent.
@@ -117,8 +153,10 @@ fn segment(
         .child(label)
 }
 
-fn label(theme: &Theme, text: &'static str) -> impl IntoElement {
-    div().text_size(px(theme.type_scale.subtitle)).child(text)
+fn label(theme: &Theme, text: &str) -> impl IntoElement {
+    div()
+        .text_size(px(theme.type_scale.subtitle))
+        .child(text.to_string())
 }
 
 struct Shell {
@@ -135,6 +173,7 @@ struct Shell {
     mods_loading: bool,
     installing: Option<String>,
     preparing: bool,
+    mods_source: ModsSource,
     servers: Result<serde_json::Value, String>,
     server_name: gpui::Entity<EditableTextState>,
     server_ip: gpui::Entity<EditableTextState>,
@@ -168,6 +207,7 @@ impl Shell {
             mods_loading: false,
             installing: None,
             preparing: false,
+            mods_source: ModsSource::Horizon,
             servers: scoria_core::api::saved_servers(),
             server_name: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
             server_ip: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
@@ -186,6 +226,20 @@ impl Shell {
             shell.search_mods(cx);
         }
         shell
+    }
+
+    fn language(&self) -> Language {
+        self.settings.language.unwrap_or_else(Language::system)
+    }
+
+    fn t(&self, english: &str) -> String {
+        scoria_core::i18n::tr_in(self.language(), english).to_string()
+    }
+
+    fn toggle_rail(&mut self, cx: &mut Context<Self>) {
+        self.settings.rail_collapsed = !self.settings.rail_collapsed;
+        self.settings.save();
+        cx.notify();
     }
 
     fn show_toast(&mut self, tone: Tone, message: impl Into<String>, cx: &mut Context<Self>) {
@@ -528,7 +582,7 @@ impl Shell {
                         .size(px(15.0))
                         .text_color(tint),
                 )
-                .children((!compact).then(|| screen.label()));
+                .children((!compact).then(|| screen.label(self.language())));
             if !selected {
                 let hover = if theme.dark {
                     rgba(0xFFFFFF0A)
@@ -539,7 +593,32 @@ impl Shell {
             }
             rail = rail.child(item);
         }
-        rail.child(div().flex_1()).child(
+        rail = rail.child(div().flex_1()).child(
+            div()
+                .id("rail-toggle")
+                .flex()
+                .items_center()
+                .justify_center()
+                .h(px(30.0))
+                .rounded(px(theme.radii.md))
+                .text_color(theme.colors.muted)
+                .cursor_pointer()
+                .hover(move |style| {
+                    style.bg(if theme.dark {
+                        rgba(0xFFFFFF0A)
+                    } else {
+                        rgba(0x1D15100A)
+                    })
+                })
+                .on_click(cx.listener(|this, _, _window, cx| this.toggle_rail(cx)))
+                .child(
+                    gpui::svg()
+                        .data(ICON_MENU)
+                        .size(px(14.0))
+                        .text_color(theme.colors.muted),
+                ),
+        );
+        rail.child(
             div()
                 .when(compact, |line| line.hidden())
                 .px(px(theme.spacing.sm))
@@ -570,24 +649,31 @@ impl Shell {
             Err(_) => Vec::new(),
         };
 
-        let play = Button::new("play", if playing { "Playing" } else { "Play" })
-            .variant(if prepared {
-                ButtonVariant::Primary
+        let play = Button::new(
+            "play",
+            if playing {
+                self.t("Playing")
             } else {
-                ButtonVariant::Secondary
-            })
-            .size(ButtonSize::Lg)
-            .disabled(playing || !prepared)
-            .render(
-                &theme,
-                Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| this.play(cx))),
-            );
+                self.t("Play")
+            },
+        )
+        .variant(if prepared {
+            ButtonVariant::Primary
+        } else {
+            ButtonVariant::Secondary
+        })
+        .size(ButtonSize::Lg)
+        .disabled(playing || !prepared)
+        .render(
+            &theme,
+            Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| this.play(cx))),
+        );
         let prepare = Button::new(
             "prepare",
             if self.preparing {
-                "Preparing…"
+                self.t("Preparing…")
             } else {
-                "Download 26.3"
+                self.t("Download 26.3")
             },
         )
         .variant(if prepared {
@@ -607,7 +693,11 @@ impl Shell {
             .child(badge(&theme, version.clone(), Tone::Neutral))
             .child(badge(
                 &theme,
-                if prepared { "Prepared" } else { "Not prepared" },
+                if prepared {
+                    self.t("Prepared")
+                } else {
+                    self.t("Not prepared")
+                },
                 if prepared {
                     Tone::Success
                 } else {
@@ -705,7 +795,7 @@ impl Shell {
 
     fn mods(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = self.theme;
-        let search = Button::new("search-mods", "Search")
+        let search = Button::new("search-mods", self.t("Search"))
             .variant(ButtonVariant::Secondary)
             .size(ButtonSize::Lg)
             .render(
@@ -747,17 +837,25 @@ impl Shell {
                     .child(
                         div()
                             .text_size(px(theme.type_scale.subtitle))
-                            .child("Nothing yet"),
+                            .child(self.t("Nothing yet")),
                     )
                     .child(
                         div()
                             .text_size(px(theme.type_scale.body))
                             .text_color(theme.colors.muted)
-                            .child("Search the registry or type a mod name."),
+                            .child(self.t("Search the registry or type a mod name.")),
                     ),
             );
         }
-        for project in self.mods_results.iter() {
+        let wanted = match self.mods_source {
+            ModsSource::Horizon => "Horizon",
+            ModsSource::Modrinth => "Modrinth",
+        };
+        for project in self
+            .mods_results
+            .iter()
+            .filter(|project| project["source"].as_str().unwrap_or("").contains(wanted))
+        {
             let title = project["title"].as_str().unwrap_or("Untitled");
             let summary = project["summary"].as_str().unwrap_or("");
             let author = project["author"].as_str().unwrap_or("");
@@ -808,11 +906,11 @@ impl Shell {
                                 div()
                                     .text_size(px(theme.type_scale.caption))
                                     .text_color(theme.colors.muted)
-                                    .child("Installing…")
+                                    .child(self.t("Installing…"))
                                     .into_any_element()
                             } else if installable {
                                 let id = id.clone();
-                                Button::new(format!("install-{id}"), "Install")
+                                Button::new(format!("install-{id}"), self.t("Install"))
                                     .variant(ButtonVariant::Secondary)
                                     .size(ButtonSize::Sm)
                                     .render(
@@ -826,7 +924,7 @@ impl Shell {
                                 div()
                                     .text_size(px(theme.type_scale.caption))
                                     .text_color(theme.colors.muted)
-                                    .child("Not installable")
+                                    .child(self.t("Not installable"))
                                     .into_any_element()
                             }),
                     ),
@@ -844,16 +942,21 @@ impl Shell {
                         .flex()
                         .flex_col()
                         .gap(px(theme.spacing.xs))
-                        .child(div().text_size(px(theme.type_scale.title)).child("Mods"))
+                        .child(
+                            div()
+                                .text_size(px(theme.type_scale.title))
+                                .child(self.t("Mods")),
+                        )
                         .child(
                             div()
                                 .text_size(px(theme.type_scale.body))
                                 .text_color(theme.colors.muted)
                                 .child(
-                                    "Horizon's registry first, then Modrinth. Every result says how it runs on Scoria.",
+                                    self.t("Horizon's registry first, then Modrinth. Every result says how it runs on Scoria."),
                                 ),
                         ),
                 )
+                .child(catalogue_tabs(self, cx))
                 .child(
                     div()
                         .flex()
@@ -875,7 +978,7 @@ impl Shell {
                                 .whitespace_nowrap()
                                 .min_h_auto()
                                 .max_h_auto()
-                                .placeholder("Search mods"),
+                                .placeholder(self.t("Search mods")),
                         )
                         .child(search),
                 )
@@ -894,7 +997,7 @@ impl Shell {
             Err(error) => (Vec::new(), Some(error.clone())),
         };
 
-        let add = Button::new("add-server", "Add")
+        let add = Button::new("add-server", self.t("Add"))
             .variant(ButtonVariant::Primary)
             .size(ButtonSize::Lg)
             .render(
@@ -916,7 +1019,9 @@ impl Shell {
                 div()
                     .text_size(px(theme.type_scale.body))
                     .text_color(theme.colors.muted)
-                    .child("No saved servers yet. Add the address of an offline-mode server."),
+                    .child(
+                        self.t("No saved servers yet. Add the address of an offline-mode server."),
+                    ),
             );
         }
         for server in &list {
@@ -947,7 +1052,7 @@ impl Shell {
                             ),
                     )
                     .child(
-                        Button::new(format!("remove-{index}"), "Remove")
+                        Button::new(format!("remove-{index}"), self.t("Remove"))
                             .variant(ButtonVariant::Ghost)
                             .size(ButtonSize::Sm)
                             .render(
@@ -971,13 +1076,17 @@ impl Shell {
                         .flex()
                         .flex_col()
                         .gap(px(theme.spacing.xs))
-                        .child(div().text_size(px(theme.type_scale.title)).child("Servers"))
+                        .child(
+                            div()
+                                .text_size(px(theme.type_scale.title))
+                                .child(self.t("Servers")),
+                        )
                         .child(
                             div()
                                 .text_size(px(theme.type_scale.body))
                                 .text_color(theme.colors.muted)
                                 .child(
-                                    "Saved servers for this instance. LAN worlds appear inside the game.",
+                                    self.t("Saved servers for this instance. LAN worlds appear inside the game."),
                                 ),
                         ),
                 )
@@ -992,7 +1101,7 @@ impl Shell {
                                 .flex_1()
                                 .px(px(theme.spacing.md))
                                 .py(px(theme.spacing.sm))
-                                .placeholder("Name")
+                                .placeholder(self.t("Name"))
                                 .placeholder_color(theme.colors.muted)
                                 .rounded(px(theme.radii.field))
                                 .border_1()
@@ -1010,7 +1119,7 @@ impl Shell {
                                 .flex_1()
                                 .px(px(theme.spacing.md))
                                 .py(px(theme.spacing.sm))
-                                .placeholder("host:port")
+                                .placeholder(self.t("host:port"))
                                 .placeholder_color(theme.colors.muted)
                                 .rounded(px(theme.radii.field))
                                 .border_1()
@@ -1098,9 +1207,9 @@ impl Shell {
                             div()
                                 .text_size(px(theme.type_scale.body))
                                 .text_color(theme.colors.muted)
-                                .child(
+                                .child(self.t(
                                     "Appearance and language are saved to the launcher's settings.",
-                                ),
+                                )),
                         ),
                 )
                 .child(
@@ -1108,7 +1217,7 @@ impl Shell {
                         .flex()
                         .flex_col()
                         .gap(px(theme.spacing.sm))
-                        .child(label(&theme, "Appearance"))
+                        .child(label(&theme, &self.t("Appearance")))
                         .child(appearance),
                 )
                 .child(
@@ -1116,7 +1225,7 @@ impl Shell {
                         .flex()
                         .flex_col()
                         .gap(px(theme.spacing.sm))
-                        .child(label(&theme, "Language"))
+                        .child(label(&theme, &self.t("Language")))
                         .child(language),
                 )
                 .child(
@@ -1124,7 +1233,7 @@ impl Shell {
                         .flex()
                         .flex_col()
                         .gap(px(theme.spacing.sm))
-                        .child(label(&theme, "Offline name"))
+                        .child(label(&theme, &self.t("Offline name")))
                         .child(
                             div()
                                 .text_size(px(theme.type_scale.caption))
@@ -1152,10 +1261,10 @@ impl Shell {
                                         .whitespace_nowrap()
                                         .min_h_auto()
                                         .max_h_auto()
-                                        .placeholder("Your offline name"),
+                                        .placeholder(self.t("Your offline name")),
                                 )
                                 .child(
-                                    Button::new("save-name", "Save")
+                                    Button::new("save-name", self.t("Save"))
                                         .variant(ButtonVariant::Primary)
                                         .size(ButtonSize::Lg)
                                         .render(
@@ -1178,7 +1287,7 @@ impl Shell {
                             None => div()
                                 .text_size(px(theme.type_scale.caption))
                                 .text_color(theme.colors.muted)
-                                .child("3 to 16 letters, digits or _ (any script)."),
+                                .child(self.t("3 to 16 letters, digits or _ (any script).")),
                         }),
                 ),
         )
@@ -1190,7 +1299,7 @@ impl Render for Shell {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = self.theme;
         // Below ~1080px the rail drops its labels and the hero shrinks.
-        let compact = window.viewport_size().width < px(1080.0);
+        let compact = window.viewport_size().width < px(1080.0) || self.settings.rail_collapsed;
         let body = match self.screen {
             Screen::Home => div().child(self.home(cx, compact)),
             Screen::Mods => div().child(self.mods(cx)),

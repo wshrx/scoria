@@ -2670,6 +2670,9 @@ pub struct Settings {
     /// The window's language. Unset follows the system's (`i18n::Language::system`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub language: Option<crate::i18n::Language>,
+    /// The window's rail folded to icons only.
+    #[serde(default)]
+    pub rail_collapsed: bool,
 }
 
 impl Settings {
