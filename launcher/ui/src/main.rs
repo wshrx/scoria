@@ -19,7 +19,9 @@ use gpui_ce_platform::application;
 use scoria_core::account::{Accounts, Player};
 use scoria_core::backend::{Appearance, Settings};
 use scoria_core::i18n::Language;
-use scoria_ui_kit::{card, soft_card, Button, ButtonSize, ButtonVariant, Theme};
+use scoria_ui_kit::{
+    badge, card, soft_card, tone_for_support, Button, ButtonSize, ButtonVariant, Theme,
+};
 
 /// The bundled OFL fonts: Medeo Sans for text, Medeo Mono for versions and numbers.
 const FONTS: [&[u8]; 6] = [
@@ -244,8 +246,8 @@ impl Shell {
         let mut rail = div()
             .flex()
             .flex_col()
-            .gap(px(theme.spacing.xs))
-            .w(px(232.0))
+            .gap(px(2.0))
+            .w(px(248.0))
             .h_full()
             .p(px(theme.spacing.md))
             .bg(theme.colors.surface_secondary)
@@ -261,10 +263,12 @@ impl Shell {
                     .child(Self::mark())
                     .child(
                         div()
-                            .text_size(px(theme.type_scale.subtitle))
+                            .text_size(px(18.0))
+                            .font_weight(gpui::FontWeight::SEMIBOLD)
                             .child("Scoria"),
                     ),
-            );
+            )
+            .child(div().h(px(theme.spacing.sm)));
 
         for screen in Screen::ALL {
             let selected = screen == self.screen;
@@ -275,21 +279,31 @@ impl Shell {
                 }
                 cx.notify();
             });
+            let indicator = div()
+                .w(px(3.0))
+                .h(px(16.0))
+                .rounded(px(2.0))
+                .bg(if selected {
+                    theme.colors.accent
+                } else {
+                    theme.colors.surface_secondary
+                });
             rail = rail.child(
                 div()
                     .id(("rail", screen as usize))
                     .flex()
                     .items_center()
-                    .h(px(36.0))
+                    .gap(px(theme.spacing.sm))
+                    .h(px(40.0))
                     .px(px(theme.spacing.sm))
                     .rounded(px(theme.radii.lg))
                     .bg(if selected {
-                        theme.colors.accent_soft
+                        theme.colors.surface_tertiary
                     } else {
                         theme.colors.surface_secondary
                     })
                     .text_color(if selected {
-                        theme.colors.accent
+                        theme.colors.foreground
                     } else {
                         theme.colors.muted
                     })
@@ -297,6 +311,7 @@ impl Shell {
                     .cursor_pointer()
                     .hover(move |style| style.bg(theme.colors.surface_tertiary))
                     .on_click(on_click)
+                    .child(indicator)
                     .child(screen.label()),
             );
         }
@@ -331,32 +346,45 @@ impl Shell {
                 Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| this.play(cx))),
             );
 
-        let mut status = div().flex().flex_col().gap(px(theme.spacing.xs)).child(
+        let row = |name: &'static str, value: String, tone: gpui::Rgba| {
+            div()
+                .flex()
+                .items_center()
+                .justify_between()
+                .child(
+                    div()
+                        .text_size(px(theme.type_scale.body))
+                        .text_color(theme.colors.muted)
+                        .child(name),
+                )
+                .child(
+                    div()
+                        .text_size(px(theme.type_scale.body))
+                        .text_color(tone)
+                        .child(value),
+                )
+        };
+        let mut status = div().flex().flex_col().gap(px(theme.spacing.sm)).child(
             div()
                 .text_size(px(theme.type_scale.subtitle))
                 .child(if playing { "Running" } else { "Ready" }),
         );
         status = status
-            .child(
-                div()
-                    .text_size(px(theme.type_scale.body))
-                    .text_color(theme.colors.muted)
-                    .child(format!("{version} · {worlds} worlds")),
-            )
-            .child(
-                div()
-                    .text_size(px(theme.type_scale.body))
-                    .text_color(if prepared {
-                        theme.colors.success
-                    } else {
-                        theme.colors.warning
-                    })
-                    .child(if prepared {
-                        "Resources are prepared."
-                    } else {
-                        "Resources are not prepared yet."
-                    }),
-            );
+            .child(row("Version", version, theme.colors.foreground))
+            .child(row(
+                "Resources",
+                if prepared {
+                    "Prepared".to_string()
+                } else {
+                    "Not prepared".to_string()
+                },
+                if prepared {
+                    theme.colors.success
+                } else {
+                    theme.colors.warning
+                },
+            ))
+            .child(row("Worlds", worlds.to_string(), theme.colors.foreground));
         if let Some(problem) = problem {
             status = status.child(
                 div()
@@ -430,6 +458,14 @@ impl Shell {
                     .child(error.clone()),
             );
         }
+        if self.mods_results.is_empty() && !self.mods_loading && self.mods_error.is_none() {
+            results = results.child(
+                div()
+                    .text_size(px(theme.type_scale.body))
+                    .text_color(theme.colors.muted)
+                    .child("Nothing yet. Search the registry or type a mod name."),
+            );
+        }
         for project in self.mods_results.iter().take(8) {
             let title = project["title"].as_str().unwrap_or("Untitled");
             let summary = project["summary"].as_str().unwrap_or("");
@@ -452,12 +488,7 @@ impl Shell {
                                     .text_size(px(theme.type_scale.subtitle))
                                     .child(title.to_string()),
                             )
-                            .child(
-                                div()
-                                    .text_size(px(theme.type_scale.caption))
-                                    .text_color(theme.colors.accent)
-                                    .child(support.to_string()),
-                            ),
+                            .child(badge(&theme, support, tone_for_support(support))),
                     )
                     .child(
                         div()
@@ -771,7 +802,6 @@ fn main() {
 
         cx.bind_keys(default_bindings().as_keybindings(Some(DEFAULT_INPUT_CONTEXT)));
 
-        cx.activate(true);
         cx.on_window_closed(|cx, _| {
             if cx.windows().is_empty() {
                 cx.quit();
@@ -801,5 +831,6 @@ fn main() {
             move |_, cx| cx.new(|cx| Shell::new(cx, screen, query.clone())),
         )
         .expect("the launcher window");
+        cx.activate(true);
     });
 }
