@@ -33,43 +33,43 @@ raises the patch and keeps the `-beta` suffix (`0.1.0-beta`, `0.1.1-beta`, ...).
 - `tests/test_release_artifacts.py`: checks archive layout, `Scoria.cmd`, every Windows binary's DLL
   imports and the checksums before a release is published.
 
-## [0.1.0-beta] — 2026-10-29
+## [0.1.0-beta] — 2026-11-02
 
-First public beta: a Linux and Windows launcher plus the matching 26.3 game bundle, offline by
-default.
+The launcher is one Rust binary on gpui-ce. Bun, the GPUIX native addon and every
+`.exe`/`.node`/`vcruntime140.dll` combination are gone; a launcher archive is a single
+`scoria` (`scoria.exe`) with the fonts and the mark inside it.
 
 ### Added
 
-- Offline play with no Microsoft account: offline profiles, LAN worlds and offline-mode servers.
-  Online-mode servers are refused with an explanation instead of a broken login.
-- A launcher that installs the game itself: piston-meta download, local resource preparation,
-  version management and world backups.
-- Modrinth mods and resource packs with **Works**, **Partly** and **Doesn't run** labels before
-  installing.
-- New UI: dark and light Ember themes, Russian and English, one state-aware Play action, one
-  Settings entry, keyboard navigation and toasts.
-- Scoria branding and icons, signed release checksums (`SHA256SUMS` + Ed25519 signature).
+- **One process.** The window calls the engine directly; the JSON-lines API stays for the CLI
+  and MCP.
+- **Settings** edits the offline name through the engine's account file, and switches the Ember
+  theme and the language live.
+- **Home** shows the selected version, whether resources are prepared, the world count and
+  starts the game, with the engine's error under the button.
+- **Mods** searches Horizon's registry first and Modrinth second, labels each result with its
+  source and support level, and installs with a background task.
+- **Servers** lists, adds and removes offline-mode servers.
+- A crash writes `crash.log`; the release build is a GUI binary with the Scoria icon and version
+  resource on Windows.
 
 ### Changed
 
-- Scoria numbers its own releases (`v0.1.N-beta` during the beta); Horizon's `0.2.x` numbers stay
-  upstream.
-- Windows binaries link the C runtime statically, including the GPUIX addon built from source, so
-  no Visual C++ redistributable and no extra DLL are needed.
-- Linux archives ship a `.tar.zst` twin beside the `.tar.gz`; the launcher prefers the smaller
-  zstd one and still installs gzip-only releases.
+- **HeroUI-shaped design**: 4px spacing, 8px cards, 12px fields, one primary action, matte
+  buttons, 120/180 ms transitions, dark by default and light at parity.
+- The Linux archive is a `.tar.zst` of a 47 MB binary (14 MB compressed); Windows ships one
+  `scoria.exe`; macOS follows after signing.
+- `cargo xtask` is the single entry point: check, test, build, pytest, gate, ui.
 
-### Fixed
+### Removed
 
-- The Windows launcher closed instantly on a clean machine because `VCRUNTIME140.dll` was missing.
-- Release CI now checks every Windows binary's DLL imports and fails the build instead of the
-  player.
-- The online-mode message names Scoria, not Horizon.
+- `launcher-ui/` (React on GPUIX), the native addon, the Bun runtime, the wrapper script and
+  `Scoria.cmd`.
 
 ### Known limitations
 
 - Online-mode servers need a Microsoft session and are unsupported by design.
-- macOS is deferred until signing and notarization; there is no macOS archive.
-- Windows builds are not code-signed yet: SmartScreen warns until a certificate is bought.
-- CurseForge is not supported; the engine can import and port modpacks, the launcher has no
-  modpack browser yet.
+- macOS is deferred until signing and notarization.
+- Windows builds are not code-signed yet: SmartScreen warns.
+- CurseForge is not supported; the engine can import and port modpacks.
+

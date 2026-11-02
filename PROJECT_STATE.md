@@ -66,6 +66,9 @@ no online-mode servers, no Minecraft assets.
   `launcher/xtask` (the only entry point: check, test, pytest, gate, ui). The React UI stays the
   shipped one until parity, then `launcher-ui/`, Bun and GPUIX are removed. See
   `docs/adr/0001-gpui-ce-rewrite.md`.
+- **Cutover (2026-11-02)**: the launcher is one `scoria` binary on gpui-ce; `launcher-ui/`, the
+  GPUIX addon, Bun and `vcruntime140.dll` are removed. Packages: Linux `.tar.zst` (47 MB binary,
+  14 MB archive), Windows `scoria.exe`; macOS later.
 - **Rewrite progress**: `scoria-ui` runs on gpui-ce with Medeo fonts, the Scoria mark, working
   rail navigation, Settings bound to `settings.json`/`accounts.json`, Home reading
   `api::snapshot` (version, prepared, playing, worlds) and starting the game, and a crash log
