@@ -74,6 +74,12 @@ GitHub, and the public tree is an allowlist.
 Rule: `tools/export_public.sh` plus the public-tree test; no `exp/*`, `spike/*` or internal docs in
 the export.
 
+**P3 — A sync must prove the fixes survive.** Upstream is thousands of commits ahead and adds the
+Microsoft surface this fork removes. A merge can silently drop `typed_text`, the offline server or
+the whole Rust UI.
+Rule: `check_upstream_patches.sh` before, `check_fork_surfaces.sh` after; never take upstream
+`launcher/`.
+
 **P2 — Research before rewriting.** The Windows failure looked like a missing DLL in one build and
 like a broken addon in another; the log said which.
 Rule: reproduce with the smallest command and read the log before changing architecture.

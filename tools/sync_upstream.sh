@@ -19,6 +19,12 @@ if [ "$behind" -gt 200 ] && [ "${SCORIA_SYNC_APPLY:-0}" != "1" ]; then
   exit 0
 fi
 
+echo "Checking that the engine patches still apply to upstream/main…"
+if ! sh tools/check_upstream_patches.sh; then
+  echo "The fork patches do not apply cleanly: rebase them first (docs/fork/patches.md)." >&2
+  exit 1
+fi
+
 branch="sync/upstream-$(date +%Y%m%d-%H%M)"
 git switch -c "$branch"
 

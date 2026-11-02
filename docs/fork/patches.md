@@ -66,6 +66,24 @@ The check fails if `typed_text`, the Scoria online-mode text, the offline-only s
 file removal, the release key or the icon disappear. It also runs at the start of
 `tools/sync_upstream.sh`.
 
+## What a sync may and may not touch
+
+- **`crates/`** — upstream owns the code; our changes are the seven patches. Take upstream, re-apply.
+- **`launcher/`, `launcher/ui-kit/`, `launcher/ui/`, `launcher/xtask/`** — ours. Never `git checkout
+  upstream/main -- launcher`; that would replace the Rust UI with Horizon's and lose the offline
+  launcher. `tools/check_fork_surfaces.sh` fails when the UI crates or the in-process API vanish.
+- **Docs, packaging, release workflow** — ours.
+
+Two checks guard this:
+
+```sh
+sh tools/check_fork_surfaces.sh      # after a sync: every Scoria surface is still there
+sh tools/check_upstream_patches.sh   # before a sync: the patch series still applies
+```
+
+`sync_upstream.sh` runs the second before merging and the first after, so a sync that would lose a
+fix stops instead of landing.
+
 ## Sync runbook
 
 ```sh
