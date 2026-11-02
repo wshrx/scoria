@@ -1,0 +1,80 @@
+[package]
+name = "horizon-launcher"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Downloads, prepares and starts Scoria builds"
+
+[workspace]
+members = [".", "xtask", "ui-kit", "ui"]
+resolver = "2"
+
+# The new launcher UI: one process, gpui-ce, no Bun or native addon.
+[workspace.dependencies]
+gpui-ce = { version = "0.3.0" }
+gpui_ce_platform = { version = "0.3.0" }
+
+[dependencies]
+ureq = { version = "2", features = ["json", "tls"], default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Checks the client jar and the version file found in other launchers' folders (sources.rs).
+sha1 = "0.10"
+# The mod browser checks Modrinth's SHA-512 before a pack reaches the game folder (browser/download.rs).
+sha2 = "0.10"
+pulldown-cmark = { version = "0.12", default-features = false }
+flate2 = "1"
+# The Linux archives ship as .tar.zst beside the .tar.gz twin: zstd is ~22% smaller and
+# decodes faster. Pure Rust on purpose, so the Windows build keeps its static C runtime.
+ruzstd = "0.9"
+tar = { version = "0.4", default-features = false }
+toml = "1.1"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+dirs = "5"
+# The system's preferred languages, for the window's language (i18n.rs).
+sys-locale = "0.3"
+self-replace = "1"
+clap = { version = "4", features = ["derive"] }
+horizon-theme = { path = "../crates/horizon-theme" }
+horizon-core = { path = "../crates/horizon-core" }
+horizon-prepare = { path = "../crates/horizon-prepare" }
+# Join a friend: invite codes (the game does the joining).
+horizon-friends = { path = "../crates/horizon-friends" }
+horizon-bench = { path = "../crates/horizon-bench" }
+# Import modpack: the porting pipeline, run on the player's own files (docs/modpacks.md).
+horizon-port-pack = { path = "../crates/horizon-port-pack" }
+# Horizon's mod registry: its index and the checks a download passes before install.
+horizon-mods = { path = "../crates/horizon-mods", features = ["index"] }
+# Signed updates: archives are checked against the release's signed checksums (docs/security.md).
+horizon-release-sign = { path = "../crates/horizon-release-sign" }
+# level.dat and servers.dat (the worlds and server lists of instances)
+horizon-world = { path = "../crates/horizon-world" }
+# Deleting a world moves it to the system's trash
+trash = "5"
+# Backup names carry the local time, as vanilla's do
+base64 = "0.22"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+# Players' heads on the Servers page, from the default skins in the player's own game files (already
+# in the lockfile through gpui).
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
+
+# The launcher's own secrets (the Play with friends token) in the OS keychain: Secret Service on
+# Linux through oo7, Keychain and Credential Manager through keyring.
+[target.'cfg(any(target_os = "linux", target_os = "freebsd"))'.dependencies]
+oo7 = { version = "0.5", default-features = false, features = ["async-std", "native_crypto"] }
+futures-lite = "2"
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { version = "3", features = ["apple-native"] }
+[target.'cfg(target_os = "windows")'.dependencies]
+keyring = { version = "3", features = ["windows-native"] }
+
+[target.'cfg(windows)'.build-dependencies]
+# The icon resource in the .exe (build.rs).
+winresource = "0.1"
+
+[target.'cfg(windows)'.dev-dependencies]
+# tests/startup.rs writes the consent file with the crate's current version.
+horizon-telemetry = { path = "../crates/horizon-telemetry" }
+
+[profile.release]
+strip = true

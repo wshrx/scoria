@@ -1,0 +1,180 @@
+name: release
+# Builds the launcher for Linux and Windows, and the game bundle for Linux and Windows (macOS is
+# deferred until signing/notarization), then attaches the archives plus SHA256SUMS to the
+# GitHub Release for the tag. The game archives carry no Minecraft assets; signing is the next
+# release step (docs/public/RELEASE.md).
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  package:
+    name: package (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            os: ubuntu-latest
+            script: sh tools/package_ui.sh
+            file: dist/scoria-launcher-linux-x86_64.tar.*
+          - name: windows-x64
+            os: windows-latest
+            script: sh tools/package_windows.sh
+            file: dist/scoria-launcher-windows-x64.zip
+            # The C runtime linked in: without it scoria.exe asks for VCRUNTIME140.dll,
+            # which only the Visual C++ redistributable installs.
+            rustflags: -C target-feature=+crt-static
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    env:
+      RUSTFLAGS: ${{ matrix.rustflags }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "launcher -> target"
+      - name: Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libx11-xcb-dev libfontconfig-dev \
+            libvulkan-dev libasound2-dev libudev-dev zstd
+      - name: Version from the tag
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          echo "HORIZON_LAUNCHER_VERSION=$version" >> "$GITHUB_ENV"
+          echo "SCORIA_VERSION=$version" >> "$GITHUB_ENV"
+      - name: Package
+        run: ${{ matrix.script }}
+      - name: Check the Windows binaries' imports
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          # The single launcher binary must run on a clean Windows: +crt-static, no
+          # addon and no Visual C++ redistributable.
+          python tools/check_imports.py --shipped dist/windows dist/windows/scoria.exe
+      - name: Release artifact checks
+        shell: bash
+        run: |
+          python -m pip install --quiet pytest pytest-timeout
+          SCORIA_ARTIFACTS=dist python -m pytest tests/pytest/test_release_artifacts.py -q
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.file }}
+          if-no-files-found: error
+
+  game:
+    name: game (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            os: ubuntu-latest
+            script: sh tools/package_game.sh
+            file: dist/scoria-game-linux-x86_64.tar.*
+          - name: windows-x64
+            os: windows-latest
+            script: sh tools/package_game_windows.sh
+            file: dist/scoria-game-windows-x64.zip
+            # Same static C runtime as the launcher: the game runs on a machine
+            # without the Visual C++ redistributable.
+            rustflags: -C target-feature=+crt-static
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    env:
+      RUSTFLAGS: ${{ matrix.rustflags }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libx11-xcb-dev libfontconfig-dev \
+            libvulkan-dev libasound2-dev libudev-dev zstd
+      - name: Package
+        run: ${{ matrix.script }}
+      - name: Check the game binaries' imports
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          python tools/check_imports.py \
+            dist/game-windows-x64/horizon-windows-x64/horizon-client.exe \
+            dist/game-windows-x64/horizon-windows-x64/horizon-ctl.exe \
+            dist/game-windows-x64/horizon-windows-x64/horizon-prepare.exe \
+            dist/game-windows-x64/horizon-windows-x64/horizon-server.exe
+      - name: Release artifact checks
+        shell: bash
+        run: |
+          python -m pip install --quiet pytest pytest-timeout
+          SCORIA_ARTIFACTS=dist python -m pytest tests/pytest/test_release_artifacts.py -q
+      - uses: actions/upload-artifact@v4
+        with:
+          name: game-${{ matrix.name }}
+          path: ${{ matrix.file }}
+          if-no-files-found: error
+
+  publish:
+    name: publish
+    needs: [package, game]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Sign checksums
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+        run: |
+          if [ -z "$RELEASE_SIGNING_KEY" ]; then
+            echo "Set the release environment secret RELEASE_SIGNING_KEY (base64 PKCS#8 Ed25519)." >&2
+            exit 1
+          fi
+          bash tools/ci/sign_release.sh "${{ github.ref_name }}" dist/scoria-launcher-* dist/scoria-game-*
+      - name: Verify signatures
+        run: cargo run --quiet -p horizon-release-sign -- verify --tag "${{ github.ref_name }}" dist
+      - name: Release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v want="$version" '
+            /^## \[/ {
+              section = $0
+              gsub(/^## \[|\].*$/, "", section)
+              printing = (section == want)
+              if (printing) next
+            }
+            printing' CHANGELOG.md | sed '/./,$!d' > dist/release-notes.md
+          if [ ! -s dist/release-notes.md ]; then
+            echo "No CHANGELOG.md section for $version; the release body will say so." >&2
+            echo "See CHANGELOG.md in the repository for the full history." > dist/release-notes.md
+          fi
+          head -20 dist/release-notes.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          body_path: dist/release-notes.md
+          generate_release_notes: false
+          files: |
+            dist/scoria-launcher-*.tar.zst
+            dist/scoria-launcher-*.zip
+            dist/scoria-game-*.tar.zst
+            dist/scoria-game-*.zip
+            dist/SHA256SUMS
+            dist/SHA256SUMS.sig
+          prerelease: false
+          fail_on_unmatched_files: true

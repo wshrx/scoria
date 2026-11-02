@@ -1,0 +1,14 @@
+{
+  "Mods": "Моды",
+  "Settings": "Настройки",
+  "Launcher": "Лаунчер",
+  "Minimise": "Свернуть",
+  "Running": "Запущено",
+  "Stopped": "Остановлен",
+  "Prepare again": "Подготовить заново",
+  "Resources": "Ресурсы",
+  "Website": "Сайт",
+  "under a minute": "меньше минуты",
+  "Not prepared. Scoria needs the files of your own Minecraft {version}.": "Не подготовлено. Scoria нужны файлы вашего собственного Minecraft {version}.",
+  "Prepared for Minecraft {version}": "Подготовлено для Minecraft {version}"
+}
