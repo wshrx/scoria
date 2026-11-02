@@ -41,9 +41,9 @@
    26.3 files into its own folder: about 600 MB on the first run, with a percentage on screen.
 3. Press **Play**.
 
-The release page also lists `scoria-game-*` for transparency, plus `SHA256SUMS` and its signature.
-Those are not player downloads: leave them to the launcher. SmartScreen warns about `scoria.exe`
-until the build is code-signed.
+The engine bundle lives in a separate **pre-release** (`v0.1.0-beta-game`), marked *do not
+download*: Scoria fetches it itself on first launch. `SHA256SUMS` and its signature are attached
+to both releases. SmartScreen warns about `scoria.exe` until the build is code-signed.
 
 **The first beta is out:** [v0.1.0-beta](https://github.com/wshrx/scoria/releases/tag/v0.1.0-beta).
 

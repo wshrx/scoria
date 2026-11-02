@@ -138,6 +138,13 @@ jobs:
         with:
           path: dist
           merge-multiple: true
+      - name: Split launcher and engine assets
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          echo "GAME_TAG=v${version}-game" >> "$GITHUB_ENV"
+          mkdir -p dist/launcher dist/game
+          mv dist/scoria-launcher-* dist/launcher/
+          mv dist/scoria-game-* dist/game/
       - name: Sign checksums
         env:
           RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
@@ -146,9 +153,12 @@ jobs:
             echo "Set the release environment secret RELEASE_SIGNING_KEY (base64 PKCS#8 Ed25519)." >&2
             exit 1
           fi
-          bash tools/ci/sign_release.sh "${{ github.ref_name }}" dist/scoria-launcher-* dist/scoria-game-*
+          bash tools/ci/sign_release.sh "${{ github.ref_name }}" dist/launcher/scoria-launcher-*
+          bash tools/ci/sign_release.sh "$GAME_TAG" dist/game/scoria-game-*
       - name: Verify signatures
-        run: cargo run --quiet -p horizon-release-sign -- verify --tag "${{ github.ref_name }}" dist
+        run: |
+          cargo run --quiet -p horizon-release-sign -- verify --tag "${{ github.ref_name }}" dist/launcher
+          cargo run --quiet -p horizon-release-sign -- verify --tag "$GAME_TAG" dist/game
       - name: Release notes from CHANGELOG.md
         run: |
           version="${GITHUB_REF_NAME#v}"
@@ -165,7 +175,7 @@ jobs:
             echo "See CHANGELOG.md in the repository for the full history." > dist/release-notes.md
           fi
           head -20 dist/release-notes.md
-      - name: Publish release
+      - name: Publish launcher release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
@@ -178,10 +188,26 @@ jobs:
             --title "Scoria $TAG" \
             --notes-file dist/release-notes.md \
             --latest
-          # Players download only the launcher. Upload it first: GitHub lists assets in upload
-          # order, and the game bundle must not be the first thing on the page.
+          # The player-facing release carries the launcher only. The engine bundle lives in its
+          # own release, so a first-time visitor cannot pick the wrong archive.
           gh release upload "$TAG" --clobber \
-            dist/scoria-launcher-*.tar.zst dist/scoria-launcher-*.zip
-          gh release upload "$TAG" --clobber \
-            dist/scoria-game-*.tar.zst dist/scoria-game-*.zip
-          gh release upload "$TAG" --clobber dist/SHA256SUMS dist/SHA256SUMS.sig
+            dist/launcher/scoria-launcher-*.tar.zst \
+            dist/launcher/scoria-launcher-*.zip \
+            dist/launcher/SHA256SUMS \
+            dist/launcher/SHA256SUMS.sig
+      - name: Publish engine release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GAME_TAG" >/dev/null 2>&1; then
+            gh release delete "$GAME_TAG" -y
+          fi
+          gh release create "$GAME_TAG" \
+            --title "Engine bundle ${GAME_TAG#v} (do not download)" \
+            --notes "The game engine bundle for Scoria. The launcher downloads and installs this itself; there is nothing to pick here. It contains no Minecraft assets." \
+            --prerelease
+          gh release upload "$GAME_TAG" --clobber \
+            dist/game/scoria-game-*.tar.zst \
+            dist/game/scoria-game-*.zip \
+            dist/game/SHA256SUMS \
+            dist/game/SHA256SUMS.sig
