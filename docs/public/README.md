@@ -41,16 +41,16 @@
    26.3 files into its own folder: about 600 MB on the first run, with a percentage on screen.
 3. Press **Play**.
 
-The engine bundle lives in a separate **pre-release** (`v0.1.1-beta-game`), marked *do not
+The engine bundle lives in a separate **pre-release** (`v0.1.2-beta-game`), marked *do not
 download*: Scoria fetches it itself on first launch. `SHA256SUMS` and its signature are attached
 to both releases. SmartScreen warns about `scoria.exe` until the build is code-signed.
 
-**Latest beta:** [v0.1.1-beta](https://github.com/wshrx/scoria/releases/tag/v0.1.1-beta).
+**Latest beta:** [v0.1.2-beta](https://github.com/wshrx/scoria/releases/tag/v0.1.2-beta).
 
 | Platform | Status |
 |---|---|
-| Linux x86_64 (Wayland, Vulkan) | `v0.1.1-beta` |
-| Windows 10/11 x64 (Vulkan) | `v0.1.1-beta` |
+| Linux x86_64 (Wayland, Vulkan) | `v0.1.2-beta` |
+| Windows 10/11 x64 (Vulkan) | `v0.1.2-beta` |
 | macOS 14+, Apple silicon | deferred until signing and notarization |
 
 ## What it is

@@ -22,13 +22,13 @@ account, no telemetry, no online-mode servers, no Minecraft assets.
 
 ## Current release
 
-- **GitHub `v0.1.1-beta`** is a normal Release (not pre-release) and the Latest release. It carries
+- **GitHub `v0.1.2-beta`** is a normal Release (not pre-release) and the Latest release. It carries
   only the launcher: `scoria-launcher-linux-x86_64.tar.zst`,
   `scoria-launcher-windows-x64.zip`, `SHA256SUMS`, `SHA256SUMS.sig`.
-- **GitHub `v0.1.1-beta-game`** is a pre-release titled “do not download”. It carries the engine
+- **GitHub `v0.1.2-beta-game`** is a pre-release titled “do not download”. It carries the engine
   bundles `scoria-game-linux-x86_64.tar.zst` / `scoria-game-windows-x64.zip` and their signed
   checksums. The launcher finds this release and installs the bundle itself.
-- Tags and releases are immutable per built artifact: `v0.1.1-beta` carries the synced engine.
+- Tags and releases are immutable per built artifact: `v0.1.2-beta` carries the synced engine.
 - The release workflow splits the assets, signs each release with its own tag, and recreates the
   release so an old asset order cannot survive. The README (en/ru) tells players to download only
   `scoria-launcher-*`.
