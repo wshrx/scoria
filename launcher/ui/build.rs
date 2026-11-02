@@ -6,10 +6,14 @@ fn main() {
     println!("cargo:rerun-if-changed=../../packaging/icons/horizon.ico");
     println!("cargo:rerun-if-changed=assets/scoria-mark.png");
     println!("cargo:rerun-if-changed=assets/fonts");
+    println!("cargo:rerun-if-env-changed=SCORIA_VERSION");
     for (key, value) in [
         ("SCORIA_TARGET_OS", std::env::var("CARGO_CFG_TARGET_OS")),
         ("SCORIA_TARGET_ARCH", std::env::var("CARGO_CFG_TARGET_ARCH")),
-        ("SCORIA_VERSION", std::env::var("CARGO_PKG_VERSION")),
+        (
+            "SCORIA_VERSION",
+            std::env::var("SCORIA_VERSION").or_else(|_| std::env::var("CARGO_PKG_VERSION")),
+        ),
     ] {
         if let Ok(value) = value {
             println!("cargo:rustc-env={key}={value}");
