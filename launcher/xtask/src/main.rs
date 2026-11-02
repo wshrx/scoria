@@ -71,32 +71,70 @@ fn run(program: &str, args: &[&str], dir: &Path) -> ExitCode {
 
 fn check() -> ExitCode {
     let dir = launcher();
-    for (program, args) in [
-        ("cargo", vec!["fmt", "--all", "--check"]),
-        (
-            "cargo",
-            vec![
-                "clippy",
-                // The core still carries pre-existing clippy debt; the new UI crates must be clean.
-                "-p",
-                "scoria-ui-kit",
-                "-p",
-                "scoria-ui",
-                "-p",
-                "xtask",
-                "--all-targets",
-                "--",
-                "-D",
-                "warnings",
-            ],
-        ),
-    ] {
-        let code = run(program, &args, &dir);
-        if code != ExitCode::SUCCESS {
-            return code;
-        }
+    let code = run("cargo", &["fmt", "--all", "--check"], &dir);
+    if code != ExitCode::SUCCESS {
+        return code;
     }
-    ExitCode::SUCCESS
+    clippy(&dir)
+}
+
+/// Clippy on our crates only. `-D warnings` would also deny the engine's platform-specific
+/// warnings through the path dependency, so the JSON diagnostics are filtered by target.
+fn clippy(dir: &Path) -> ExitCode {
+    println!("$ cargo clippy -p scoria-ui -p scoria-ui-kit -p xtask --no-deps --all-targets");
+    let output = match Command::new("cargo")
+        .args([
+            "clippy",
+            "-p",
+            "scoria-ui",
+            "-p",
+            "scoria-ui-kit",
+            "-p",
+            "xtask",
+            "--no-deps",
+            "--all-targets",
+            "--message-format=json",
+        ])
+        .current_dir(dir)
+        .output()
+    {
+        Ok(output) => output,
+        Err(error) => {
+            eprintln!("could not run cargo clippy: {error}");
+            return ExitCode::FAILURE;
+        }
+    };
+    if !output.status.success() {
+        eprint!("{}", String::from_utf8_lossy(&output.stderr));
+        return ExitCode::FAILURE;
+    }
+
+    let ours = ["scoria-ui", "scoria-ui-kit", "xtask"];
+    let mut failed = false;
+    for line in String::from_utf8_lossy(&output.stdout).lines() {
+        let Ok(message) = serde_json::from_str::<serde_json::Value>(line) else {
+            continue;
+        };
+        if message["reason"] != "compiler-message" {
+            continue;
+        }
+        let target = message["target"]["name"].as_str().unwrap_or_default();
+        let level = message["message"]["level"].as_str().unwrap_or_default();
+        if !ours.contains(&target) || !matches!(level, "warning" | "error") {
+            continue;
+        }
+        failed = true;
+        let text = message["message"]["message"].as_str().unwrap_or_default();
+        let span = &message["message"]["spans"][0];
+        let file = span["file_name"].as_str().unwrap_or_default();
+        let line = span["line_start"].as_u64().unwrap_or_default();
+        eprintln!("{target} {file}:{line}: {level}: {text}");
+    }
+    if failed {
+        ExitCode::FAILURE
+    } else {
+        ExitCode::SUCCESS
+    }
 }
 
 fn test(extra: &[String]) -> ExitCode {
