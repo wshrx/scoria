@@ -456,26 +456,19 @@ impl Shell {
             .m(px(theme.spacing.md))
             .p(px(theme.spacing.md))
             .rounded(px(theme.radii.xl))
-            .bg(rgba(0x121014A8))
+            .bg(if theme.dark {
+                rgba(0x121014A8)
+            } else {
+                rgba(0xFFFBF6D9)
+            })
             .backdrop_blur(px(24.0))
             .border_1()
-            .border_color(rgba(0xFFFFFF14))
-            .child(
-                div()
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .gap(px(theme.spacing.sm))
-                    .px(px(theme.spacing.sm))
-                    .py(px(theme.spacing.md))
-                    .child(Self::mark())
-                    .children((!compact).then(|| {
-                        div()
-                            .text_size(px(18.0))
-                            .font_weight(gpui::FontWeight::SEMIBOLD)
-                            .child("Scoria")
-                    })),
-            )
+            .border_color(if theme.dark {
+                rgba(0xFFFFFF14)
+            } else {
+                rgba(0x1D151010)
+            })
+            .child(div().h(px(theme.spacing.sm)))
             .child(div().h(px(theme.spacing.sm)));
 
         for screen in Screen::ALL {
@@ -1188,6 +1181,19 @@ impl Render for Shell {
                 .left(px(0.0))
                 .w_full()
                 .h_full(),
+            )
+            .child(
+                div()
+                    .absolute()
+                    .top(px(0.0))
+                    .left(px(0.0))
+                    .w_full()
+                    .h_full()
+                    .bg(if theme.dark {
+                        rgba(0x09080A66)
+                    } else {
+                        rgba(0xFBF5EEF2)
+                    }),
             )
             .child(
                 div()
