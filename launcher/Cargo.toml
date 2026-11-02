@@ -72,5 +72,9 @@ keyring = { version = "3", features = ["windows-native"] }
 # The icon resource in the .exe (build.rs).
 winresource = "0.1"
 
+[target.'cfg(windows)'.dev-dependencies]
+# tests/startup.rs writes the consent file with the crate's current version.
+horizon-telemetry = { path = "../crates/horizon-telemetry" }
+
 [profile.release]
 strip = true

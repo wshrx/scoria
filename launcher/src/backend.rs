@@ -2978,7 +2978,7 @@ mod tests {
                 {"name": "horizon-linux-x86_64.tar.gz", "browser_download_url": "https://e/horizon-linux-x86_64.tar.gz", "size": 9},
             ]},
         ]);
-        let releases = parse_releases(&list, ASSET, is_game_tag);
+        let releases = parse_releases(&list, Some("horizon-linux-x86_64.tar.gz"), is_game_tag);
         let asset = |tag: &str| {
             releases
                 .iter()
