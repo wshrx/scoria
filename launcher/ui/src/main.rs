@@ -93,24 +93,22 @@ fn segment(
         .id(id)
         .flex()
         .items_center()
-        .h(px(32.0))
+        .h(px(28.0))
         .px(px(theme.spacing.md))
-        .rounded(px(theme.radii.lg))
-        .border_1()
-        .border_color(if selected {
-            theme.colors.accent
-        } else {
-            theme.colors.border
-        })
+        .rounded(px(theme.radii.md))
         .bg(if selected {
-            theme.colors.accent_soft
+            if theme.dark {
+                rgba(0xFFFFFF12)
+            } else {
+                theme.colors.surface
+            }
         } else {
-            theme.colors.surface
+            rgba(0x00000000)
         })
         .text_color(if selected {
-            theme.colors.accent
-        } else {
             theme.colors.foreground
+        } else {
+            theme.colors.muted
         })
         .text_size(px(theme.type_scale.body))
         .cursor_pointer()
@@ -175,6 +173,9 @@ impl Shell {
             toast: None,
             toast_generation: 0,
         };
+        if screen == Screen::Mods && query.is_none() {
+            shell.search_mods(cx);
+        }
         if let Some(query) = query {
             if !query.is_empty() {
                 shell
@@ -468,8 +469,15 @@ impl Shell {
             } else {
                 rgba(0x1D151010)
             })
-            .child(div().h(px(theme.spacing.sm)))
-            .child(div().h(px(theme.spacing.sm)));
+            .children((!compact).then(|| {
+                div()
+                    .px(px(theme.spacing.sm))
+                    .pt(px(theme.spacing.sm))
+                    .pb(px(theme.spacing.xs))
+                    .text_size(px(theme.type_scale.caption))
+                    .text_color(theme.colors.muted)
+                    .child("MENU")
+            }));
 
         for screen in Screen::ALL {
             let selected = screen == self.screen;
@@ -480,6 +488,9 @@ impl Shell {
                 }
                 if screen == Screen::Servers {
                     this.refresh_servers();
+                }
+                if screen == Screen::Mods && this.mods_results.is_empty() && !this.mods_loading {
+                    this.search_mods(cx);
                 }
                 cx.notify();
             });
@@ -492,18 +503,22 @@ impl Shell {
                 .id(("rail", screen as usize))
                 .flex()
                 .items_center()
-                .justify_center()
+                .justify_start()
                 .gap(px(theme.spacing.sm))
-                .h(px(40.0))
+                .h(px(38.0))
                 .px(px(theme.spacing.sm))
                 .when(compact, |item| {
-                    item.w(px(44.0)).h(px(44.0)).px(px(0.0)).self_center()
+                    item.w(px(44.0))
+                        .h(px(44.0))
+                        .px(px(0.0))
+                        .justify_center()
+                        .self_center()
                 })
-                .rounded(px(theme.radii.lg))
+                .rounded(px(theme.radii.md))
                 .bg(if selected {
-                    theme.colors.accent_soft
+                    rgba(0xFF8A4C1F)
                 } else {
-                    theme.colors.surface_secondary
+                    rgba(0x00000000)
                 })
                 .text_color(if selected {
                     theme.colors.foreground
@@ -522,7 +537,12 @@ impl Shell {
                 )
                 .children((!compact).then(|| screen.label()));
             if !selected {
-                item = item.hover(move |style| style.bg(theme.colors.surface_tertiary));
+                let hover = if theme.dark {
+                    rgba(0xFFFFFF0A)
+                } else {
+                    rgba(0x1D15100A)
+                };
+                item = item.hover(move |style| style.bg(hover));
             }
             rail = rail.child(item);
         }
@@ -1019,7 +1039,17 @@ impl Shell {
     fn settings(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = self.theme;
 
-        let mut appearance = div().flex().gap(px(theme.spacing.xs));
+        let mut appearance = div()
+            .flex()
+            .self_start()
+            .gap(px(2.0))
+            .p(px(3.0))
+            .rounded(px(theme.radii.lg))
+            .bg(if theme.dark {
+                rgba(0xFFFFFF08)
+            } else {
+                rgba(0x1D15100A)
+            });
         for (id, value, label) in [
             ("seg-dark", Appearance::Dark, "Dark"),
             ("seg-light", Appearance::Light, "Light"),
@@ -1032,7 +1062,17 @@ impl Shell {
             appearance = appearance.child(segment(theme, id, label, selected, on_click));
         }
 
-        let mut language = div().flex().gap(px(theme.spacing.xs));
+        let mut language = div()
+            .flex()
+            .self_start()
+            .gap(px(2.0))
+            .p(px(3.0))
+            .rounded(px(theme.radii.lg))
+            .bg(if theme.dark {
+                rgba(0xFFFFFF08)
+            } else {
+                rgba(0x1D15100A)
+            });
         for (id, value, label) in [
             ("seg-language-system", None, "System"),
             ("seg-english", Some(Language::English), "English"),
