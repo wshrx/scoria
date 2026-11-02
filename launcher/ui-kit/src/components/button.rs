@@ -1,5 +1,7 @@
 //! Buttons follow HeroUI's variants: one primary action per context, quieter alternatives,
 //! danger for destructive work.
+use std::time::Duration;
+
 use gpui::{div, prelude::*, px, ElementId, IntoElement, SharedString};
 
 use crate::{Theme, Variant};
@@ -79,6 +81,11 @@ impl Button {
             ButtonVariant::Ghost => colors.surface_secondary,
             _ => colors.surface_tertiary,
         };
+        let pressed = match self.variant {
+            ButtonVariant::Primary => colors.accent,
+            ButtonVariant::Danger => colors.danger,
+            _ => colors.surface_secondary,
+        };
         let (height, padding, text) = match self.size {
             ButtonSize::Sm => (28.0, 10.0, theme.type_scale.caption),
             ButtonSize::Md => (36.0, 14.0, theme.type_scale.body),
@@ -103,7 +110,15 @@ impl Button {
         if self.disabled {
             button = button.opacity(0.5).cursor_default();
         } else {
-            button = button.cursor_pointer().hover(move |style| style.bg(hover));
+            button = button
+                .cursor_pointer()
+                .hover(move |style| style.bg(hover))
+                .active(move |style| style.bg(pressed))
+                .transitions(|transitions| {
+                    transitions
+                        .bg(Duration::from_millis(140))
+                        .border_color(Duration::from_millis(140))
+                });
             if let Some(on_click) = on_click {
                 button = button.on_click(on_click);
             }

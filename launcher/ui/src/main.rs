@@ -33,6 +33,11 @@ const FONTS: [&[u8]; 6] = [
     include_bytes!("../assets/fonts/MedeoMono-Medium.ttf"),
 ];
 const MARK: &[u8] = include_bytes!("../assets/scoria-mark.png");
+const ICON_PLAY: &[u8] = include_bytes!("../assets/icons/play.svg");
+const ICON_MODS: &[u8] = include_bytes!("../assets/icons/mods.svg");
+const ICON_SERVERS: &[u8] = include_bytes!("../assets/icons/servers.svg");
+const ICON_SETTINGS: &[u8] = include_bytes!("../assets/icons/settings.svg");
+const ICON_SEARCH: &[u8] = include_bytes!("../assets/icons/search.svg");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Screen {
@@ -49,6 +54,15 @@ impl Screen {
         Screen::Servers,
         Screen::Settings,
     ];
+
+    fn icon(self) -> &'static [u8] {
+        match self {
+            Screen::Home => ICON_PLAY,
+            Screen::Mods => ICON_MODS,
+            Screen::Servers => ICON_SERVERS,
+            Screen::Settings => ICON_SETTINGS,
+        }
+    }
 
     fn label(self) -> &'static str {
         match self {
@@ -349,41 +363,44 @@ impl Shell {
                 }
                 cx.notify();
             });
-            let indicator = div()
-                .w(px(3.0))
-                .h(px(16.0))
-                .rounded(px(2.0))
+            let tint = if selected {
+                theme.colors.accent
+            } else {
+                theme.colors.muted
+            };
+            let mut item = div()
+                .id(("rail", screen as usize))
+                .flex()
+                .items_center()
+                .gap(px(theme.spacing.sm))
+                .h(px(40.0))
+                .px(px(theme.spacing.sm))
+                .rounded(px(theme.radii.lg))
                 .bg(if selected {
-                    theme.colors.accent
+                    theme.colors.accent_soft
                 } else {
                     theme.colors.surface_secondary
-                });
-            rail = rail.child(
-                div()
-                    .id(("rail", screen as usize))
-                    .flex()
-                    .items_center()
-                    .gap(px(theme.spacing.sm))
-                    .h(px(40.0))
-                    .px(px(theme.spacing.sm))
-                    .rounded(px(theme.radii.lg))
-                    .bg(if selected {
-                        theme.colors.surface_tertiary
-                    } else {
-                        theme.colors.surface_secondary
-                    })
-                    .text_color(if selected {
-                        theme.colors.foreground
-                    } else {
-                        theme.colors.muted
-                    })
-                    .text_size(px(theme.type_scale.body))
-                    .cursor_pointer()
-                    .hover(move |style| style.bg(theme.colors.surface_tertiary))
-                    .on_click(on_click)
-                    .child(indicator)
-                    .child(screen.label()),
-            );
+                })
+                .text_color(if selected {
+                    theme.colors.foreground
+                } else {
+                    theme.colors.muted
+                })
+                .text_size(px(theme.type_scale.body))
+                .cursor_pointer()
+                .transitions(|transitions| transitions.bg(std::time::Duration::from_millis(140)))
+                .on_click(on_click)
+                .child(
+                    gpui::svg()
+                        .data(screen.icon())
+                        .size(px(16.0))
+                        .text_color(tint),
+                )
+                .child(screen.label());
+            if !selected {
+                item = item.hover(move |style| style.bg(theme.colors.surface_tertiary));
+            }
+            rail = rail.child(item);
         }
         rail.child(div().flex_1()).child(
             div()
@@ -544,12 +561,31 @@ impl Shell {
         if self.mods_results.is_empty() && !self.mods_loading && self.mods_error.is_none() {
             results = results.child(
                 div()
-                    .text_size(px(theme.type_scale.body))
-                    .text_color(theme.colors.muted)
-                    .child("Nothing yet. Search the registry or type a mod name."),
+                    .flex()
+                    .flex_col()
+                    .items_center()
+                    .gap(px(theme.spacing.sm))
+                    .py(px(theme.spacing.xl))
+                    .child(
+                        gpui::svg()
+                            .data(ICON_SEARCH)
+                            .size(px(28.0))
+                            .text_color(theme.colors.muted),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.subtitle))
+                            .child("Nothing yet"),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.body))
+                            .text_color(theme.colors.muted)
+                            .child("Search the registry or type a mod name."),
+                    ),
             );
         }
-        for project in self.mods_results.iter().take(8) {
+        for project in self.mods_results.iter() {
             let title = project["title"].as_str().unwrap_or("Untitled");
             let summary = project["summary"].as_str().unwrap_or("");
             let author = project["author"].as_str().unwrap_or("");
@@ -561,9 +597,12 @@ impl Shell {
             results = results.child(soft_card(
                 &theme,
                 div()
+                    .id(id.clone())
                     .flex()
                     .flex_col()
                     .gap(px(theme.spacing.xs))
+                    .cursor_pointer()
+                    .hover(move |style| style.bg(theme.colors.surface_tertiary))
                     .child(
                         div()
                             .flex()

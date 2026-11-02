@@ -528,7 +528,24 @@ pub fn install_project(project_id: &str) -> Result<Value, String> {
 /// Search the catalogue for the in-process UI: Horizon's registry first, then Modrinth, as the
 /// same JSON `search_mods` serves.
 pub fn search_catalog(query: &str) -> Result<Value, String> {
-    search_mods(&json!({ "query": query, "kind": "mod" }))
+    // Every source, in order (Horizon first): the screen shows one list, each card says where it
+    // came from. A source that fails does not hide the others.
+    let mut results = Vec::new();
+    let mut errors = Vec::new();
+    for source in browser::sources() {
+        let mut search = browser::Query::new(query, browser::Kind::Mod);
+        search.everything = true;
+        search.limit = 16;
+        match source.search(&search) {
+            Ok(found) => results.extend(found.iter().map(project_json)),
+            Err(error) => errors.push(format!("{}: {error}", source.id().label())),
+        }
+    }
+    if results.is_empty() && !errors.is_empty() {
+        return Err(errors.join("; "));
+    }
+    results.truncate(24);
+    Ok(json!({ "results": results }))
 }
 
 fn search_mods(params: &Value) -> Result<Value, String> {
