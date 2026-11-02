@@ -60,24 +60,24 @@ fn alive(pid: u32) -> bool {
     }
     #[cfg(all(unix, not(target_os = "linux")))]
     {
-        return std::process::Command::new("kill")
+        std::process::Command::new("kill")
             .args(["-0", &pid.to_string()])
             .status()
             .map(|status| status.success())
-            .unwrap_or(false);
+            .unwrap_or(false)
     }
     #[cfg(windows)]
     {
         // tasklist with a PID filter: the image name proves the PID is still the game, not a
         // recycled one. No shell, so no quoting problems with a hostile PID.
-        return std::process::Command::new("tasklist")
+        std::process::Command::new("tasklist")
             .args(["/FI", &format!("PID eq {pid}"), "/FO", "CSV", "/NH"])
             .output()
             .map(|out| {
                 let text = String::from_utf8_lossy(&out.stdout).to_ascii_lowercase();
                 text.contains("horizon-client") || text.contains("scoria")
             })
-            .unwrap_or(false);
+            .unwrap_or(false)
     }
     #[cfg(not(any(unix, windows)))]
     {
