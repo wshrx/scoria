@@ -104,6 +104,8 @@ struct Shell {
     settings: Settings,
     name: gpui::Entity<EditableTextState>,
     name_message: Option<(bool, String)>,
+    snapshot: Result<serde_json::Value, String>,
+    play_message: Option<(bool, String)>,
 }
 
 impl Shell {
@@ -124,7 +126,25 @@ impl Shell {
             settings,
             name,
             name_message: None,
+            snapshot: scoria_core::api::snapshot(),
+            play_message: None,
         }
+    }
+
+    fn play(&mut self, cx: &mut Context<Self>) {
+        self.play_message = Some(match scoria_core::api::start_game(None) {
+            Ok(started) => (
+                true,
+                format!(
+                    "Started {} (pid {}).",
+                    started["version"].as_str().unwrap_or("the game"),
+                    started["pid"].as_u64().unwrap_or(0)
+                ),
+            ),
+            Err(error) => (false, error),
+        });
+        self.snapshot = scoria_core::api::snapshot();
+        cx.notify();
     }
 
     fn save_name(&mut self, cx: &mut Context<Self>) {
@@ -205,6 +225,9 @@ impl Shell {
             let selected = screen == self.screen;
             let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
                 this.screen = screen;
+                if screen == Screen::Home {
+                    this.snapshot = scoria_core::api::snapshot();
+                }
                 cx.notify();
             });
             rail = rail.child(
@@ -235,15 +258,80 @@ impl Shell {
         rail.child(div().flex_1())
     }
 
-    fn home(&self) -> impl IntoElement {
+    fn home(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = self.theme;
-        let play = Button::new("play", "Play")
+        let (version, prepared, playing) = match &self.snapshot {
+            Ok(snapshot) => (
+                snapshot["version"].as_str().unwrap_or("—").to_string(),
+                snapshot["prepared"].as_bool().unwrap_or(false),
+                snapshot["playing"].as_bool().unwrap_or(false),
+            ),
+            Err(_) => ("No version installed".to_string(), false, false),
+        };
+        let worlds = match &self.snapshot {
+            Ok(snapshot) => snapshot["worlds"].as_array().map(Vec::len).unwrap_or(0),
+            Err(_) => 0,
+        };
+        let problem = match &self.snapshot {
+            Ok(_) if prepared => None,
+            Ok(_) => Some("Press Download and prepare once to fetch 26.3.".to_string()),
+            Err(error) => Some(error.clone()),
+        };
+        let play = Button::new("play", if playing { "Playing" } else { "Play" })
             .variant(ButtonVariant::Primary)
             .size(ButtonSize::Md)
+            .disabled(playing || !prepared)
             .render(
                 &theme,
-                None::<fn(&gpui::ClickEvent, &mut gpui::Window, &mut gpui::App)>,
+                Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| this.play(cx))),
             );
+
+        let mut status = div().flex().flex_col().gap(px(theme.spacing.xs)).child(
+            div()
+                .text_size(px(theme.type_scale.subtitle))
+                .child(if playing { "Running" } else { "Ready" }),
+        );
+        status = status
+            .child(
+                div()
+                    .text_size(px(theme.type_scale.body))
+                    .text_color(theme.colors.muted)
+                    .child(format!("{version} · {worlds} worlds")),
+            )
+            .child(
+                div()
+                    .text_size(px(theme.type_scale.body))
+                    .text_color(if prepared {
+                        theme.colors.success
+                    } else {
+                        theme.colors.warning
+                    })
+                    .child(if prepared {
+                        "Resources are prepared."
+                    } else {
+                        "Resources are not prepared yet."
+                    }),
+            );
+        if let Some(problem) = problem {
+            status = status.child(
+                div()
+                    .text_size(px(theme.type_scale.body))
+                    .text_color(theme.colors.muted)
+                    .child(problem),
+            );
+        }
+        if let Some((ok, text)) = &self.play_message {
+            status = status.child(
+                div()
+                    .text_size(px(theme.type_scale.caption))
+                    .text_color(if *ok {
+                        theme.colors.success
+                    } else {
+                        theme.colors.danger
+                    })
+                    .child(text.clone()),
+            );
+        }
 
         div()
             .flex()
@@ -268,24 +356,7 @@ impl Shell {
                     ),
             )
             .child(div().w(px(160.0)).child(play))
-            .child(card(
-                &theme,
-                div()
-                    .flex()
-                    .flex_col()
-                    .gap(px(theme.spacing.xs))
-                    .child(
-                        div()
-                            .text_size(px(theme.type_scale.subtitle))
-                            .child("Ready"),
-                    )
-                    .child(
-                        div()
-                            .text_size(px(theme.type_scale.body))
-                            .text_color(theme.colors.muted)
-                            .child("The first slice has no game wiring yet."),
-                    ),
-            ))
+            .child(card(&theme, status))
     }
 
     fn settings(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -437,7 +508,7 @@ impl Render for Shell {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = self.theme;
         let body = match self.screen {
-            Screen::Home => div().child(self.home()),
+            Screen::Home => div().child(self.home(cx)),
             Screen::Mods => div().child(self.placeholder("Mods")),
             Screen::Servers => div().child(self.placeholder("Servers")),
             Screen::Settings => div().child(self.settings(cx)),

@@ -5620,6 +5620,7 @@ dependencies = [
  "gpui_ce_platform",
  "horizon-launcher",
  "scoria-ui-kit",
+ "serde_json",
 ]
 
 [[package]]

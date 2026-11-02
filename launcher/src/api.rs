@@ -102,6 +102,16 @@ fn selected_tag() -> Result<String, String> {
         .ok_or_else(|| "No version is installed yet.".to_string())
 }
 
+/// The window's snapshot: the same JSON `state` serves the CLI and MCP, for the in-process UI.
+pub fn snapshot() -> Result<Value, String> {
+    state()
+}
+
+/// Start the game as the window's Play does (no world or server yet).
+pub fn start_game(world: Option<&str>) -> Result<Value, String> {
+    play(&json!({ "world": world }))
+}
+
 fn state() -> Result<Value, String> {
     let tag = selected_tag()?;
     let accounts = Accounts::load();
