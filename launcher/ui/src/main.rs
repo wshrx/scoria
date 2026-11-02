@@ -11,8 +11,8 @@ use std::{
 
 use gpui::{
     div, img, linear_color_stop, linear_gradient, point, prelude::*, px, rgb, rgba, size, Bounds,
-    Context, Image, ImageFormat, ImageSource, IntoElement, MouseButton, Render, Window,
-    WindowBounds, WindowDecorations, WindowOptions,
+    Context, Image, ImageFormat, ImageSource, IntoElement, Render, Window, WindowBounds,
+    WindowControlArea, WindowDecorations, WindowOptions,
 };
 use gpui_ce_elements::editable_text::{
     actions::{default_bindings, DEFAULT_INPUT_CONTEXT},
@@ -42,6 +42,9 @@ const ICON_MODS: &[u8] = include_bytes!("../assets/icons/mods.svg");
 const ICON_SERVERS: &[u8] = include_bytes!("../assets/icons/servers.svg");
 const ICON_SETTINGS: &[u8] = include_bytes!("../assets/icons/settings.svg");
 const ICON_SEARCH: &[u8] = include_bytes!("../assets/icons/search.svg");
+const ICON_WIN_MIN: &[u8] = include_bytes!("../assets/icons/win-min.svg");
+const ICON_WIN_MAX: &[u8] = include_bytes!("../assets/icons/win-max.svg");
+const ICON_WIN_CLOSE: &[u8] = include_bytes!("../assets/icons/win-close.svg");
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Screen {
@@ -371,23 +374,27 @@ impl Shell {
 
     fn titlebar(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = self.theme;
-        let control = |id: &'static str, label: &'static str, control: fn(&mut Window)| {
-            div()
-                .id(id)
-                .flex()
-                .items_center()
-                .justify_center()
-                .w(px(34.0))
-                .h(px(28.0))
-                .rounded(px(theme.radii.md))
-                .text_color(theme.colors.muted)
-                .text_size(px(theme.type_scale.caption))
-                .cursor_pointer()
-                .hover(move |style| style.bg(theme.colors.surface_tertiary))
-                .on_click(move |_, window, _| control(window))
-                .child(label)
-        };
         let _ = cx;
+        let control =
+            |id: &'static str, icon: &'static [u8], hover: gpui::Rgba, action: fn(&mut Window)| {
+                div()
+                    .id(id)
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .w(px(34.0))
+                    .h(px(28.0))
+                    .rounded(px(theme.radii.md))
+                    .cursor_pointer()
+                    .hover(move |style| style.bg(hover))
+                    .on_click(move |_, window, _| action(window))
+                    .child(
+                        gpui::svg()
+                            .data(icon)
+                            .size(px(12.0))
+                            .text_color(theme.colors.muted),
+                    )
+            };
         div()
             .flex()
             .items_center()
@@ -396,10 +403,13 @@ impl Shell {
             .px(px(theme.spacing.md))
             .child(
                 div()
+                    .id("titlebar-drag")
                     .flex()
                     .items_center()
                     .gap(px(theme.spacing.sm))
-                    .on_mouse_down(MouseButton::Left, |_, window, _| window.start_window_move())
+                    .flex_1()
+                    .h_full()
+                    .window_control_area(WindowControlArea::Drag)
                     .child(Self::mark())
                     .child(
                         div()
@@ -412,10 +422,25 @@ impl Shell {
                 div()
                     .flex()
                     .items_center()
-                    .gap(px(4.0))
-                    .child(control("tb-min", "—", |window| window.minimize_window()))
-                    .child(control("tb-max", "□", |window| window.zoom_window()))
-                    .child(control("tb-close", "×", |window| window.remove_window())),
+                    .gap(px(2.0))
+                    .child(control(
+                        "tb-min",
+                        ICON_WIN_MIN,
+                        theme.colors.surface_tertiary,
+                        |window| window.minimize_window(),
+                    ))
+                    .child(control(
+                        "tb-max",
+                        ICON_WIN_MAX,
+                        theme.colors.surface_tertiary,
+                        |window| window.zoom_window(),
+                    ))
+                    .child(control(
+                        "tb-close",
+                        ICON_WIN_CLOSE,
+                        rgba(0xE5484D44),
+                        |window| window.remove_window(),
+                    )),
             )
     }
 
@@ -1164,19 +1189,21 @@ impl Render for Shell {
                     .flex()
                     .flex_col()
                     .size_full()
+                    .overflow_hidden()
                     .child(self.titlebar(cx))
                     .child(
                         div()
                             .flex()
                             .flex_1()
                             .min_h(px(0.0))
+                            .overflow_hidden()
                             .child(self.rail(cx, compact))
                             .child(
                                 div()
                                     .flex()
                                     .flex_col()
                                     .flex_1()
-                                    .h_full()
+                                    .min_h(px(0.0))
                                     .m(px(theme.spacing.md))
                                     .ml(px(0.0))
                                     .p(px(if compact { 20.0 } else { 32.0 }))
