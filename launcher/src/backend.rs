@@ -2134,15 +2134,21 @@ pub fn select_after_update(selected: Option<&str>, installed_before: &[String]) 
     }
 }
 
+/// The release `install_tag("latest")` uses: the newest with a build for this platform, skipping
+/// ordinary pre-releases but allowing Scoria's `-game` engine bundles (which are published as
+/// pre-releases so they stay out of the player-facing Latest slot).
+pub fn newest_installable(releases: &[Release]) -> Option<&Release> {
+    releases
+        .iter()
+        .find(|r| r.asset.is_some() && (!r.prerelease || r.tag.ends_with("-game")))
+}
+
 /// Installs `tag` (or with "latest" the newest release, pre-releases left out), then updates the selection as
 /// `select_after_update` says when `as_update`, or always selects it otherwise.
 pub fn install_tag(tag: &str, as_update: bool, progress: impl Fn(f32)) -> Result<String, String> {
     let releases = releases()?;
     let release = if tag == "latest" {
-        releases
-            .iter()
-            .find(|r| r.asset.is_some() && !r.prerelease)
-            .ok_or("No release has a build for this platform yet.")?
+        newest_installable(&releases).ok_or("No release has a build for this platform yet.")?
     } else {
         releases
             .iter()
@@ -3333,11 +3339,28 @@ mod tests {
             }
         ]);
         let releases = parse_releases(&list, Some(asset), is_game_tag);
-        let picked = releases
-            .iter()
-            .find(|r| r.asset.is_some())
-            .map(|r| r.tag.as_str());
+        let picked = newest_installable(&releases).map(|r| r.tag.as_str());
         assert_eq!(picked, Some("v0.1.0-beta-game"));
+
+        // An ordinary pre-release is still skipped; only Scoria's `-game` engine bundles are
+        // published as pre-releases and must remain installable.
+        let list = serde_json::json!([
+            {
+                "tag_name": "v2026.11.01",
+                "prerelease": true,
+                "assets": [{"name": asset, "browser_download_url": "u", "size": 1}]
+            },
+            {
+                "tag_name": "v2026.10.31",
+                "prerelease": false,
+                "assets": [{"name": asset, "browser_download_url": "u", "size": 1}]
+            }
+        ]);
+        let releases = parse_releases(&list, Some(asset), is_game_tag);
+        assert_eq!(
+            newest_installable(&releases).map(|r| r.tag.as_str()),
+            Some("v2026.10.31")
+        );
     }
 
     #[test]

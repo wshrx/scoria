@@ -383,9 +383,7 @@ fn remove_version(params: &Value) -> Result<Value, String> {
 
 fn install_latest() -> Result<Value, String> {
     let releases = backend::releases()?;
-    let release = releases
-        .iter()
-        .find(|r| r.asset.is_some())
+    let release = backend::newest_installable(&releases)
         .ok_or("No build for this platform in the release feed.")?;
     backend::install_tag(&release.tag, false, |_| {})?;
     versions()
