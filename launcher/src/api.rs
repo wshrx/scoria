@@ -516,6 +516,12 @@ fn mod_source() -> Result<Box<dyn browser::Source>, String> {
     browser::source(SourceId::Modrinth).ok_or_else(|| "Modrinth is not available.".to_string())
 }
 
+/// Search the catalogue for the in-process UI: Modrinth today (the Horizon registry is not
+/// Scoria's to call), as the same JSON `search_mods` serves.
+pub fn search_catalog(query: &str) -> Result<Value, String> {
+    search_mods(&json!({ "query": query, "kind": "mod" }))
+}
+
 fn search_mods(params: &Value) -> Result<Value, String> {
     let text = params.get("query").and_then(Value::as_str).unwrap_or("");
     let kind = mod_kind(params.get("kind").and_then(Value::as_str).unwrap_or("mod"))?;

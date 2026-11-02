@@ -19,7 +19,7 @@ use gpui_ce_platform::application;
 use scoria_core::account::{Accounts, Player};
 use scoria_core::backend::{Appearance, Settings};
 use scoria_core::i18n::Language;
-use scoria_ui_kit::{card, Button, ButtonSize, ButtonVariant, Theme};
+use scoria_ui_kit::{card, soft_card, Button, ButtonSize, ButtonVariant, Theme};
 
 /// The bundled OFL fonts: Medeo Sans for text, Medeo Mono for versions and numbers.
 const FONTS: [&[u8]; 6] = [
@@ -106,6 +106,10 @@ struct Shell {
     name_message: Option<(bool, String)>,
     snapshot: Result<serde_json::Value, String>,
     play_message: Option<(bool, String)>,
+    mods_query: gpui::Entity<EditableTextState>,
+    mods_results: Vec<serde_json::Value>,
+    mods_error: Option<String>,
+    mods_loading: bool,
 }
 
 impl Shell {
@@ -128,7 +132,39 @@ impl Shell {
             name_message: None,
             snapshot: scoria_core::api::snapshot(),
             play_message: None,
+            mods_query: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
+            mods_results: Vec::new(),
+            mods_error: None,
+            mods_loading: false,
         }
+    }
+
+    fn search_mods(&mut self, cx: &mut Context<Self>) {
+        let query = self.mods_query.read(cx).as_str().trim().to_string();
+        self.mods_loading = true;
+        self.mods_error = None;
+        cx.notify();
+        cx.spawn(async move |this, cx| {
+            let result = cx
+                .background_spawn(async move { scoria_core::api::search_catalog(&query) })
+                .await;
+            this.update(cx, |this, cx| {
+                this.mods_loading = false;
+                match result {
+                    Ok(found) => {
+                        this.mods_results =
+                            found["results"].as_array().cloned().unwrap_or_default();
+                    }
+                    Err(error) => {
+                        this.mods_results.clear();
+                        this.mods_error = Some(error);
+                    }
+                }
+                cx.notify();
+            })
+            .ok();
+        })
+        .detach();
     }
 
     fn play(&mut self, cx: &mut Context<Self>) {
@@ -359,6 +395,122 @@ impl Shell {
             .child(card(&theme, status))
     }
 
+    fn mods(&self, cx: &mut Context<Self>) -> impl IntoElement {
+        let theme = self.theme;
+        let search = Button::new("search-mods", "Search")
+            .variant(ButtonVariant::Secondary)
+            .render(
+                &theme,
+                Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| this.search_mods(cx))),
+            );
+
+        let mut results = div().flex().flex_col().gap(px(theme.spacing.sm));
+        if self.mods_loading {
+            results = results.child(
+                div()
+                    .text_size(px(theme.type_scale.body))
+                    .text_color(theme.colors.muted)
+                    .child("Searching Modrinth…"),
+            );
+        }
+        if let Some(error) = &self.mods_error {
+            results = results.child(
+                div()
+                    .text_size(px(theme.type_scale.body))
+                    .text_color(theme.colors.danger)
+                    .child(error.clone()),
+            );
+        }
+        for project in self.mods_results.iter().take(8) {
+            let title = project["title"].as_str().unwrap_or("Untitled");
+            let summary = project["summary"].as_str().unwrap_or("");
+            let author = project["author"].as_str().unwrap_or("");
+            let support = project["support"].as_str().unwrap_or("");
+            results = results.child(soft_card(
+                &theme,
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap(px(theme.spacing.xs))
+                    .child(
+                        div()
+                            .flex()
+                            .items_center()
+                            .justify_between()
+                            .child(
+                                div()
+                                    .text_size(px(theme.type_scale.subtitle))
+                                    .child(title.to_string()),
+                            )
+                            .child(
+                                div()
+                                    .text_size(px(theme.type_scale.caption))
+                                    .text_color(theme.colors.accent)
+                                    .child(support.to_string()),
+                            ),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.body))
+                            .text_color(theme.colors.muted)
+                            .child(summary.to_string()),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.caption))
+                            .text_color(theme.colors.muted)
+                            .child(format!("by {author} · Modrinth")),
+                    ),
+            ));
+        }
+
+        card(
+            &theme,
+            div()
+                .flex()
+                .flex_col()
+                .gap(px(theme.spacing.lg))
+                .child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(theme.spacing.xs))
+                        .child(div().text_size(px(theme.type_scale.title)).child("Mods"))
+                        .child(
+                            div()
+                                .text_size(px(theme.type_scale.body))
+                                .text_color(theme.colors.muted)
+                                .child(
+                                    "Modrinth catalogue. Java mods show whether they run on Scoria before installing.",
+                                ),
+                        ),
+                )
+                .child(
+                    div()
+                        .flex()
+                        .items_center()
+                        .gap(px(theme.spacing.sm))
+                        .child(
+                            text_input("mods-query")
+                                .state(self.mods_query.downgrade())
+                                .w(px(320.0))
+                                .h(px(36.0))
+                                .px(px(theme.spacing.sm))
+                                .rounded(px(theme.radii.field))
+                                .border_1()
+                                .border_color(theme.colors.border)
+                                .bg(theme.colors.surface_secondary)
+                                .text_color(theme.colors.foreground)
+                                .text_size(px(theme.type_scale.body))
+                                .placeholder("sodium, shaders, …"),
+                        )
+                        .child(search),
+                )
+                .child(results),
+        )
+        .max_w(px(880.0))
+    }
+
     fn settings(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = self.theme;
 
@@ -509,7 +661,7 @@ impl Render for Shell {
         let theme = self.theme;
         let body = match self.screen {
             Screen::Home => div().child(self.home(cx)),
-            Screen::Mods => div().child(self.placeholder("Mods")),
+            Screen::Mods => div().child(self.mods(cx)),
             Screen::Servers => div().child(self.placeholder("Servers")),
             Screen::Settings => div().child(self.settings(cx)),
         };
