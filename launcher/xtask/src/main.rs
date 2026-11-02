@@ -148,7 +148,9 @@ fn test(extra: &[String]) -> ExitCode {
     // macOS keeps to the new crates: the engine's app-bundle test needs a real Apple app and
     // signing setup that this CI image does not provide, and the engine is not what this
     // rewrite changes. Linux and Windows run the whole workspace.
-    let scoped = cfg!(target_os = "macos");
+    // The engine's platform tests need fixtures this repo never ran on Windows/macOS; keep those
+    // two on the crates this rewrite owns. Linux runs the whole workspace.
+    let scoped = cfg!(any(target_os = "macos", windows));
     let mut args: Vec<&str> = if nextest {
         vec!["nextest", "run"]
     } else {
