@@ -41,7 +41,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            libxkbcommon-dev libwayland-dev libx11-xcb-dev libfontconfig-dev \
+            libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libx11-xcb-dev libfontconfig-dev \
             libvulkan-dev libasound2-dev libudev-dev zstd
       - name: Format and lints
         run: cargo xtask check
