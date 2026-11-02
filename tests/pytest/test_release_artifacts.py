@@ -41,9 +41,11 @@ def _launcher_zip() -> Path:
 
 
 def _linux_archives():
-    return sorted(ARTIFACTS.glob("scoria-launcher-linux-x86_64.tar.*")) + sorted(
+    found = sorted(ARTIFACTS.glob("scoria-launcher-linux-x86_64.tar.*")) + sorted(
         ARTIFACTS.glob("**/scoria-launcher-linux-x86_64.tar.*")
     )
+    # Prefer the zstd archive: older gzip ones may still sit in dist/ from a previous release.
+    return sorted(found, key=lambda path: (path.suffix != ".zst", str(path)))
 
 
 def _windows_folder(tmp_path: Path) -> Path:
@@ -55,27 +57,17 @@ def _windows_folder(tmp_path: Path) -> Path:
 def test_windows_archive_has_everything_the_launcher_needs(tmp_path):
     folder = _windows_folder(tmp_path)
     names = {path.name for path in folder.rglob("*")}
-    for required in (
-        "scoria-ui.exe",
-        "horizon-launcher.exe",
-        "gpuix-native.node",
-        "Scoria.cmd",
-    ):
+    for required in ("scoria.exe", "README.txt"):
         assert required in names, f"{required} is missing from the Windows archive"
-    assert any(path.suffix == ".ttf" for path in folder.rglob("*")), "no bundled fonts"
-
-
-def test_windows_cmd_runs_in_the_console_and_keeps_a_log(tmp_path):
-    folder = _windows_folder(tmp_path)
-    cmd = next(folder.rglob("Scoria.cmd"))
-    raw = cmd.read_bytes()
-    assert b"\r\n" in raw, "Scoria.cmd must use CRLF line endings for cmd.exe"
-    text = raw.decode("utf-8", "replace")
-    assert "NAPI_RS_NATIVE_LIBRARY_PATH" in text, "the GPUIX addon path is not set"
-    assert "scoria-ui.log" in text, (
-        "the launcher must keep a log: a silent exit on Windows is undiagnosable otherwise"
+    assert not any(path.suffix == ".node" for path in folder.rglob("*")), (
+        "the launcher must not ship a native addon"
     )
-    assert "pause" in text, "a failed start must leave the console open"
+
+
+def test_windows_readme_points_at_the_crash_log(tmp_path):
+    folder = _windows_folder(tmp_path)
+    readme = next(folder.rglob("README.txt")).read_text()
+    assert "crash.log" in readme, "the README must say where a crash is recorded"
 
 
 def test_windows_binaries_import_only_dlls_that_are_there(tmp_path):
@@ -120,11 +112,9 @@ def test_linux_archive_is_complete():
     else:
         with tarfile.open(archive) as tar:
             names = tar.getnames()
-    assert any(name.endswith("/horizon-launcher") for name in names), "no launcher engine"
-    assert any(name.endswith("/scoria-ui") for name in names), "no UI"
-    assert any(name.endswith("/gpuix-native.node") for name in names), "no GPUIX addon"
-    wrapper = next((name for name in names if name.endswith("/scoria-launcher-ui")), None)
-    assert wrapper, "no scoria-launcher-ui wrapper (the addon path would not be set)"
+    assert any(name.endswith("/scoria") for name in names), "no scoria binary"
+    assert any(name.endswith("/README.txt") for name in names), "no README"
+    assert not any(name.endswith(".node") for name in names), "no native addon in a release"
 
 
 def _zstd_members(archive: Path):

@@ -22,11 +22,9 @@ decompiled Java in the public tree.
 
 ## What a launcher archive contains
 
-`scoria-ui` (the Bun-compiled UI), `horizon-launcher` (the Rust engine), `gpuix-native.node`, and
-`fonts/`. Both Rust binaries on Windows are built with `+crt-static`, and the GPUIX addon is built
-from source the same way (`tools/build_gpuix_native.sh`), so no Visual C++ redistributable is
-needed; `tools/windows_runtime.sh` still ships `vcruntime140.dll` if a binary ever imports it. Linux adds a `scoria-launcher-ui` wrapper; macOS ships `Scoria.app` with a shell shim that
-sets `NAPI_RS_NATIVE_LIBRARY_PATH`; Windows ships `Scoria.cmd` for the same reason.
+One binary, `scoria` (`scoria.exe` on Windows). The fonts, the mark and the engine are inside it:
+there is no Bun, no native addon and no Visual C++ redistributable. Windows builds use
+`+crt-static`; macOS ships `Scoria.app` with the binary in `Contents/MacOS`.
 
 ## The game client is not in these archives
 
@@ -68,7 +66,7 @@ not a branch.
 
 ## Checklist for a release
 
-- [ ] `bun run typecheck && bun run check:ui && bun run check:i18n`
+- [ ] `cargo xtask gate` (fmt, clippy, Rust tests, pytest)
 - [ ] `cargo test` in `launcher/`, and `cargo test -p horizon-client --bin horizon-client`
 - [ ] Fresh-machine install test on each OS
 - [ ] Screenshots in `docs/public/screenshots/` match the build

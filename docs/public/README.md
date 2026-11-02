@@ -92,7 +92,7 @@ no Minecraft assets.
 
 ## Install
 
-Linux: unpack the tarball and run `scoria-launcher-ui`. Windows: unzip and run `Scoria.cmd`
+Linux: unpack the tarball and run `./scoria`. Windows: unzip and run `scoria.exe`
 (SmartScreen warns until signed). macOS is deferred: there is no archive yet. The first launch asks for nothing; press **Download and prepare**
 once and Scoria prepares 26.3 locally from your own files or Mojang's servers.
 
@@ -113,29 +113,29 @@ is a build, not a release.
 
 ## Build from source
 
-Rust 1.90+, Bun 1.4+, and a Vulkan-capable GPU.
+Rust 1.90+ and a Vulkan-capable GPU.
 
 ```sh
-cd launcher && cargo build --release
-cd ../launcher-ui && bun install && bun run build
+cd launcher && cargo build --release -p scoria-ui
 sh tools/package_ui.sh        # Linux bundle
 sh tools/package_macos.sh     # macOS .app
 sh tools/package_windows.sh   # Windows zip
 ```
 
-Run the UI in development with `bun run dev` (Linux: native Wayland, no XWayland).
+Run the window in development with `cargo xtask ui` (Linux: native Wayland, no XWayland).
 
 ## How it is put together
 
 ```
 crates/        Rust engine: client, world, protocol, assets, preparation, servers
 launcher/      Rust launcher engine + JSON-lines API (horizon-launcher api)
-launcher-ui/   React on GPUIX + flint-ui (screens, layout, mods, feedback)
+launcher/ui/    the gpui-ce window (screens, layout, mods, feedback)
+launcher/ui-kit/ the design tokens, theme and components
 docs/          engine and user documentation
 ```
 
-The UI never touches the disk or starts the game; it talks to the launcher over JSON lines. The
-launcher prepares Mojang files, ports Java mods to the Rust runtime, and starts the client.
+The window and the launcher are one process: `scoria` calls the engine directly, no JSON bridge.
+The engine prepares Mojang files, ports Java mods to the Rust runtime, and starts the client.
 
 ## Status
 

@@ -15,16 +15,14 @@ building the game client is a full Rust build (the same engine as Horizon).
 
 ```sh
 cd launcher
-cargo build --release
-
-cd ../launcher-ui
-bun install
-bun run build
+cargo xtask build             # the `scoria` window (debug)
+cargo xtask ui                # run it
+cargo build --release -p scoria-ui
 
 cd ..
-sh tools/package_ui.sh        # Linux bundle
+sh tools/package_ui.sh        # Linux .tar.zst
 sh tools/package_macos.sh     # macOS .app
-sh tools/package_windows.sh   # Windows zip
+sh tools/package_windows.sh   # Windows .zip
 ```
 
 The archives contain the launcher only. They do **not** contain Minecraft files.
@@ -48,7 +46,7 @@ describe running the client directly with resources prepared from your own Minec
 ```sh
 cd launcher && cargo test
 cargo test -p horizon-client --bin horizon-client cyrillic
-cd launcher-ui && bun run typecheck && bun run check:ui && bun run check:i18n
+cargo xtask gate              # fmt, clippy, Rust tests, pytest
 ```
 
 ## No assets

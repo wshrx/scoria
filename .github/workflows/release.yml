@@ -24,24 +24,16 @@ jobs:
             os: windows-latest
             script: sh tools/package_windows.sh
             file: dist/scoria-launcher-windows-x64.zip
-            # The C runtime linked in: without it horizon-launcher.exe asks for
-            # VCRUNTIME140.dll, which only the Visual C++ redistributable installs.
+            # The C runtime linked in: without it scoria.exe asks for VCRUNTIME140.dll,
+            # which only the Visual C++ redistributable installs.
             rustflags: -C target-feature=+crt-static
-            # 0: ship the published npm addon plus vcruntime140.dll (the combination
-            # known to load). 1: build it from source with +crt-static, which drops the
-            # DLL but has not been proven on a real Windows machine yet.
-            gpuix_from_source: 0
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     env:
       RUSTFLAGS: ${{ matrix.rustflags }}
-      SCORIA_GPUIX_FROM_SOURCE: ${{ matrix.gpuix_from_source }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.4
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: "launcher -> target"
@@ -62,12 +54,9 @@ jobs:
         if: runner.os == 'Windows'
         shell: bash
         run: |
-          # Everything in the folder must run on a clean Windows: the Rust launcher
-          # is +crt-static and the GPUIX addon is built from source the same way.
-          python tools/check_imports.py --shipped dist/windows \
-            dist/windows/horizon-launcher.exe \
-            dist/windows/scoria-ui.exe \
-            dist/windows/gpuix-native.node
+          # The single launcher binary must run on a clean Windows: +crt-static, no
+          # addon and no Visual C++ redistributable.
+          python tools/check_imports.py --shipped dist/windows dist/windows/scoria.exe
       - name: Release artifact checks
         shell: bash
         run: |

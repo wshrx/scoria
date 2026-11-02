@@ -12,7 +12,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 BIN = ROOT / "launcher" / "target" / "debug" / (
-    "scoria-ui.exe" if sys.platform == "win32" else "scoria-ui"
+    "scoria.exe" if sys.platform == "win32" else "scoria"
 )
 
 

@@ -1,6 +1,7 @@
 #!/bin/sh
-# Packages Scoria for Windows x64: scoria-launcher-windows-x64.zip.
-# Run in Git Bash on Windows with Rust and Bun on PATH.
+# Packages the Scoria launcher for Windows x64: one GUI binary, no addon, no CRT DLL.
+#   dist/windows/scoria.exe
+#   dist/scoria-launcher-windows-x64.zip
 set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 out="$root/dist/windows"
@@ -8,54 +9,16 @@ out="$root/dist/windows"
 rm -rf "$out"
 mkdir -p "$out"
 
-echo "Building the Rust engine…"
-(cd "$root/launcher" && cargo build --release --locked)
+echo "Building scoria.exe…"
+(cd "$root/launcher" && cargo build --release --locked -p scoria-ui)
 
-echo "Building the UI…"
-(cd "$root/launcher-ui" && bun install --frozen-lockfile && bun run check:ui && bun run typecheck && bun run check:i18n)
-(cd "$root/launcher-ui" && bun build --compile app.tsx --outfile "$out/scoria-ui.exe")
-
-cp "$root/launcher/target/release/horizon-launcher.exe" "$out/"
-mkdir -p "$out/fonts" "$out/brand"
-cp "$root"/launcher-ui/src/lib/fonts/*.ttf "$out/fonts/"
-cp "$root"/launcher-ui/src/assets/*.png "$out/brand/"
-
-addon="$root/launcher-ui/node_modules/@gpuix/native-win32-x64-msvc/gpuix-native.win32-x64-msvc.node"
-if [ "${SCORIA_GPUIX_FROM_SOURCE:-0}" = 1 ] &&
-   sh "$root/tools/build_gpuix_native.sh" "$out/gpuix-native.node"; then
-  echo "Using the self-built GPUIX addon (static C runtime)."
-else
-  [ -f "$addon" ] || { echo "missing $addon: bun install must run on Windows" >&2; exit 1; }
-  cp "$addon" "$out/gpuix-native.node"
-fi
-sh "$root/tools/windows_runtime.sh" "$out"
-
-# Batch files need CRLF; a shell here-string would write LF and cmd.exe can misread it.
-# The UI runs in this console, not detached: if it dies, its output must reach
-# scoria-ui.log and the window must stay open with the exit code.
-printf '@echo off
-setlocal
-cd /d "%%~dp0"
-set "NAPI_RS_NATIVE_LIBRARY_PATH=%%~dp0gpuix-native.node"
-set "RUST_BACKTRACE=1"
-"%%~dp0scoria-ui.exe" %%* > "%%~dp0scoria-ui.log" 2>&1
-set "code=%%errorlevel%%"
-if not "%%code%%"=="0" (
-  echo.
-  echo Scoria exited with code %%code%%. The log is %%~dp0scoria-ui.log
-  pause
-)
-exit /b %%code%%' | sed 's/$/\r/' > "$out/Scoria.cmd"
-
+cp "$root/launcher/target/release/scoria.exe" "$out/scoria.exe"
 cat > "$out/README.txt" <<'TXT'
 Scoria — Minecraft: Java Edition 26.3, offline by default.
 
-Run Scoria.cmd. Windows SmartScreen will warn until the build is signed:
-More info -> Run anyway. If the launcher closes, scoria-ui.log beside Scoria.cmd
-and the exit code in the console say why.
-
-Saves and options live in %APPDATA%\horizon; the launcher's files live in
-%LOCALAPPDATA%\horizon-launcher. Delete neither while the game is running.
+Run scoria.exe. Windows SmartScreen will warn until the build is signed:
+More info -> Run anyway. A crash writes crash.log beside the launcher settings
+in %LOCALAPPDATA%\horizon-launcher.
 TXT
 
 if command -v 7z >/dev/null 2>&1; then

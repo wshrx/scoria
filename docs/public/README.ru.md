@@ -84,7 +84,7 @@ Scoria — нативный лаунчер и клиент. Читает ван�
 
 ## Установка
 
-Linux: распаковать архив и запустить `scoria-launcher-ui`. Windows: распаковать и запустить
+Linux: распаковать архив и запустить `./scoria`. Windows: распаковать и запустить
 `Scoria.cmd` (SmartScreen предупредит, пока не подписана). macOS отложена: архива пока нет. Первый запуск
 ничего не спрашивает; нажмите **Скачать и подготовить** один раз — Scoria подготовит 26.3 из
 ваших файлов или с серверов Mojang.
@@ -106,11 +106,10 @@ Linux: распаковать архив и запустить `scoria-launcher-
 
 ## Сборка из исходников
 
-Rust 1.90+, Bun 1.4+, GPU с Vulkan.
+Rust 1.90+, GPU с Vulkan.
 
 ```sh
-cd launcher && cargo build --release
-cd ../launcher-ui && bun install && bun run build
+cd launcher && cargo build --release -p scoria-ui
 sh tools/package_ui.sh        # Linux
 sh tools/package_macos.sh     # macOS .app
 sh tools/package_windows.sh   # Windows zip

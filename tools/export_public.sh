@@ -17,7 +17,7 @@ copy() {
 
 # Product sources and build files. docs/media is game art and old launcher screenshots: it stays
 # out. launcher/docs is the same. The public README carries only UI screenshots.
-copy crates launcher launcher-ui docs packaging mods third_party xtask
+copy crates launcher docs packaging mods third_party xtask
 # mods/horizon holds the clean-room Java oracles the preparer compiles; they ship in the game
 # bundle and are allowed by check_public_tree.py (original code, no Mojang sources).
 cp "$root/Cargo.toml" "$root/Cargo.lock" "$root/research-lock.json" "$root/CHANGELOG.md" \
@@ -29,7 +29,7 @@ rm -rf "$out/docs/media" "$out/docs/public" "$out/docs/agents" "$out/docs/fork" 
 mkdir -p "$out/tools"
 cp "$root"/tools/package_ui.sh "$root"/tools/package_macos.sh "$root"/tools/package_windows.sh \
    "$root"/tools/package_game.sh "$root"/tools/package_game_windows.sh \
-   "$root"/tools/windows_runtime.sh "$root"/tools/build_gpuix_native.sh \
+   "$root"/tools/windows_runtime.sh \
    "$root"/tools/check_imports.py "$out/tools/"
 mkdir -p "$out/tests/pytest"
 cp "$root"/tests/pytest/*.py "$out/tests/pytest/"
@@ -51,7 +51,7 @@ done
 
 mkdir -p "$out/.github/workflows"
 cp "$root/.github/workflows/release.yml" "$out/.github/workflows/"
-cp "$root/.github/workflows/public-ci.yml" "$out/.github/workflows/ci.yml"
+cp "$root/.github/workflows/ci.yml" "$out/.github/workflows/ci.yml"
 
 cat > "$out/.gitignore" <<'IGNORE'
 node_modules/

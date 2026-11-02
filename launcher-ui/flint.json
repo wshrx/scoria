@@ -1,5 +1,0 @@
-{
-  "$schema": "https://flint-ui.dev/schema/flint.json",
-  "root": "src",
-  "registry": "https://raw.githubusercontent.com/wshrx/flint-ui/main/registry"
-}

@@ -1,4 +1,6 @@
 //! Scoria's launcher window: one process, gpui-ce, no Bun and no native addon.
+// The release build is a GUI app: no console window behind the launcher on Windows.
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use std::{
     borrow::Cow,
     fs::OpenOptions,

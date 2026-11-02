@@ -1,8 +1,8 @@
 //! Scoria launcher engine: installs builds, prepares them from the player's own files, and
 //! serves the JSON API the desktop UI talks to.
 //!
-//! The legacy GPUI launcher was removed: Scoria's UI is `scoria-launcher-ui`, and this binary is
-//! the engine behind it (`horizon-launcher api`). The CLI stays for scripts and diagnostics.
+//! The window is `scoria`; this binary is the engine behind it (`horizon-launcher api`). The CLI
+//! stays for scripts and diagnostics.
 mod cli;
 mod cli_tools;
 mod console;
@@ -25,8 +25,6 @@ fn main() {
     if let Some(code) = cli::run() {
         std::process::exit(code);
     }
-    eprintln!(
-        "Scoria's window is scoria-launcher-ui. This binary is the engine: `horizon-launcher api`."
-    );
+    eprintln!("Scoria's window is `scoria`. This binary is the engine: `horizon-launcher api`.");
     std::process::exit(2);
 }

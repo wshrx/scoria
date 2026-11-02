@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [[bin]]
-name = "scoria-ui"
+name = "scoria"
 path = "src/main.rs"
 
 [target.'cfg(windows)'.build-dependencies]
