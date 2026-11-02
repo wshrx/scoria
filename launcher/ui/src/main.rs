@@ -20,7 +20,7 @@ use scoria_core::account::{Accounts, Player};
 use scoria_core::backend::{Appearance, Settings};
 use scoria_core::i18n::Language;
 use scoria_ui_kit::{
-    badge, card, soft_card, tone_for_support, Button, ButtonSize, ButtonVariant, Theme,
+    badge, card, soft_card, toast, tone_for_support, Button, ButtonSize, ButtonVariant, Theme, Tone,
 };
 
 /// The bundled OFL fonts: Medeo Sans for text, Medeo Mono for versions and numbers.
@@ -127,11 +127,11 @@ struct Shell {
     mods_error: Option<String>,
     mods_loading: bool,
     installing: Option<String>,
-    install_message: Option<(bool, String)>,
     servers: Result<serde_json::Value, String>,
     server_name: gpui::Entity<EditableTextState>,
     server_ip: gpui::Entity<EditableTextState>,
-    server_message: Option<(bool, String)>,
+    toast: Option<(Tone, String)>,
+    toast_generation: u64,
 }
 
 impl Shell {
@@ -159,11 +159,11 @@ impl Shell {
             mods_error: None,
             mods_loading: false,
             installing: None,
-            install_message: None,
             servers: scoria_core::api::saved_servers(),
             server_name: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
             server_ip: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
-            server_message: None,
+            toast: None,
+            toast_generation: 0,
         };
         if let Some(query) = query {
             if !query.is_empty() {
@@ -176,6 +176,26 @@ impl Shell {
         shell
     }
 
+    fn show_toast(&mut self, tone: Tone, message: impl Into<String>, cx: &mut Context<Self>) {
+        self.toast_generation += 1;
+        let generation = self.toast_generation;
+        self.toast = Some((tone, message.into()));
+        cx.notify();
+        cx.spawn(async move |this, cx| {
+            cx.background_executor()
+                .timer(std::time::Duration::from_secs(3))
+                .await;
+            this.update(cx, |this, cx| {
+                if this.toast_generation == generation {
+                    this.toast = None;
+                    cx.notify();
+                }
+            })
+            .ok();
+        })
+        .detach();
+    }
+
     fn refresh_servers(&mut self) {
         self.servers = scoria_core::api::saved_servers();
     }
@@ -183,28 +203,26 @@ impl Shell {
     fn add_server(&mut self, cx: &mut Context<Self>) {
         let name = self.server_name.read(cx).as_str().trim().to_string();
         let ip = self.server_ip.read(cx).as_str().trim().to_string();
-        self.server_message = Some(match scoria_core::api::add_saved_server(&name, &ip) {
+        match scoria_core::api::add_saved_server(&name, &ip) {
             Ok(list) => {
                 self.servers = Ok(list);
                 self.server_name
                     .update(cx, |state, cx| state.emplace("", cx));
                 self.server_ip.update(cx, |state, cx| state.emplace("", cx));
-                (true, format!("Added {name}."))
+                self.show_toast(Tone::Success, format!("Added {name}."), cx);
             }
-            Err(error) => (false, error),
-        });
-        cx.notify();
+            Err(error) => self.show_toast(Tone::Danger, error, cx),
+        }
     }
 
     fn remove_server(&mut self, index: usize, cx: &mut Context<Self>) {
-        self.server_message = Some(match scoria_core::api::remove_saved_server(index) {
+        match scoria_core::api::remove_saved_server(index) {
             Ok(list) => {
                 self.servers = Ok(list);
-                (true, "Removed.".to_string())
+                self.show_toast(Tone::Success, "Removed.", cx);
             }
-            Err(error) => (false, error),
-        });
-        cx.notify();
+            Err(error) => self.show_toast(Tone::Danger, error, cx),
+        }
     }
 
     fn install(&mut self, project_id: String, cx: &mut Context<Self>) {
@@ -212,7 +230,6 @@ impl Shell {
             return;
         }
         self.installing = Some(project_id.clone());
-        self.install_message = None;
         cx.notify();
         cx.spawn(async move |this, cx| {
             let result = cx
@@ -220,11 +237,12 @@ impl Shell {
                 .await;
             this.update(cx, |this, cx| {
                 this.installing = None;
-                this.install_message = Some(match result {
-                    Ok(_) => (true, "Installed into the selected instance.".to_string()),
-                    Err(error) => (false, error),
-                });
-                cx.notify();
+                match result {
+                    Ok(_) => {
+                        this.show_toast(Tone::Success, "Installed into the selected instance.", cx)
+                    }
+                    Err(error) => this.show_toast(Tone::Danger, error, cx),
+                }
             })
             .ok();
         })
@@ -661,19 +679,6 @@ impl Shell {
             ));
         }
 
-        if let Some((ok, text)) = &self.install_message {
-            results = results.child(
-                div()
-                    .text_size(px(theme.type_scale.body))
-                    .text_color(if *ok {
-                        theme.colors.success
-                    } else {
-                        theme.colors.danger
-                    })
-                    .child(text.clone()),
-            );
-        }
-
         card(
             &theme,
             div()
@@ -799,19 +804,6 @@ impl Shell {
                             ),
                     ),
             ));
-        }
-
-        if let Some((ok, text)) = &self.server_message {
-            rows = rows.child(
-                div()
-                    .text_size(px(theme.type_scale.caption))
-                    .text_color(if *ok {
-                        theme.colors.success
-                    } else {
-                        theme.colors.danger
-                    })
-                    .child(text.clone()),
-            );
         }
 
         card(
@@ -1030,7 +1022,7 @@ impl Render for Shell {
             Screen::Settings => div().child(self.settings(cx)),
         };
 
-        div()
+        let mut root = div()
             .flex()
             .size_full()
             .font_family(theme.type_scale.sans)
@@ -1046,7 +1038,17 @@ impl Render for Shell {
                     .p(px(theme.spacing.xl))
                     .gap(px(theme.spacing.lg))
                     .child(body),
-            )
+            );
+        if let Some((tone, message)) = &self.toast {
+            root = root.child(
+                div()
+                    .absolute()
+                    .bottom(px(theme.spacing.xl))
+                    .right(px(theme.spacing.xl))
+                    .child(toast(&theme, message.clone(), *tone)),
+            );
+        }
+        root
     }
 }
 

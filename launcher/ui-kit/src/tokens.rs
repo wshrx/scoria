@@ -68,6 +68,28 @@ pub struct Typography {
     pub display: f32,
 }
 
+/// Motion timings. Long enough to read as a transition, short enough not to wait.
+#[derive(Clone, Copy, Debug)]
+pub struct Motion {
+    pub fast: std::time::Duration,
+    pub base: std::time::Duration,
+}
+
+impl Motion {
+    pub const fn new() -> Self {
+        Self {
+            fast: std::time::Duration::from_millis(120),
+            base: std::time::Duration::from_millis(180),
+        }
+    }
+}
+
+impl Default for Motion {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct Theme {
     pub dark: bool,
@@ -75,6 +97,7 @@ pub struct Theme {
     pub radii: Radii,
     pub spacing: Spacing,
     pub type_scale: Typography,
+    pub motion: Motion,
 }
 
 impl Theme {
@@ -126,6 +149,7 @@ impl Theme {
                 title: 20.0,
                 display: 32.0,
             },
+            motion: Motion::new(),
         }
     }
 
@@ -177,6 +201,7 @@ impl Theme {
                 title: 20.0,
                 display: 32.0,
             },
+            motion: Motion::new(),
         }
     }
 
