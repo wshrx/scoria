@@ -10,8 +10,9 @@ use std::{
 };
 
 use gpui::{
-    div, img, point, prelude::*, px, size, Bounds, Context, Image, ImageFormat, ImageSource,
-    IntoElement, Render, Window, WindowBounds, WindowOptions,
+    div, img, linear_color_stop, linear_gradient, point, prelude::*, px, rgb, rgba, size, Bounds,
+    Context, Image, ImageFormat, ImageSource, IntoElement, Render, Window, WindowBounds,
+    WindowOptions,
 };
 use gpui_ce_elements::editable_text::{
     actions::{default_bindings, DEFAULT_INPUT_CONTEXT},
@@ -35,6 +36,7 @@ const FONTS: [&[u8]; 6] = [
     include_bytes!("../assets/fonts/MedeoMono-Medium.ttf"),
 ];
 const MARK: &[u8] = include_bytes!("../assets/scoria-mark.png");
+const BACKDROP: &[u8] = include_bytes!("../assets/backdrop.jpg");
 const ICON_PLAY: &[u8] = include_bytes!("../assets/icons/play.svg");
 const ICON_MODS: &[u8] = include_bytes!("../assets/icons/mods.svg");
 const ICON_SERVERS: &[u8] = include_bytes!("../assets/icons/servers.svg");
@@ -129,6 +131,7 @@ struct Shell {
     mods_error: Option<String>,
     mods_loading: bool,
     installing: Option<String>,
+    preparing: bool,
     servers: Result<serde_json::Value, String>,
     server_name: gpui::Entity<EditableTextState>,
     server_ip: gpui::Entity<EditableTextState>,
@@ -161,6 +164,7 @@ impl Shell {
             mods_error: None,
             mods_loading: false,
             installing: None,
+            preparing: false,
             servers: scoria_core::api::saved_servers(),
             server_name: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
             server_ip: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
@@ -279,6 +283,29 @@ impl Shell {
         .detach();
     }
 
+    fn prepare(&mut self, cx: &mut Context<Self>) {
+        if self.preparing {
+            return;
+        }
+        self.preparing = true;
+        cx.notify();
+        cx.spawn(async move |this, cx| {
+            let result = cx
+                .background_spawn(async { scoria_core::api::prepare_game() })
+                .await;
+            this.update(cx, |this, cx| {
+                this.preparing = false;
+                this.snapshot = scoria_core::api::snapshot();
+                match result {
+                    Ok(_) => this.show_toast(Tone::Success, "26.3 is prepared.", cx),
+                    Err(error) => this.show_toast(Tone::Danger, error, cx),
+                }
+            })
+            .ok();
+        })
+        .detach();
+    }
+
     fn play(&mut self, cx: &mut Context<Self>) {
         self.play_message = Some(match scoria_core::api::start_game(None) {
             Ok(started) => (
@@ -350,10 +377,13 @@ impl Shell {
             .gap(px(2.0))
             .w(px(248.0))
             .h_full()
+            .m(px(theme.spacing.md))
             .p(px(theme.spacing.md))
-            .bg(theme.colors.surface_secondary)
-            .border_r_1()
-            .border_color(theme.colors.separator)
+            .rounded(px(theme.radii.xl))
+            .bg(rgba(0x121014A8))
+            .backdrop_blur(px(24.0))
+            .border_1()
+            .border_color(rgba(0xFFFFFF14))
             .child(
                 div()
                     .flex()
@@ -447,63 +477,117 @@ impl Shell {
             ),
             Err(_) => ("No version installed".to_string(), false, false),
         };
-        let worlds = match &self.snapshot {
-            Ok(snapshot) => snapshot["worlds"].as_array().map(Vec::len).unwrap_or(0),
-            Err(_) => 0,
+        let worlds: Vec<serde_json::Value> = match &self.snapshot {
+            Ok(snapshot) => snapshot["worlds"].as_array().cloned().unwrap_or_default(),
+            Err(_) => Vec::new(),
         };
         let problem = match &self.snapshot {
             Ok(_) if prepared => None,
-            Ok(_) => Some("Press Download and prepare once to fetch 26.3.".to_string()),
+            Ok(_) => Some("26.3 is not prepared on this machine yet.".to_string()),
             Err(error) => Some(error.clone()),
         };
+
         let play = Button::new("play", if playing { "Playing" } else { "Play" })
-            .variant(ButtonVariant::Primary)
-            .size(ButtonSize::Md)
+            .variant(if prepared {
+                ButtonVariant::Primary
+            } else {
+                ButtonVariant::Secondary
+            })
+            .size(ButtonSize::Lg)
             .disabled(playing || !prepared)
             .render(
                 &theme,
                 Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| this.play(cx))),
             );
-
-        let row = |name: &'static str, value: String, tone: gpui::Rgba| {
-            div()
-                .flex()
-                .items_center()
-                .justify_between()
-                .child(
-                    div()
-                        .text_size(px(theme.type_scale.body))
-                        .text_color(theme.colors.muted)
-                        .child(name),
-                )
-                .child(
-                    div()
-                        .text_size(px(theme.type_scale.body))
-                        .text_color(tone)
-                        .child(value),
-                )
-        };
-        let mut status = div().flex().flex_col().gap(px(theme.spacing.sm)).child(
-            div()
-                .text_size(px(theme.type_scale.subtitle))
-                .child(if playing { "Running" } else { "Ready" }),
+        let prepare = Button::new(
+            "prepare",
+            if self.preparing {
+                "Preparing…"
+            } else {
+                "Download and prepare"
+            },
+        )
+        .variant(if prepared {
+            ButtonVariant::Secondary
+        } else {
+            ButtonVariant::Primary
+        })
+        .size(ButtonSize::Lg)
+        .disabled(self.preparing || prepared)
+        .render(
+            &theme,
+            Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| this.prepare(cx))),
         );
-        status = status
-            .child(row("Version", version, theme.colors.foreground))
-            .child(row(
-                "Resources",
+
+        let mut chips = div().flex().items_center().gap(px(theme.spacing.xs));
+        chips = chips
+            .child(badge(&theme, version.clone(), Tone::Neutral))
+            .child(badge(
+                &theme,
+                if prepared { "Prepared" } else { "Not prepared" },
                 if prepared {
-                    "Prepared".to_string()
+                    Tone::Success
                 } else {
-                    "Not prepared".to_string()
-                },
-                if prepared {
-                    theme.colors.success
-                } else {
-                    theme.colors.warning
+                    Tone::Warning
                 },
             ))
-            .child(row("Worlds", worlds.to_string(), theme.colors.foreground));
+            .child(badge(
+                &theme,
+                if worlds.is_empty() {
+                    "No worlds".to_string()
+                } else {
+                    format!("{} worlds", worlds.len())
+                },
+                Tone::Neutral,
+            ));
+
+        let mut tiles = div().flex().gap(px(theme.spacing.md));
+        for world in worlds.iter().take(4) {
+            let name = world["name"].as_str().unwrap_or("World");
+            let played = world["lastPlayed"].as_str().unwrap_or("");
+            tiles = tiles.child(
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap(px(theme.spacing.xs))
+                    .w(px(156.0))
+                    .child(
+                        div()
+                            .w_full()
+                            .h(px(92.0))
+                            .rounded(px(theme.radii.lg))
+                            .bg(linear_gradient(
+                                160.0,
+                                linear_color_stop(rgb(0x3A2116), 0.0),
+                                linear_color_stop(rgb(0x141114), 1.0),
+                            ))
+                            .border_1()
+                            .border_color(rgba(0xFFFFFF10)),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.caption))
+                            .child(name.to_string()),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.caption))
+                            .text_color(theme.colors.muted)
+                            .child(played.to_string()),
+                    ),
+            );
+        }
+
+        if worlds.is_empty() {
+            tiles = div().child(
+                div()
+                    .text_size(px(theme.type_scale.body))
+                    .text_color(theme.colors.muted)
+                    .child("No worlds yet. The first Play creates one."),
+            );
+        }
+
+        let mut status = div().flex().flex_col().gap(px(theme.spacing.xs));
         if let Some(problem) = problem {
             status = status.child(
                 div()
@@ -528,27 +612,54 @@ impl Shell {
         div()
             .flex()
             .flex_col()
-            .gap(px(theme.spacing.lg))
-            .max_w(px(880.0))
+            .gap(px(theme.spacing.xl))
+            .max_w(px(920.0))
             .child(
                 div()
                     .flex()
                     .flex_col()
-                    .gap(px(theme.spacing.xs))
+                    .gap(px(theme.spacing.sm))
                     .child(
                         div()
-                            .text_size(px(theme.type_scale.display))
+                            .text_size(px(13.0))
+                            .text_color(theme.colors.accent)
+                            .child("SCORIA · OFFLINE FIRST"),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(46.0))
+                            .font_weight(gpui::FontWeight::SEMIBOLD)
                             .child("Minecraft: Java Edition 26.3"),
                     )
                     .child(
                         div()
-                            .text_size(px(theme.type_scale.body))
+                            .text_size(px(theme.type_scale.subtitle))
                             .text_color(theme.colors.muted)
-                            .child("Offline by default. No Microsoft account, no telemetry."),
+                            .child("A native launcher and client in Rust. No Microsoft account, no telemetry."),
                     ),
             )
-            .child(div().w(px(160.0)).child(play))
-            .child(card(&theme, status))
+            .child(
+                div()
+                    .flex()
+                    .items_center()
+                    .gap(px(theme.spacing.sm))
+                    .child(prepare)
+                    .child(play),
+            )
+            .child(chips)
+            .child(status)
+            .child(
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap(px(theme.spacing.sm))
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.subtitle))
+                            .child("Your worlds"),
+                    )
+                    .child(tiles),
+            )
     }
 
     fn mods(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -1025,21 +1136,40 @@ impl Render for Shell {
         };
 
         let mut root = div()
-            .flex()
+            .relative()
             .size_full()
             .font_family(theme.type_scale.sans)
-            .bg(theme.colors.background)
+            .bg(rgb(0x09080A))
             .text_color(theme.colors.foreground)
-            .child(self.rail(cx))
             .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .flex_1()
-                    .h_full()
-                    .p(px(theme.spacing.xl))
-                    .gap(px(theme.spacing.lg))
-                    .child(body),
+                img(ImageSource::Image(Arc::new(Image::from_bytes(
+                    ImageFormat::Jpeg,
+                    BACKDROP.to_vec(),
+                ))))
+                .absolute()
+                .top(px(0.0))
+                .left(px(0.0))
+                .w_full()
+                .h_full(),
+            )
+            .child(
+                div().flex().size_full().child(self.rail(cx)).child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .flex_1()
+                        .h_full()
+                        .m(px(theme.spacing.md))
+                        .ml(px(0.0))
+                        .p(px(32.0))
+                        .gap(px(theme.spacing.lg))
+                        .rounded(px(theme.radii.xl))
+                        .bg(rgba(0x1210149E))
+                        .backdrop_blur(px(28.0))
+                        .border_1()
+                        .border_color(rgba(0xFFFFFF10))
+                        .child(body),
+                ),
             );
         if let Some((tone, message)) = &self.toast {
             root = root.child(

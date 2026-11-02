@@ -519,6 +519,12 @@ fn mod_source() -> Result<Box<dyn browser::Source>, String> {
         .ok_or_else(|| "No mod catalogue is available.".to_string())
 }
 
+/// Download Mojang files and prepare the selected version, for the window. Progress is dropped
+/// until the Home screen shows a bar.
+pub fn prepare_game() -> Result<Value, String> {
+    prepare(&Value::Null, &json!({ "download": true }), &mut |_| {})
+}
+
 /// Install a catalogue project for the window. Progress events are dropped until the UI shows a
 /// per-download bar; the result is the same JSON `install_mod` returns.
 pub fn install_project(project_id: &str) -> Result<Value, String> {

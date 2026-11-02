@@ -10,6 +10,11 @@ raises the patch and keeps the `-beta` suffix (`0.1.0-beta`, `0.1.1-beta`, ...).
 
 ## [Unreleased]
 
+- Home gains a **Download and prepare** action: the launcher now fetches and prepares 26.3 from
+  the window instead of only pointing at the CLI.
+- The window is a glass layout over an original basalt-and-ember backdrop: floating rail, a
+  translucent content panel, a large hero and world tiles.
+
 ### Added
 
 - The launcher UI is being rewritten in Rust on gpui-ce: one process, no Bun, no native addon.
