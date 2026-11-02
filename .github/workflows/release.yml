@@ -63,7 +63,7 @@ jobs:
       - name: Release artifact checks
         shell: bash
         run: |
-          python -m pip install --quiet pytest
+          python -m pip install --quiet pytest pytest-timeout
           SCORIA_ARTIFACTS=dist python -m pytest tests/pytest/test_release_artifacts.py -q
       - uses: actions/upload-artifact@v4
         with:
@@ -117,7 +117,7 @@ jobs:
       - name: Release artifact checks
         shell: bash
         run: |
-          python -m pip install --quiet pytest
+          python -m pip install --quiet pytest pytest-timeout
           SCORIA_ARTIFACTS=dist python -m pytest tests/pytest/test_release_artifacts.py -q
       - uses: actions/upload-artifact@v4
         with:

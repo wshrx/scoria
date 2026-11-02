@@ -6,7 +6,7 @@
 
 use crate::sources::{fetch_checked, sha1_file, sha1_hex, write_file, Fetch};
 use serde_json::Value;
-#[cfg(unix)]
+#[allow(unused_imports)] // used by the unix link step and by tests
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering::Relaxed};
