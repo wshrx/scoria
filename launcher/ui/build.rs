@@ -25,16 +25,14 @@ fn main() {
         {
             let manifest = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default();
             let icon = format!("{manifest}/../../packaging/icons/horizon.ico");
+            let version = std::env::var("CARGO_PKG_VERSION").unwrap_or_default();
             let mut resource = winresource::WindowsResource::new();
             resource
                 .set_icon(&icon)
                 .set("ProductName", "Scoria")
                 .set("FileDescription", "Scoria launcher")
-                .set("OriginalFilename", "scoria-ui.exe")
-                .set(
-                    "ProductVersion",
-                    std::env::var("CARGO_PKG_VERSION").unwrap_or_default(),
-                )
+                .set("OriginalFilename", "scoria.exe")
+                .set("ProductVersion", &version)
                 .set("LegalCopyright", "MIT");
             if let Err(error) = resource.compile() {
                 panic!("embedding the Windows resources: {error}");
