@@ -30,8 +30,9 @@ The launcher is one Rust binary on gpui-ce. Bun, the GPUIX native addon and ever
 - The launcher's own version sits beside the Scoria name in the titlebar. The engine build tag is
   no longer shown: players see one version, the launcher's.
 - Settings dropdowns expand in place instead of covering the next field.
-- On the release page the launcher archives come first, and the README says to download
-  `scoria-launcher-*` only; the launcher installs `scoria-game-*` itself.
+- The engine bundle has its own pre-release (`v0.1.0-beta-game`). The player-facing release lists
+  only the launcher archives, so there is nothing to choose by mistake; the launcher installs the
+  engine itself.
 - The Linux archive is a `.tar.zst` of a 47 MB binary (14 MB compressed); Windows ships one
   `scoria.exe`; macOS follows after signing.
 - `cargo xtask` is the single entry point: check, test, build, pytest, gate, ui.

@@ -1,8 +1,8 @@
 """The release page must not look like a menu of builds to pick from.
 
 A player downloads the launcher; the launcher installs the game itself. These
-checks are about that order and about the names, because both are easy to break
-in a workflow edit and neither shows up in a unit test.
+checks keep the launcher release free of game bundles and the engine release out
+of the way, because both are easy to break in a workflow edit.
 """
 from pathlib import Path
 
@@ -10,23 +10,30 @@ ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 
 
-def _publish_block() -> str:
+def _step(name: str) -> str:
     text = WORKFLOW.read_text()
-    start = text.index("- name: Publish release")
-    return text[start:]
+    start = text.index(f"- name: {name}")
+    return text[start:].split("\n      - name:", 1)[0]
 
 
-def test_the_launcher_is_uploaded_before_the_game_bundle():
-    block = _publish_block()
-    launcher = block.index("dist/scoria-launcher-")
-    game = block.index("dist/scoria-game-")
-    assert launcher < game, "GitHub lists assets in upload order: launcher first"
+def test_the_launcher_release_is_published_before_the_engine_release():
+    text = WORKFLOW.read_text()
+    launcher = text.index("- name: Publish launcher release")
+    engine = text.index("- name: Publish engine release")
+    assert launcher < engine
 
 
-def test_the_release_is_recreated_so_old_asset_order_cannot_survive():
-    block = _publish_block()
-    assert "gh release delete" in block
-    assert "gh release create" in block
+def test_the_launcher_release_carries_only_the_launcher():
+    block = _step("Publish launcher release")
+    assert "dist/launcher/scoria-launcher-" in block
+    assert "scoria-game-" not in block
+
+
+def test_the_engine_release_is_a_prerelease_with_only_the_game():
+    block = _step("Publish engine release")
+    assert "dist/game/scoria-game-" in block
+    assert "scoria-launcher-" not in block
+    assert "--prerelease" in block
 
 
 def test_no_horizon_named_release_assets():

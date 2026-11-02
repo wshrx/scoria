@@ -3319,6 +3319,28 @@ mod tests {
     }
 
     #[test]
+    fn the_engine_release_is_what_a_fresh_launcher_installs() {
+        let asset = ASSET.unwrap_or("scoria-game-test");
+        let list = serde_json::json!([
+            {
+                "tag_name": "v0.1.0-beta",
+                "assets": [{"name": "scoria-launcher-test", "browser_download_url": "u", "size": 1}]
+            },
+            {
+                "tag_name": "v0.1.0-beta-game",
+                "prerelease": true,
+                "assets": [{"name": asset, "browser_download_url": "u", "size": 1}]
+            }
+        ]);
+        let releases = parse_releases(&list, Some(asset), is_game_tag);
+        let picked = releases
+            .iter()
+            .find(|r| r.asset.is_some())
+            .map(|r| r.tag.as_str());
+        assert_eq!(picked, Some("v0.1.0-beta-game"));
+    }
+
+    #[test]
     fn a_deleted_build_is_not_still_selected() {
         let installed = ["v0.2.93".to_string(), "v0.2.92".to_string()];
         // The old beta is gone, so the saved selection must fall back to the newest build on disk.

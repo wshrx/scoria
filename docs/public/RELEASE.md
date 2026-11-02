@@ -1,15 +1,23 @@
 # Release engineering
 
 The tag workflow (`.github/workflows/release.yml`) builds the **launcher** and the **game bundle**
-for Linux and Windows (macOS is deferred until signing and notarization) and attaches the archives
-with a SHA-256 file:
+for Linux and Windows (macOS is deferred until signing and notarization). They are published as
+two releases:
+
+| Release | Tag | Contents |
+|---|---|---|
+| Launcher (Latest) | `v0.1.0-beta` | `scoria-launcher-*`, `SHA256SUMS`, signature |
+| Engine bundle (pre-release) | `v0.1.0-beta-game` | `scoria-game-*`, `SHA256SUMS`, signature |
+
+A player downloads only the launcher. The launcher discovers the engine release and installs the
+matching `scoria-game-*` itself, so the engine can be updated without replacing the launcher.
 
 | Target | Runner | Archive |
 |---|---|---|
-| Linux x86_64 (Wayland) | `ubuntu-latest` | `scoria-launcher-linux-x86_64.tar.zst` (beta.1 also carried a `.tar.gz` for launchers that predate zstd) |
+| Linux x86_64 (Wayland) | `ubuntu-latest` | `scoria-launcher-linux-x86_64.tar.zst` |
 | Windows 10/11 x64 | `windows-latest` | `scoria-launcher-windows-x64.zip` |
 
-Tag format: `v0.1.0-beta.1` (a `beta`/`alpha` tag becomes a GitHub pre-release).
+Tag format: `v0.1.0-beta` (a `beta`/`alpha` tag becomes a GitHub pre-release).
 
 ## Assets
 
@@ -28,22 +36,19 @@ there is no Bun, no native addon and no Visual C++ redistributable. Windows buil
 
 ## The game client is not in these archives
 
-A fresh launcher installs a **game version** from a release asset (`scoria-game-linux-x86_64.tar.zst`,
-`scoria-game-macos-arm64.zip`, `scoria-game-windows-x64.zip`) and prepares Mojang resources locally. Scoria
-must therefore publish its own client bundles before the downloads above can play on a clean
-machine:
+A fresh launcher installs a **game version** from the engine release asset
+(`scoria-game-linux-x86_64.tar.zst`, `scoria-game-macos-arm64.zip`,
+`scoria-game-windows-x64.zip`) and prepares Mojang resources locally. The engine release is marked
+pre-release so it stays out of the Latest slot, but its API entry is public: the launcher has no
+GitHub token.
 
 1. Build `horizon-client` and its helper binaries for each target in CI (matrix job).
 2. Package binaries only — **never prepared Minecraft assets**; first play prepares them from the
    user's files or piston-meta.
-3. Sign `SHA256SUMS` with Scoria's release key. The launcher currently trusts Horizon's built-in
-   keys (`crates/horizon-release-sign`), so a Scoria key must be added to `trusted_keys` before an
-   update can be verified.
-4. Tag the client bundle with the game tag the launcher looks for (not the launcher's `v0.1.0`
-   tag), and attach it to the release that has the matching asset name.
-
-Until step 3 is done, mac/win downloads are **launcher previews**: they start, but installing 26.3
-uses the existing asset path and may fall back to an already installed version.
+3. Sign the engine release's own `SHA256SUMS` with the tag `v0.1.0-beta-game`. The launcher looks
+   up checksums for the release that carries the asset, so both releases are signed separately.
+4. Keep the engine tag derived from the launcher tag (`vX.Y.Z-game`); a newer engine alone can use
+   a later engine tag, and the launcher installs the newest bundle with a `scoria-game-*` asset.
 
 ## Branches and channels
 
