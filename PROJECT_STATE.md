@@ -63,8 +63,8 @@ gets a test that failed before the fix.
 
 ## Engine sync (done 2026-11-02)
 
-- Branch `sync/upstream-20261102` merged `dev` onto `upstream/main` = `b53cfcd14` (2026-11-02).
-  The engine is **0 commits behind** that base.
+- The sync branch merged `dev` onto `upstream/main` = `b53cfcd14` (2026-11-02) and was deleted
+  after the merge. The engine is **0 commits behind** that base.
 - The engine delta is now 2 patches in `docs/fork/engine-patches/`: non-Latin input + offline
   (no Microsoft session options), and the Scoria release key/icon. Both apply cleanly to
   `b53cfcd14`; `tools/check_upstream_patches.sh` passes.
