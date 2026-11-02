@@ -659,11 +659,12 @@ impl Shell {
                                         .text_size(px(theme.type_scale.body))
                                         .whitespace_nowrap()
                                         .min_h_auto()
-                                        .max_h_auto(),
+                                        .max_h_auto()
+                                        .placeholder("Your offline name"),
                                 )
                                 .child(
                                     Button::new("save-name", "Save")
-                                        .variant(ButtonVariant::Secondary)
+                                        .variant(ButtonVariant::Primary)
                                         .size(ButtonSize::Lg)
                                         .render(
                                             &theme,
@@ -682,7 +683,10 @@ impl Shell {
                                     theme.colors.danger
                                 })
                                 .child(text.clone()),
-                            None => div(),
+                            None => div()
+                                .text_size(px(theme.type_scale.caption))
+                                .text_color(theme.colors.muted)
+                                .child("3 to 16 letters, digits or _ (any script)."),
                         }),
                 ),
         )
