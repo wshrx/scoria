@@ -10,6 +10,39 @@ raises the patch and keeps the `-beta` suffix (`0.1.0-beta`, `0.1.1-beta`, ...).
 
 ## [Unreleased]
 
+## [0.1.1-beta] — 2026-11-02
+
+The first beta with the rewritten window: glass over an original basalt-and-ember
+backdrop, a custom Wayland titlebar, and the catalogue in two tabs.
+
+### Added
+
+- **Download 26.3** on Home prepares the game from the window; Play starts it.
+- Mods has **Horizon** and **Modrinth** tabs over one merged search, and the list
+  scrolls through every result.
+- The rail folds to icons from a hamburger and remembers it (`rail_collapsed`).
+- Appearance and Language are dropdowns; switching the theme fades the window.
+- The window has its own en/ru dictionary: navigation, titles, buttons and the
+  support labels follow the language setting.
+- Mods, Servers and Settings screens with the engine's own data.
+
+### Changed
+
+- One binary, one process: the Rust window calls the engine directly.
+- Dark and light modes each have their own backdrop; surfaces, rail and titlebar
+  are theme-aware.
+- The window draws its own titlebar (drag, minimise, maximise, close) and resizes
+  from eight edge grips.
+- The layout adapts below 1080px: icon-only rail, smaller hero, tighter padding.
+
+### Fixed
+
+- Horizon's `native-mod` kind and `.hnmod` files: the launcher showed one mod of
+  forty-four because the parser treated the renamed kind as unknown.
+- The system language option could not be selected (two controls shared an id).
+- The window no longer overflows past its bottom edge.
+
+
 - Home gains a **Download and prepare** action: the launcher now fetches and prepares 26.3 from
   the window instead of only pointing at the CLI.
 - The window is a glass layout over an original basalt-and-ember backdrop: floating rail, a
