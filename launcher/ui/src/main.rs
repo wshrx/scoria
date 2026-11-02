@@ -11,8 +11,8 @@ use std::{
 
 use gpui::{
     div, img, linear_color_stop, linear_gradient, point, prelude::*, px, rgb, rgba, size, Bounds,
-    Context, Image, ImageFormat, ImageSource, IntoElement, Render, Window, WindowBounds,
-    WindowOptions,
+    Context, Image, ImageFormat, ImageSource, IntoElement, MouseButton, Render, Window,
+    WindowBounds, WindowDecorations, WindowOptions,
 };
 use gpui_ce_elements::editable_text::{
     actions::{default_bindings, DEFAULT_INPUT_CONTEXT},
@@ -369,13 +369,63 @@ impl Shell {
         .h(px(26.0))
     }
 
-    fn rail(&self, cx: &mut Context<Self>) -> impl IntoElement {
+    fn titlebar(&self, cx: &mut Context<Self>) -> impl IntoElement {
+        let theme = self.theme;
+        let control = |id: &'static str, label: &'static str, control: fn(&mut Window)| {
+            div()
+                .id(id)
+                .flex()
+                .items_center()
+                .justify_center()
+                .w(px(34.0))
+                .h(px(28.0))
+                .rounded(px(theme.radii.md))
+                .text_color(theme.colors.muted)
+                .text_size(px(theme.type_scale.caption))
+                .cursor_pointer()
+                .hover(move |style| style.bg(theme.colors.surface_tertiary))
+                .on_click(move |_, window, _| control(window))
+                .child(label)
+        };
+        let _ = cx;
+        div()
+            .flex()
+            .items_center()
+            .justify_between()
+            .h(px(40.0))
+            .px(px(theme.spacing.md))
+            .child(
+                div()
+                    .flex()
+                    .items_center()
+                    .gap(px(theme.spacing.sm))
+                    .on_mouse_down(MouseButton::Left, |_, window, _| window.start_window_move())
+                    .child(Self::mark())
+                    .child(
+                        div()
+                            .text_size(px(13.0))
+                            .font_weight(gpui::FontWeight::SEMIBOLD)
+                            .child("Scoria"),
+                    ),
+            )
+            .child(
+                div()
+                    .flex()
+                    .items_center()
+                    .gap(px(4.0))
+                    .child(control("tb-min", "—", |window| window.minimize_window()))
+                    .child(control("tb-max", "□", |window| window.zoom_window()))
+                    .child(control("tb-close", "×", |window| window.remove_window())),
+            )
+    }
+
+    fn rail(&self, cx: &mut Context<Self>, compact: bool) -> impl IntoElement {
         let theme = self.theme;
         let mut rail = div()
             .flex()
             .flex_col()
             .gap(px(2.0))
-            .w(px(248.0))
+            .w(px(if compact { 72.0 } else { 248.0 }))
             .h_full()
             .m(px(theme.spacing.md))
             .p(px(theme.spacing.md))
@@ -388,16 +438,17 @@ impl Shell {
                 div()
                     .flex()
                     .items_center()
+                    .justify_center()
                     .gap(px(theme.spacing.sm))
                     .px(px(theme.spacing.sm))
                     .py(px(theme.spacing.md))
                     .child(Self::mark())
-                    .child(
+                    .children((!compact).then(|| {
                         div()
                             .text_size(px(18.0))
                             .font_weight(gpui::FontWeight::SEMIBOLD)
-                            .child("Scoria"),
-                    ),
+                            .child("Scoria")
+                    })),
             )
             .child(div().h(px(theme.spacing.sm)));
 
@@ -446,7 +497,7 @@ impl Shell {
                         .size(px(16.0))
                         .text_color(tint),
                 )
-                .child(screen.label());
+                .children((!compact).then(|| screen.label()));
             if !selected {
                 item = item.hover(move |style| style.bg(theme.colors.surface_tertiary));
             }
@@ -454,6 +505,7 @@ impl Shell {
         }
         rail.child(div().flex_1()).child(
             div()
+                .when(compact, |line| line.hidden())
                 .px(px(theme.spacing.sm))
                 .pb(px(theme.spacing.sm))
                 .text_size(px(theme.type_scale.caption))
@@ -467,7 +519,7 @@ impl Shell {
         )
     }
 
-    fn home(&self, cx: &mut Context<Self>) -> impl IntoElement {
+    fn home(&self, cx: &mut Context<Self>, compact: bool) -> impl IntoElement {
         let theme = self.theme;
         let (version, prepared, playing) = match &self.snapshot {
             Ok(snapshot) => (
@@ -480,11 +532,6 @@ impl Shell {
         let worlds: Vec<serde_json::Value> = match &self.snapshot {
             Ok(snapshot) => snapshot["worlds"].as_array().cloned().unwrap_or_default(),
             Err(_) => Vec::new(),
-        };
-        let problem = match &self.snapshot {
-            Ok(_) if prepared => None,
-            Ok(_) => Some("26.3 is not prepared on this machine yet.".to_string()),
-            Err(error) => Some(error.clone()),
         };
 
         let play = Button::new("play", if playing { "Playing" } else { "Play" })
@@ -504,7 +551,7 @@ impl Shell {
             if self.preparing {
                 "Preparing…"
             } else {
-                "Download and prepare"
+                "Download 26.3"
             },
         )
         .variant(if prepared {
@@ -530,15 +577,6 @@ impl Shell {
                 } else {
                     Tone::Warning
                 },
-            ))
-            .child(badge(
-                &theme,
-                if worlds.is_empty() {
-                    "No worlds".to_string()
-                } else {
-                    format!("{} worlds", worlds.len())
-                },
-                Tone::Neutral,
             ));
 
         let mut tiles = div().flex().gap(px(theme.spacing.md));
@@ -578,24 +616,7 @@ impl Shell {
             );
         }
 
-        if worlds.is_empty() {
-            tiles = div().child(
-                div()
-                    .text_size(px(theme.type_scale.body))
-                    .text_color(theme.colors.muted)
-                    .child("No worlds yet. The first Play creates one."),
-            );
-        }
-
         let mut status = div().flex().flex_col().gap(px(theme.spacing.xs));
-        if let Some(problem) = problem {
-            status = status.child(
-                div()
-                    .text_size(px(theme.type_scale.body))
-                    .text_color(theme.colors.muted)
-                    .child(problem),
-            );
-        }
         if let Some((ok, text)) = &self.play_message {
             status = status.child(
                 div()
@@ -615,28 +636,12 @@ impl Shell {
             .gap(px(theme.spacing.xl))
             .max_w(px(920.0))
             .child(
-                div()
-                    .flex()
-                    .flex_col()
-                    .gap(px(theme.spacing.sm))
-                    .child(
-                        div()
-                            .text_size(px(13.0))
-                            .text_color(theme.colors.accent)
-                            .child("SCORIA · OFFLINE FIRST"),
-                    )
-                    .child(
-                        div()
-                            .text_size(px(46.0))
-                            .font_weight(gpui::FontWeight::SEMIBOLD)
-                            .child("Minecraft: Java Edition 26.3"),
-                    )
-                    .child(
-                        div()
-                            .text_size(px(theme.type_scale.subtitle))
-                            .text_color(theme.colors.muted)
-                            .child("A native launcher and client in Rust. No Microsoft account, no telemetry."),
-                    ),
+                div().flex().flex_col().gap(px(theme.spacing.sm)).child(
+                    div()
+                        .text_size(px(if compact { 30.0 } else { 44.0 }))
+                        .font_weight(gpui::FontWeight::SEMIBOLD)
+                        .child("Minecraft 26.3"),
+                ),
             )
             .child(
                 div()
@@ -648,7 +653,7 @@ impl Shell {
             )
             .child(chips)
             .child(status)
-            .child(
+            .children((!worlds.is_empty()).then(|| {
                 div()
                     .flex()
                     .flex_col()
@@ -658,8 +663,8 @@ impl Shell {
                             .text_size(px(theme.type_scale.subtitle))
                             .child("Your worlds"),
                     )
-                    .child(tiles),
-            )
+                    .child(tiles)
+            }))
     }
 
     fn mods(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -1126,10 +1131,12 @@ impl Shell {
 }
 
 impl Render for Shell {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = self.theme;
+        // Below ~1080px the rail drops its labels and the hero shrinks.
+        let compact = window.viewport_size().width < px(1080.0);
         let body = match self.screen {
-            Screen::Home => div().child(self.home(cx)),
+            Screen::Home => div().child(self.home(cx, compact)),
             Screen::Mods => div().child(self.mods(cx)),
             Screen::Servers => div().child(self.servers_screen(cx)),
             Screen::Settings => div().child(self.settings(cx)),
@@ -1153,23 +1160,35 @@ impl Render for Shell {
                 .h_full(),
             )
             .child(
-                div().flex().size_full().child(self.rail(cx)).child(
-                    div()
-                        .flex()
-                        .flex_col()
-                        .flex_1()
-                        .h_full()
-                        .m(px(theme.spacing.md))
-                        .ml(px(0.0))
-                        .p(px(32.0))
-                        .gap(px(theme.spacing.lg))
-                        .rounded(px(theme.radii.xl))
-                        .bg(rgba(0x1210149E))
-                        .backdrop_blur(px(28.0))
-                        .border_1()
-                        .border_color(rgba(0xFFFFFF10))
-                        .child(body),
-                ),
+                div()
+                    .flex()
+                    .flex_col()
+                    .size_full()
+                    .child(self.titlebar(cx))
+                    .child(
+                        div()
+                            .flex()
+                            .flex_1()
+                            .min_h(px(0.0))
+                            .child(self.rail(cx, compact))
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .flex_1()
+                                    .h_full()
+                                    .m(px(theme.spacing.md))
+                                    .ml(px(0.0))
+                                    .p(px(if compact { 20.0 } else { 32.0 }))
+                                    .gap(px(theme.spacing.lg))
+                                    .rounded(px(theme.radii.xl))
+                                    .bg(rgba(0x1210149E))
+                                    .backdrop_blur(px(28.0))
+                                    .border_1()
+                                    .border_color(rgba(0xFFFFFF10))
+                                    .child(body),
+                            ),
+                    ),
             );
         if let Some((tone, message)) = &self.toast {
             root = root.child(
@@ -1216,11 +1235,12 @@ fn install_crash_log() {
 }
 
 /// A dev flag for reproducible screenshots: `--screen mods --query "compass"`.
-fn start_screen() -> (Screen, Option<String>, bool) {
+fn start_screen() -> (Screen, Option<String>, bool, Option<(f32, f32)>) {
     let mut args = std::env::args().skip(1);
     let mut screen = Screen::Home;
     let mut query = None;
     let mut fullscreen = false;
+    let mut window_size: Option<(f32, f32)> = None;
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--screen" => {
@@ -1233,10 +1253,19 @@ fn start_screen() -> (Screen, Option<String>, bool) {
             }
             "--query" => query = args.next(),
             "--fullscreen" => fullscreen = true,
+            "--size" => {
+                if let Some(value) = args.next() {
+                    if let Some((w, h)) = value.split_once('x') {
+                        if let (Ok(w), Ok(h)) = (w.parse(), h.parse()) {
+                            window_size = Some((w, h));
+                        }
+                    }
+                }
+            }
             _ => {}
         }
     }
-    (screen, query, fullscreen)
+    (screen, query, fullscreen, window_size)
 }
 
 fn main() {
@@ -1245,7 +1274,7 @@ fn main() {
         panic!("crash-test: the crash log must contain this line");
     }
 
-    let (screen, query, fullscreen) = start_screen();
+    let (screen, query, fullscreen, window_size) = start_screen();
     application().run(move |cx| {
         cx.text_system()
             .add_fonts(FONTS.iter().map(|font| Cow::Borrowed(*font)).collect())
@@ -1272,12 +1301,16 @@ fn main() {
         } else {
             WindowBounds::Windowed(Bounds::new(
                 point(px(0.0), px(0.0)),
-                size(px(1280.0), px(720.0)),
+                match window_size {
+                    Some((w, h)) => size(px(w), px(h)),
+                    None => size(px(1280.0), px(720.0)),
+                },
             ))
         };
         cx.open_window(
             WindowOptions::new()
                 .window_bounds(Some(window_bounds))
+                .window_decorations(WindowDecorations::Client)
                 .focus(true)
                 .titlebar(None),
             move |_, cx| cx.new(|cx| Shell::new(cx, screen, query.clone())),
