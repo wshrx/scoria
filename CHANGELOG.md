@@ -13,10 +13,21 @@ tag (`v0.1.0-beta` → `## [0.1.0-beta]`).
   launcher's own recycled PID no longer counts as a live game.
 - Horizon Visuals: calmer sky haze and sun shafts, clamped before the composite.
 
+### Changed
+
+- The download is a card: a title, the engine's last line, a large mono percentage, a full-width
+  progress track and a quiet Cancel, instead of a 360 px bar squeezed beside the button.
+- The window is split into `app.rs`, `app/screens/` and `assets.rs`; `scoria-ui-kit` owns page
+  headers, empty/error states and the progress bar.
+- The window uses the launcher's existing `launcher/lang/{ru,fr}.json` tables through
+  `scoria_core::i18n`, so the CLI and the UI share one translation source; French is selectable
+  again. Engine lines and errors pass through the same lookup and fall back unchanged.
+- Settings gains a Sidebar control (expanded/compact), and screen changes fade/rise for 160 ms.
+
 ### Added
 
 - Every launcher screen has a capturable state: `SCORIA_UI_STATE` paints synthetic data and
-  `tools/capture_ui_states.py` saves all 16 states as PNGs (docs/qa/launcher-ui-states.md).
+  `tools/capture_ui_states.py` saves all 18 states as PNGs (docs/qa/launcher-ui-states.md).
 - Home shows the game state honestly (Not installed, Not prepared, Prepared, Playing), errors in a
   card with Try again, and world tiles with the mode and a key-art placeholder.
 - Mods show a skeleton while loading and a retry card on failure; servers can be joined directly,

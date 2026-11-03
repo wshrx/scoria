@@ -91,6 +91,14 @@ unfinished.
 Rule: 4px spacing, 8px cards, 12px fields, one primary action per screen, no custom shadows in dark
 mode.
 
+**D6 — A second UI dictionary is a fork of the first.** The window grew its own English→Russian
+`match` while the launcher already had `lang/{ru,fr}.json`; the two drifted, French disappeared from
+the menu, and every new label was added twice.
+Rule: one table per language, read by both the CLI and the window through
+`scoria_core::i18n::tr_in`; add a string to `launcher/lang/*.json` and the scan test fails when a key
+is missing or unused. Reusable layout belongs in `scoria-ui-kit`, one file per screen in
+`ui/src/app/screens/`.
+
 ## Process
 
 **P4 — Never script the live compositor for a screenshot.** A KWin D-Bus script created a temporary

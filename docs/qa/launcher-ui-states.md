@@ -32,8 +32,10 @@ is offline. Nothing is persisted.
 | `settings` | Settings, dark |
 | `settings-light` | Settings, light |
 | `compact` | Collapsed rail in a 900x640 window |
+| `small` | 1024x600, just under the compact breakpoint |
+| `wide` | 1920x1080, two-column Home |
 
-The fixtures live in `apply_qa_state` and `qa_snapshot` in `launcher/ui/src/main.rs`. Add a state
+The fixtures live in `apply_qa_state` and `qa_snapshot` in `launcher/ui/src/app.rs`. Add a state
 there and to `STATES` in the capture tool at the same time.
 
 ## Capture
@@ -75,3 +77,17 @@ X stack only, not of the live desktop.
 
 A visual change is not done until these captures are regenerated and looked at. The gate checks
 the code, not the pixels.
+
+## Where the window lives
+
+| File | Owns |
+| --- | --- |
+| `launcher/ui/src/main.rs` | boot, window options |
+| `launcher/ui/src/app.rs` | `Shell` state, actions, QA fixtures, crash log |
+| `launcher/ui/src/app/screens/` | one file per screen plus the titlebar/rail/render shell |
+| `launcher/ui/src/assets.rs` | bundled fonts, icons, backdrop |
+| `launcher/ui-kit/` | tokens and reusable components |
+| `launcher/lang/{ru,fr}.json` | one table per language, shared with the CLI |
+
+Strings from the engine (log lines, errors) are not rewritten in the window: they go through the
+same table with `tr_in`, so a known line can be translated and an unknown one stays as it is.

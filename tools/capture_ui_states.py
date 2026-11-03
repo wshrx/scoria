@@ -41,6 +41,8 @@ STATES = {
     "settings": ("Settings, dark", "1280x720"),
     "settings-light": ("Settings, light", "1280x720"),
     "compact": ("Rail collapsed, 900x640", "900x640"),
+    "small": ("1024x600, the compact breakpoint", "1024x600"),
+    "wide": ("1920x1080, a wide window", "1920x1080"),
 }
 
 

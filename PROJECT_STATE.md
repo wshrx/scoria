@@ -36,14 +36,18 @@ account, no telemetry, no online-mode servers, no Minecraft assets.
 ## Launcher
 
 - One Rust binary on gpui-ce 0.3.0. `scoria-core` is the old `horizon-launcher` library;
-  `scoria-ui-kit` owns tokens and components; `scoria-ui` owns the window.
+  `scoria-ui-kit` owns tokens and reusable components (`page_header`, `empty_state`,
+  `error_panel`, `progress_bar`, cards, buttons, badges, toasts); `scoria-ui` owns the window,
+  split into `app.rs` (state/actions/QA), `app/screens/` (one file per screen) and `assets.rs`.
 - The titlebar shows **Scoria + the launcher version** (`0.1.1-beta`). The engine build tag is not
   shown anywhere: Scoria has one public versioning.
 - Screens: Home (one action: Download 26.3 / Preparing / Play / Playing, progress bar, percent and
   the engine's last log line), Mods (Horizon registry first, Modrinth second, tabs, loading
   skeleton, retry card), Servers (Join and Remove per row), Settings (appearance, language en/ru,
   offline nickname). The rail collapses and the layout adapts below 1080 px.
-- `SCORIA_UI_STATE` paints 16 synthetic states without network or game; `tools/capture_ui_states.py`
+- The window and the CLI share `launcher/lang/{ru,fr}.json` through `scoria_core::i18n::tr_in`;
+  a test scans both crates for `tr`/`t` calls and fails on a missing or unused key.
+- `SCORIA_UI_STATE` paints 18 synthetic states without network or game; `tools/capture_ui_states.py`
   captures them to `~/Pictures/scoria-ui-states/` with a blank-frame check. See
   `docs/qa/launcher-ui-states.md`. A visual change is not done until the states are looked at.
 - Home installs the newest engine bundle before preparing; progress and failures go to `ui.log`.
@@ -62,7 +66,7 @@ cargo xtask gate      # everything CI runs
 cargo xtask ui        # run the window in development
 ```
 
-Current gate: **226 Rust tests** (2 skipped) and **15 pytest cases** in 3 files green. Every fixed bug
+Current gate: **227 Rust tests** (2 skipped) and **15 pytest cases** in 3 files green. Every fixed bug
 gets a test that failed before the fix.
 
 ## Engine sync (done 2026-11-02)

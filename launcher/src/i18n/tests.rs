@@ -51,10 +51,10 @@ fn literal(code: &str) -> String {
 /// other string literal (some reach `tr` through a widget).
 fn strings() -> (BTreeSet<String>, BTreeSet<String>) {
     let mut files = Vec::new();
-    sources(
-        &Path::new(env!("CARGO_MANIFEST_DIR")).join("src"),
-        &mut files,
-    );
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    sources(&root.join("src"), &mut files);
+    // The window has its own crate but the same tables: `self.t("…")` is a tr() call.
+    sources(&root.join("ui/src"), &mut files);
     let (mut asked, mut all) = (BTreeSet::new(), BTreeSet::new());
     for file in &files {
         for (at, _) in file.match_indices('"') {
@@ -69,7 +69,7 @@ fn strings() -> (BTreeSet<String>, BTreeSet<String>) {
                     !head.ends_with(|c: char| c.is_alphanumeric() || c == '_')
                 }
             };
-            if call("tr") || call("trf") {
+            if call("tr") || call("trf") || call("t") || call("tf") {
                 asked.insert(s.clone());
             }
             all.insert(s);
