@@ -603,13 +603,8 @@ impl Shell {
             .flex()
             .items_center()
             .justify_between()
-            .h(px(48.0))
-            .m(px(8.0))
-            .px(px(theme.spacing.lg))
-            .rounded(px(theme.radii.xl))
-            .border_2()
-            .border_color(theme.colors.border)
-            .overflow_hidden()
+            .h(px(44.0))
+            .px(px(theme.spacing.md))
             .bg(theme.colors.surface)
             .child(
                 div()
@@ -686,12 +681,8 @@ impl Shell {
             .flex_col()
             .gap(px(4.0))
             .w(px(if compact { 64.0 } else { 188.0 }))
-            .m(px(12.0))
+            .h_full()
             .p(px(if compact { 8.0 } else { 10.0 }))
-            .rounded(px(theme.radii.xl))
-            .border_2()
-            .border_color(theme.colors.border)
-            .overflow_hidden()
             .bg(theme.colors.surface)
             .child(div().h(px(theme.spacing.sm)));
 
@@ -782,7 +773,15 @@ impl Shell {
                         .text_color(theme.colors.muted),
                 ),
         );
-        rail
+        rail.child(
+            div()
+                .absolute()
+                .top(px(0.0))
+                .right(px(0.0))
+                .w(px(1.0))
+                .h_full()
+                .bg(theme.colors.border),
+        )
     }
 
     fn home(&self, cx: &mut Context<Self>, compact: bool) -> impl IntoElement {
