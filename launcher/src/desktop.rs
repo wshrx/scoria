@@ -1,7 +1,7 @@
 //! Linux: the launcher puts itself in the applications menu. It writes
-//! `applications/horizon-launcher.desktop` (pointing at wherever the binary is now) and Horizon's
-//! icon into the `hicolor` theme, under `$XDG_DATA_HOME` (`~/.local/share` by default), so no root
-//! is needed; `horizon.desktop` (hidden from menus) gives the game's window its icon on Wayland.
+//! `applications/scoria.desktop` (pointing at wherever the binary is now) and Scoria's icon into
+//! the `hicolor` theme, under `$XDG_DATA_HOME` (`~/.local/share` by default), so no root is
+//! needed; `horizon.desktop` (hidden from menus) gives the game's window its icon on Wayland.
 //! A release build writes it when it starts only if there is no entry yet or the one there starts
 //! a program that is gone ([`repair`]), so a development or test build never takes over a working
 //! entry. Turning the Settings switch on (or `horizon-launcher desktop-entry`) points it at this
@@ -52,7 +52,9 @@ const ICONS: [(&str, &[u8]); 9] = [
     ),
 ];
 
-const LAUNCHER_ENTRY: &str = "horizon-launcher.desktop";
+const LAUNCHER_ENTRY: &str = "scoria.desktop";
+/// The old entry this module wrote before the Scoria rename; removed on install.
+const LEGACY_LAUNCHER_ENTRY: &str = "horizon-launcher.desktop";
 const GAME_ENTRY: &str = "horizon.desktop";
 const GAME_ENTRY_TEXT: &str = include_str!("../../packaging/linux/horizon.desktop");
 
@@ -82,15 +84,15 @@ pub fn launcher_entry(exe: &Path) -> String {
     format!(
         "[Desktop Entry]\n\
          Type=Application\n\
-         Name=Horizon\n\
+         Name=Scoria\n\
          GenericName=Game launcher\n\
-         Comment=Install, prepare and play Horizon, Minecraft: Java Edition {minecraft} rewritten in Rust\n\
+         Comment=Install, prepare and play Scoria, Minecraft: Java Edition {minecraft} rewritten in Rust\n\
          Exec={}\n\
          TryExec={}\n\
-         Icon=horizon\n\
+         Icon=scoria\n\
          Terminal=false\n\
          Categories=Game;\n\
-         StartupWMClass=horizon-launcher\n",
+         StartupWMClass=scoria\n",
         quote(exe),
         exe.display(),
         minecraft = horizon_core::VANILLA_VERSION,
@@ -111,9 +113,9 @@ fn files(data: &Path, exe: &Path) -> Vec<(PathBuf, Vec<u8>)> {
     ];
     for (size, bytes) in ICONS {
         let name = if size == "scalable" {
-            "horizon.svg"
+            "scoria.svg"
         } else {
-            "horizon.png"
+            "scoria.png"
         };
         out.push((
             data.join("icons/hicolor")
@@ -143,6 +145,12 @@ pub fn install_in(data: &Path, exe: &Path) -> io::Result<bool> {
         fs::rename(&temp, &path)?;
         wrote = true;
     }
+    // The pre-Scoria launcher entry would give the window an extra menu item and the wrong
+    // StartupWMClass on Wayland. The game's `horizon.desktop` is kept.
+    let legacy = data.join("applications").join(LEGACY_LAUNCHER_ENTRY);
+    if legacy.exists() {
+        let _ = fs::remove_file(legacy);
+    }
     Ok(wrote)
 }
 
@@ -153,6 +161,10 @@ pub fn remove_in(data: &Path) -> io::Result<()> {
             Err(e) if e.kind() != io::ErrorKind::NotFound => return Err(e),
             _ => {}
         }
+    }
+    let legacy = data.join("applications").join(LEGACY_LAUNCHER_ENTRY);
+    if legacy.exists() {
+        fs::remove_file(legacy)?;
     }
     Ok(())
 }
@@ -257,7 +269,9 @@ mod tests {
         let entry = launcher_entry(Path::new("/home/a b/Horizon \"x\"/horizon-launcher"));
         assert!(entry.contains("Exec=\"/home/a b/Horizon \\\"x\\\"/horizon-launcher\"\n"));
         assert!(entry.contains("TryExec=/home/a b/Horizon \"x\"/horizon-launcher\n"));
-        assert!(entry.contains("Icon=horizon\n"));
+        assert!(entry.contains("Name=Scoria\n"));
+        assert!(entry.contains("Icon=scoria\n"));
+        assert!(entry.contains("StartupWMClass=scoria\n"));
     }
 
     #[test]
@@ -266,11 +280,9 @@ mod tests {
         let _ = fs::remove_dir_all(&data);
         assert!(install_in(&data, Path::new("/opt/a/horizon-launcher")).unwrap());
         assert!(!install_in(&data, Path::new("/opt/a/horizon-launcher")).unwrap());
-        let png = data.join("icons/hicolor/48x48/apps/horizon.png");
+        let png = data.join("icons/hicolor/48x48/apps/scoria.png");
         assert!(fs::read(&png).unwrap().starts_with(b"\x89PNG"));
-        assert!(data
-            .join("icons/hicolor/scalable/apps/horizon.svg")
-            .exists());
+        assert!(data.join("icons/hicolor/scalable/apps/scoria.svg").exists());
         assert!(install_in(&data, Path::new("/opt/b/horizon-launcher")).unwrap());
         let entry = fs::read_to_string(data.join("applications").join(LAUNCHER_ENTRY)).unwrap();
         assert!(entry.contains("Exec=\"/opt/b/horizon-launcher\""));
@@ -331,7 +343,7 @@ mod tests {
         fs::remove_file(&installed).unwrap();
         assert!(needs_repair_in(&data, path));
         // An entry that starts nothing is broken too.
-        fs::write(&entry, "[Desktop Entry]\nName=Horizon\n").unwrap();
+        fs::write(&entry, "[Desktop Entry]\nName=Scoria\n").unwrap();
         assert!(needs_repair_in(&data, path));
         let _ = fs::remove_dir_all(&root);
     }

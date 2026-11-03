@@ -1596,6 +1596,8 @@ impl Render for Shell {
         let mut root = div()
             .relative()
             .size_full()
+            .rounded(px(18.0))
+            .overflow_hidden()
             .font_family(theme.type_scale.sans)
             .bg(theme.colors.background)
             .text_color(theme.colors.foreground)
@@ -1815,6 +1817,8 @@ fn start_screen() -> (Screen, Option<String>, bool, Option<(f32, f32)>) {
 }
 
 fn main() {
+    // The Wayland task bar matches this window to `scoria.desktop` and its Scoria icon.
+    let _ = scoria_core::desktop::repair(scoria_core::backend::exe_path());
     install_crash_log();
     if std::env::args().any(|arg| arg == "--crash-test") {
         panic!("crash-test: the crash log must contain this line");
@@ -1836,6 +1840,15 @@ fn main() {
         .detach();
 
         // A fixed origin keeps headless screenshots reproducible.
+        // Screenshot hook: open at a fixed origin so a window on a busy desktop can be captured
+        // without touching the compositor. Normal launches use 0,0.
+        let origin = std::env::var("SCORIA_WINDOW_ORIGIN")
+            .ok()
+            .and_then(|value| {
+                let (x, y) = value.split_once(',')?;
+                Some((x.trim().parse::<f32>().ok()?, y.trim().parse::<f32>().ok()?))
+            })
+            .unwrap_or((0.0, 0.0));
         let window_bounds = if fullscreen {
             let display = cx
                 .primary_display()
@@ -1846,21 +1859,34 @@ fn main() {
             WindowBounds::Fullscreen(display)
         } else {
             WindowBounds::Windowed(Bounds::new(
-                point(px(0.0), px(0.0)),
+                point(px(origin.0), px(origin.1)),
                 match window_size {
                     Some((w, h)) => size(px(w), px(h)),
                     None => size(px(1280.0), px(720.0)),
                 },
             ))
         };
-        cx.open_window(
-            WindowOptions::new()
-                .window_bounds(Some(window_bounds))
-                .window_decorations(WindowDecorations::Client)
-                .focus(true)
-                .titlebar(None),
-            move |_, cx| cx.new(|cx| Shell::new(cx, screen, query.clone())),
-        )
+        let mut options = WindowOptions::new();
+        options.window_bounds = Some(window_bounds);
+        options.window_decorations = Some(WindowDecorations::Client);
+        options.focus = true;
+        options.titlebar = None;
+        options.app_id = Some("scoria".into());
+        #[cfg(target_os = "linux")]
+        {
+            options.linux_window_background = gpui::LinuxWindowBackground::Transparent;
+        }
+        #[cfg(target_os = "macos")]
+        {
+            options.macos_window_background = gpui::MacosWindowBackground::Transparent;
+        }
+        #[cfg(target_os = "windows")]
+        {
+            options.windows_window_background = gpui::WindowsWindowBackground::Transparent;
+        }
+        cx.open_window(options, move |_, cx| {
+            cx.new(|cx| Shell::new(cx, screen, query.clone()))
+        })
         .expect("the launcher window");
         cx.activate(true);
     });
