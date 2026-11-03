@@ -81,11 +81,12 @@ gets a test that failed before the fix.
 
 - `exp/redesign` — Blueprint (cool paper/ink, safety orange).
 - `exp/redesign-brawl` — Arcade (yellow/navy/red, chunky).
-- `exp/redesign-dungeons` — Dungeons (moss/amber/parchment, rounded inner controls; square
-  window/titlebar/rail, verified on Wayland).
+- `exp/redesign-dungeons` — Dungeons (moss/amber/parchment, one rounded window shell, custom
+  titlebar, rounded inner controls; Wayland `app_id=scoria` + Scoria panel icon).
 - `exp/gpui-fast` — gpui-fast 0.1.13 comparison; no measurable win on this UI and +16 MB RSS.
 - None is merged. Pick one and promote it as `feat/redesign-*`, with tokens, tests and screenshots.
-  ADR-0003 records the rule: custom titlebar, square shell, rounded inner controls, original assets.
+  ADR-0003 records the rule: one rounded window shell, custom titlebar, rounded inner controls,
+  Wayland identity (`scoria.desktop` / `Icon=scoria`), original assets.
 
 ## Shaders
 

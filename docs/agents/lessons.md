@@ -64,10 +64,18 @@ release.
 
 ## UI and design
 
-**D3 — The window shell is not a card.** Rounding the titlebar and rail into a floating panel made
-the app look like a widget inside its own window and broke the match with the rest of the launcher.
-Rule: titlebar full width, rail flush, square window; only inner controls (buttons, fields, cards,
-badges, markers) are rounded. ADR-0003.
+**D3 — The window shell is one rounded surface, not a card.** Making the titlebar and rail floating
+rounded panels looked like a widget inside its own square window. The modern language is a
+transparent window with one clipped rounded root; the titlebar and rail are parts of that surface,
+and the inner controls are rounded too.
+Rule: 18 px rounded shell, full-width titlebar inside it, flush rail, rounded inner controls.
+ADR-0003.
+
+**D5 — A Wayland panel icon is an identity pair, not an image.** The panel showed Horizon/no icon
+because the window had no matching `app_id` and the entry was `horizon-launcher.desktop` with
+`Icon=horizon`.
+Rule: `app_id = "scoria"`, `scoria.desktop` with `Icon=scoria` and `StartupWMClass=scoria`; write
+the Scoria hicolor icons on start and remove the old launcher entry.
 
 **D4 — A screenshot must name its backend.** The redesign screenshots were X11 because the capture
 command forced `DISPLAY=:0`; the user saw an X11 window and asked why Wayland was missing.
