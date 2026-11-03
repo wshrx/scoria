@@ -22,6 +22,42 @@ Entire until merged or dropped:
 Merge `feat/*`, `fix/*` and `test/*` into `dev` and delete the branch; keep `exp/*` only while it is
 being evaluated. Do not publish WIP branches to GitHub.
 
+## From an experiment to dev
+
+An experiment is a sketch, not a release candidate:
+
+```text
+exp/<idea>          try it; screenshots, throwaway code, no test requirement
+      │  liked?
+      ▼
+feat/<idea>         start from dev, port only the good parts, add tests
+      │  cargo xtask gate + review
+      ▼
+dev                 merge and delete the feature branch
+      │
+      ▼
+main / tag          only from a green dev snapshot
+```
+
+- **Never merge `exp/*` into `dev` as-is.** Port the parts that survive into a fresh `feat/*`
+  branch, or cherry-pick the clean commits.
+- **Automated tests belong in the `feat/*`/`fix/*` branch**, not in `exp/*`. A feature is not ready
+  for `dev` until its test fails without it. `test/*` is only for manual QA plans and black-box
+  checks that need a real machine.
+- If an experiment is rejected, delete the branch (or keep it explicitly as a reference, like
+  `exp/gpui-fast`).
+- A redesign follows the same rule: `exp/redesign-*` is for visual directions; the chosen one moves
+  to `feat/redesign-*` with tokens, screenshots in dark/light, responsive checks and tests. The
+  design-system boundary stays `launcher/ui-kit/`.
+
+```sh
+git switch -c feat/motion dev
+git cherry-pick <clean exp commit>       # or copy the files
+cargo xtask gate
+git switch dev && git merge --no-ff feat/motion
+git branch -d feat/motion && git push origin --delete feat/motion
+```
+
 ## Working
 
 ```sh
