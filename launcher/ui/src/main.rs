@@ -12,7 +12,7 @@ use std::{
 };
 
 use gpui::{
-    div, img, linear_color_stop, linear_gradient, point, prelude::*, px, rgb, rgba, size, Bounds,
+    div, img, point, prelude::*, px, rgba, size, Bounds,
     Context, Image, ImageFormat, ImageSource, IntoElement, MouseButton, Render, ResizeEdge, Window,
     WindowBounds, WindowControlArea, WindowDecorations, WindowOptions,
 };
@@ -225,8 +225,8 @@ impl Shell {
     fn new(cx: &mut Context<Self>, screen: Screen, query: Option<String>) -> Self {
         let settings = Settings::load();
         let theme = match settings.appearance {
-            Appearance::Light => Theme::light(),
-            _ => Theme::dark(),
+            Appearance::Light => Theme::blueprint_light(),
+            _ => Theme::blueprint_dark(),
         };
         let current = match Accounts::load().player() {
             Player::Offline(name) => name,
@@ -537,8 +537,8 @@ impl Shell {
     fn set_appearance(&mut self, cx: &mut Context<Self>, appearance: Appearance) {
         self.settings.appearance = appearance;
         self.theme = match appearance {
-            Appearance::Light => Theme::light(),
-            _ => Theme::dark(),
+            Appearance::Light => Theme::blueprint_light(),
+            _ => Theme::blueprint_dark(),
         };
         self.settings.save();
         self.appearance_open = false;
@@ -585,9 +585,9 @@ impl Shell {
                     .flex()
                     .items_center()
                     .justify_center()
-                    .w(px(34.0))
-                    .h(px(28.0))
-                    .rounded(px(theme.radii.md))
+                    .w(px(30.0))
+                    .h(px(30.0))
+                    .rounded(px(theme.radii.sm))
                     .cursor_pointer()
                     .hover(move |style| style.bg(hover))
                     .on_click(move |_, window, _| action(window))
@@ -599,11 +599,13 @@ impl Shell {
                     )
             };
         div()
+            .relative()
             .flex()
             .items_center()
             .justify_between()
-            .h(px(40.0))
+            .h(px(44.0))
             .px(px(theme.spacing.md))
+            .bg(theme.colors.surface)
             .child(
                 div()
                     .id("titlebar-drag")
@@ -617,21 +619,23 @@ impl Shell {
                     .child(Self::mark())
                     .child(
                         div()
-                            .flex()
-                            .items_center()
-                            .gap(px(theme.spacing.xs))
-                            .child(
-                                div()
-                                    .text_size(px(13.0))
-                                    .font_weight(gpui::FontWeight::SEMIBOLD)
-                                    .child("Scoria"),
-                            )
-                            .child(
-                                div()
-                                    .text_size(px(11.0))
-                                    .text_color(theme.colors.muted)
-                                    .child(env!("SCORIA_VERSION")),
-                            ),
+                            .w(px(6.0))
+                            .h(px(6.0))
+                            .rounded(px(1.0))
+                            .bg(theme.colors.accent),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(13.0))
+                            .font_weight(gpui::FontWeight::SEMIBOLD)
+                            .child("Scoria"),
+                    )
+                    .child(
+                        div()
+                            .font_family(theme.type_scale.mono)
+                            .text_size(px(11.0))
+                            .text_color(theme.colors.muted)
+                            .child(env!("SCORIA_VERSION")),
                     ),
             )
             .child(
@@ -642,47 +646,45 @@ impl Shell {
                     .child(control(
                         "tb-min",
                         ICON_WIN_MIN,
-                        theme.colors.surface_tertiary,
+                        theme.colors.surface_secondary,
                         |window| window.minimize_window(),
                     ))
                     .child(control(
                         "tb-max",
                         ICON_WIN_MAX,
-                        theme.colors.surface_tertiary,
+                        theme.colors.surface_secondary,
                         |window| window.zoom_window(),
                     ))
                     .child(control(
                         "tb-close",
                         ICON_WIN_CLOSE,
-                        rgba(0xE5484D44),
+                        rgba(0xE5484D33),
                         |window| window.remove_window(),
                     )),
+            )
+            .child(
+                div()
+                    .absolute()
+                    .bottom(px(0.0))
+                    .left(px(0.0))
+                    .w_full()
+                    .h(px(1.0))
+                    .bg(theme.colors.border),
             )
     }
 
     fn rail(&self, cx: &mut Context<Self>, compact: bool) -> impl IntoElement {
         let theme = self.theme;
         let mut rail = div()
+            .relative()
             .flex()
             .flex_col()
             .gap(px(2.0))
-            .w(px(if compact { 64.0 } else { 196.0 }))
-            .m(px(theme.spacing.md))
-            .p(px(theme.spacing.md))
-            .rounded(px(theme.radii.xl))
-            .bg(if theme.dark {
-                rgba(0x121014A8)
-            } else {
-                rgba(0xFFFBF6D9)
-            })
-            .backdrop_blur(px(24.0))
-            .border_1()
-            .border_color(if theme.dark {
-                rgba(0xFFFFFF14)
-            } else {
-                rgba(0x1D151010)
-            })
-            .child(div().h(px(theme.spacing.xs)));
+            .w(px(if compact { 64.0 } else { 188.0 }))
+            .h_full()
+            .p(px(if compact { 8.0 } else { 10.0 }))
+            .bg(theme.colors.surface)
+            .child(div().h(px(theme.spacing.sm)));
 
         for screen in Screen::ALL {
             let selected = screen == self.screen;
@@ -705,12 +707,13 @@ impl Shell {
                 theme.colors.muted
             };
             let mut item = div()
+                .relative()
                 .id(("rail", screen as usize))
                 .flex()
                 .items_center()
                 .justify_start()
                 .gap(px(theme.spacing.sm))
-                .h(px(34.0))
+                .h(px(38.0))
                 .px(px(theme.spacing.sm))
                 .when(compact, |item| {
                     item.w(px(40.0))
@@ -719,20 +722,22 @@ impl Shell {
                         .justify_center()
                         .self_center()
                 })
-                .rounded(px(theme.radii.md))
+                .rounded(px(theme.radii.sm))
                 .bg(if selected {
-                    rgba(0xFF8A4C1F)
+                    theme.colors.accent_soft
                 } else {
                     rgba(0x00000000)
                 })
                 .text_color(if selected {
-                    theme.colors.foreground
+                    theme.colors.accent
                 } else {
                     theme.colors.muted
                 })
                 .text_size(px(theme.type_scale.body))
                 .cursor_pointer()
-                .transitions(|transitions| transitions.bg(std::time::Duration::from_millis(140)))
+                .transitions(|transitions| {
+                    transitions.bg(std::time::Duration::from_millis(120))
+                })
                 .on_click(on_click)
                 .child(
                     gpui::svg()
@@ -740,14 +745,18 @@ impl Shell {
                         .size(px(15.0))
                         .text_color(tint),
                 )
-                .children((!compact).then(|| self.t(screen.label())));
+                .children((!compact).then(|| self.t(screen.label())))
+                .children(selected.then(|| {
+                    div()
+                        .absolute()
+                        .left(px(0.0))
+                        .top(px(6.0))
+                        .bottom(px(6.0))
+                        .w(px(2.0))
+                        .bg(theme.colors.accent)
+                }));
             if !selected {
-                let hover = if theme.dark {
-                    rgba(0xFFFFFF0A)
-                } else {
-                    rgba(0x1D15100A)
-                };
-                item = item.hover(move |style| style.bg(hover));
+                item = item.hover(move |style| style.bg(theme.colors.surface_secondary));
             }
             rail = rail.child(item);
         }
@@ -763,16 +772,10 @@ impl Shell {
                 .when(!compact, |button| {
                     button.w(px(34.0)).h(px(34.0)).self_start()
                 })
-                .rounded(px(theme.radii.md))
+                .rounded(px(theme.radii.sm))
                 .text_color(theme.colors.muted)
                 .cursor_pointer()
-                .hover(move |style| {
-                    style.bg(if theme.dark {
-                        rgba(0xFFFFFF0A)
-                    } else {
-                        rgba(0x1D15100A)
-                    })
-                })
+                .hover(move |style| style.bg(theme.colors.surface_secondary))
                 .on_click(cx.listener(|this, _, _window, cx| this.toggle_rail(cx)))
                 .child(
                     gpui::svg()
@@ -781,7 +784,15 @@ impl Shell {
                         .text_color(theme.colors.muted),
                 ),
         );
-        rail
+        rail.child(
+            div()
+                .absolute()
+                .top(px(0.0))
+                .right(px(0.0))
+                .w(px(1.0))
+                .h_full()
+                .bg(theme.colors.border),
+        )
     }
 
     fn home(&self, cx: &mut Context<Self>, compact: bool) -> impl IntoElement {
@@ -837,57 +848,86 @@ impl Shell {
             Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| this.prepare(cx))),
         );
 
-        let mut chips = div().flex().items_center().gap(px(theme.spacing.xs));
-        chips = chips.child(badge(
-            &theme,
-            if prepared {
-                self.t("Prepared")
-            } else {
-                self.t("Not prepared")
-            },
-            if prepared {
-                Tone::Success
-            } else {
-                Tone::Warning
-            },
-        ));
+        let status_text = if prepared {
+            self.t("Prepared")
+        } else {
+            self.t("Not prepared")
+        };
+        let status_color = if prepared {
+            theme.colors.success
+        } else {
+            theme.colors.warning
+        };
 
-        let mut tiles = div().flex().gap(px(theme.spacing.md));
-        for world in worlds.iter().take(4) {
+        let mut world_rows = div().flex().flex_col();
+        for (index, world) in worlds.iter().take(6).enumerate() {
+            if index > 0 {
+                world_rows = world_rows.child(
+                    div()
+                        .h(px(1.0))
+                        .w_full()
+                        .bg(theme.colors.separator),
+                );
+            }
             let name = world["name"].as_str().unwrap_or("World");
             let played = world["lastPlayed"].as_str().unwrap_or("");
-            tiles = tiles.child(
+            world_rows = world_rows.child(
                 div()
                     .flex()
-                    .flex_col()
-                    .gap(px(theme.spacing.xs))
-                    .w(px(156.0))
+                    .items_center()
+                    .justify_between()
+                    .gap(px(theme.spacing.md))
+                    .px(px(theme.spacing.md))
+                    .py(px(10.0))
+                    .child(div().text_size(px(theme.type_scale.body)).child(name.to_string()))
                     .child(
                         div()
-                            .w_full()
-                            .h(px(92.0))
-                            .rounded(px(theme.radii.lg))
-                            .bg(linear_gradient(
-                                160.0,
-                                linear_color_stop(rgb(0x3A2116), 0.0),
-                                linear_color_stop(rgb(0x141114), 1.0),
-                            ))
-                            .border_1()
-                            .border_color(rgba(0xFFFFFF10)),
-                    )
-                    .child(
-                        div()
-                            .text_size(px(theme.type_scale.caption))
-                            .child(name.to_string()),
-                    )
-                    .child(
-                        div()
+                            .font_family(theme.type_scale.mono)
                             .text_size(px(theme.type_scale.caption))
                             .text_color(theme.colors.muted)
                             .child(played.to_string()),
                     ),
             );
         }
+
+        let spec_col = |label: &'static str, value: String, color: gpui::Rgba| {
+            div()
+                .flex()
+                .flex_col()
+                .gap(px(2.0))
+                .flex_1()
+                .px(px(theme.spacing.md))
+                .py(px(10.0))
+                .child(
+                    div()
+                        .font_family(theme.type_scale.mono)
+                        .text_size(px(theme.type_scale.caption))
+                        .text_color(theme.colors.muted)
+                        .child(label),
+                )
+                .child(
+                    div()
+                        .text_size(px(theme.type_scale.body))
+                        .text_color(color)
+                        .child(value),
+                )
+        };
+        let spec = div()
+            .flex()
+            .items_stretch()
+            .border_1()
+            .border_color(theme.colors.border)
+            .rounded(px(theme.radii.lg))
+            .bg(theme.colors.surface)
+            .child(spec_col("Game", "26.3".to_string(), theme.colors.foreground))
+            .child(div().w(px(1.0)).bg(theme.colors.border))
+            .child(spec_col("State", status_text, status_color))
+            .child(div().w(px(1.0)).bg(theme.colors.border))
+            .child(spec_col(
+                "Worlds",
+                worlds.len().to_string(),
+                theme.colors.foreground,
+            ));
 
         let mut status = div().flex().flex_col().gap(px(theme.spacing.xs));
         if let Some((ok, text)) = &self.play_message {
@@ -906,16 +946,29 @@ impl Shell {
         div()
             .flex()
             .flex_col()
-            .gap(px(theme.spacing.xl))
+            .gap(px(theme.spacing.lg))
             .max_w(px(920.0))
             .child(
-                div().flex().flex_col().gap(px(theme.spacing.sm)).child(
-                    div()
-                        .text_size(px(if compact { 30.0 } else { 44.0 }))
-                        .font_weight(gpui::FontWeight::SEMIBOLD)
-                        .child("Minecraft 26.3"),
-                ),
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap(px(theme.spacing.xs))
+                    .child(
+                        div()
+                            .font_family(theme.type_scale.mono)
+                            .text_size(px(theme.type_scale.caption))
+                            .text_color(theme.colors.muted)
+                            .child("Offline launcher"),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(if compact { 32.0 } else { 48.0 }))
+                            .font_weight(gpui::FontWeight::SEMIBOLD)
+                            .child("Minecraft 26.3"),
+                    )
+                    .child(div().h(px(2.0)).w(px(56.0)).bg(theme.colors.accent)),
             )
+            .child(spec)
             .child(
                 div()
                     .flex()
@@ -924,10 +977,10 @@ impl Shell {
                     .child(prepare)
                     .child(play),
             )
-            .child(chips)
             .children(self.preparing.then(|| {
                 div().flex().items_center().gap(px(theme.spacing.sm)).child(
                     div()
+                        .font_family(theme.type_scale.mono)
                         .text_size(px(theme.type_scale.caption))
                         .text_color(theme.colors.muted)
                         .child(format!(
@@ -947,10 +1000,30 @@ impl Shell {
                     .gap(px(theme.spacing.sm))
                     .child(
                         div()
-                            .text_size(px(theme.type_scale.subtitle))
-                            .child("Your worlds"),
+                            .flex()
+                            .items_center()
+                            .justify_between()
+                            .child(
+                                div()
+                                    .text_size(px(theme.type_scale.subtitle))
+                                    .child("Your worlds"),
+                            )
+                            .child(
+                                div()
+                                    .font_family(theme.type_scale.mono)
+                                    .text_size(px(theme.type_scale.caption))
+                                    .text_color(theme.colors.muted)
+                                    .child(worlds.len().to_string()),
+                            ),
                     )
-                    .child(tiles)
+                    .child(
+                        div()
+                            .border_1()
+                            .border_color(theme.colors.border)
+                            .rounded(px(theme.radii.lg))
+                            .bg(theme.colors.surface)
+                            .child(world_rows),
+                    )
             }))
     }
 
@@ -1532,7 +1605,7 @@ impl Render for Shell {
             .relative()
             .size_full()
             .font_family(theme.type_scale.sans)
-            .bg(rgb(0x09080A))
+            .bg(theme.colors.background)
             .text_color(theme.colors.foreground)
             .child(
                 img(ImageSource::Image(Arc::new(Image::from_bytes(
@@ -1547,7 +1620,8 @@ impl Render for Shell {
                 .top(px(0.0))
                 .left(px(0.0))
                 .w_full()
-                .h_full(),
+                .h_full()
+                .opacity(if theme.flat { 0.0 } else { 1.0 }),
             )
             .child(
                 div()
@@ -1560,7 +1634,8 @@ impl Render for Shell {
                         rgba(0x09080A4D)
                     } else {
                         rgba(0xFFFFFF2E)
-                    }),
+                    })
+                    .opacity(if theme.flat { 0.0 } else { 1.0 }),
             )
             .child(
                 div()

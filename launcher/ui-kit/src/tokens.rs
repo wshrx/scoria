@@ -93,6 +93,8 @@ impl Default for Motion {
 #[derive(Clone, Copy, Debug)]
 pub struct Theme {
     pub dark: bool,
+    /// Flat surfaces: no photographic backdrop, no glass, no blur.
+    pub flat: bool,
     pub colors: Colors,
     pub radii: Radii,
     pub spacing: Spacing,
@@ -105,6 +107,7 @@ impl Theme {
     pub fn dark() -> Self {
         Self {
             dark: true,
+            flat: false,
             colors: Colors {
                 background: rgb(0x0B0A0C),
                 surface: rgb(0x141114),
@@ -157,6 +160,7 @@ impl Theme {
     pub fn light() -> Self {
         Self {
             dark: false,
+            flat: false,
             colors: Colors {
                 background: rgb(0xFBF5EE),
                 surface: rgb(0xFFFFFF),
@@ -203,6 +207,93 @@ impl Theme {
             },
             motion: Motion::new(),
         }
+    }
+
+    /// The redesign experiment: a flat drafting-table palette, sharp corners and mono metadata.
+    /// No backdrop image, no glass, no shadows.
+    pub fn blueprint(dark: bool) -> Self {
+        let colors = if dark {
+            Colors {
+                background: rgb(0x081218),
+                surface: rgb(0x0F1D24),
+                surface_secondary: rgb(0x132630),
+                surface_tertiary: rgb(0x19313C),
+                overlay: rgb(0x132630),
+                backdrop: rgb(0x000000),
+                foreground: rgb(0xE8F1F5),
+                muted: rgb(0x93AAB7),
+                border: rgb(0x29434F),
+                separator: rgb(0x1D333D),
+                accent: rgb(0xFF5C2B),
+                accent_foreground: rgb(0x1A0A04),
+                accent_hover: rgb(0xFF7448),
+                accent_soft: rgb(0x3A1B12),
+                success: rgb(0x48B98C),
+                warning: rgb(0xE0A03A),
+                danger: rgb(0xE05252),
+                danger_foreground: rgb(0x1A0A04),
+                focus_ring: rgb(0xFF5C2B),
+            }
+        } else {
+            Colors {
+                background: rgb(0xE7EBEE),
+                surface: rgb(0xF8FAFB),
+                surface_secondary: rgb(0xEFF3F5),
+                surface_tertiary: rgb(0xE3E9EC),
+                overlay: rgb(0xFFFFFF),
+                backdrop: rgb(0x000000),
+                foreground: rgb(0x0C1B24),
+                muted: rgb(0x4F6472),
+                border: rgb(0xAEBEC9),
+                separator: rgb(0xCBD7DE),
+                accent: rgb(0xD93F15),
+                accent_foreground: rgb(0xFFFFFF),
+                accent_hover: rgb(0xC03610),
+                accent_soft: rgb(0xF7D9CE),
+                success: rgb(0x0B6B47),
+                warning: rgb(0x8A5A00),
+                danger: rgb(0xB3261E),
+                danger_foreground: rgb(0xFFFFFF),
+                focus_ring: rgb(0xD93F15),
+            }
+        };
+        Self {
+            dark,
+            flat: true,
+            colors,
+            radii: Radii {
+                sm: 2.0,
+                md: 3.0,
+                lg: 4.0,
+                xl: 6.0,
+                field: 4.0,
+            },
+            spacing: Spacing {
+                xs: 4.0,
+                sm: 8.0,
+                md: 12.0,
+                lg: 16.0,
+                xl: 24.0,
+            },
+            type_scale: Typography {
+                sans: "Medeo Sans",
+                mono: "Medeo Mono",
+                caption: 11.0,
+                body: 14.0,
+                subtitle: 15.0,
+                title: 22.0,
+                display: 40.0,
+            },
+            motion: Motion::new(),
+        }
+    }
+
+    pub fn blueprint_dark() -> Self {
+        Self::blueprint(true)
+    }
+
+    pub fn blueprint_light() -> Self {
+        Self::blueprint(false)
     }
 
     pub fn px(value: f32) -> gpui::Pixels {
@@ -257,7 +348,7 @@ mod tests {
 
     #[test]
     fn text_is_readable_in_both_themes() {
-        for theme in [Theme::dark(), Theme::light()] {
+        for theme in [Theme::dark(), Theme::light(), Theme::blueprint_dark(), Theme::blueprint_light()] {
             let colors = theme.colors;
             assert_readable(
                 &theme,
@@ -295,7 +386,7 @@ mod tests {
 
     #[test]
     fn the_scale_stays_on_the_4px_rhythm_and_the_radius_scale() {
-        for theme in [Theme::dark(), Theme::light()] {
+        for theme in [Theme::dark(), Theme::light(), Theme::blueprint_dark(), Theme::blueprint_light()] {
             for value in [
                 theme.spacing.xs,
                 theme.spacing.sm,

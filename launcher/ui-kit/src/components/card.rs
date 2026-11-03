@@ -9,7 +9,7 @@ pub fn card(theme: &Theme, child: impl IntoElement) -> Div {
         .flex_col()
         .gap(px(theme.spacing.md))
         .p(px(theme.spacing.lg))
-        .rounded(px(theme.radii.xl))
+        .rounded(px(theme.radii.lg))
         .border_1()
         .border_color(theme.colors.border)
         .bg(theme.colors.surface)
@@ -24,6 +24,8 @@ pub fn soft_card(theme: &Theme, child: impl IntoElement) -> Div {
         .gap(px(theme.spacing.sm))
         .p(px(theme.spacing.md))
         .rounded(px(theme.radii.lg))
+        .border_1()
+        .border_color(theme.colors.separator)
         .bg(theme.colors.surface_secondary)
         .child(child)
 }

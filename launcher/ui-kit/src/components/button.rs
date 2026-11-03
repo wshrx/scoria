@@ -99,7 +99,7 @@ impl Button {
             .justify_center()
             .h(px(height))
             .px(px(padding))
-            .rounded(px(theme.radii.lg))
+            .rounded(px(theme.radii.md))
             .border_1()
             .border_color(border)
             .bg(background)
