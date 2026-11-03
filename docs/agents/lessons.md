@@ -68,7 +68,7 @@ release.
 rounded panels looked like a widget inside its own square window. The modern language is a
 transparent window with one clipped rounded root; the titlebar and rail are parts of that surface,
 and the inner controls are rounded too.
-Rule: 18 px rounded shell, full-width titlebar inside it, flush rail, rounded inner controls.
+Rule: 14–18 px rounded shell with a visible edge, full-width titlebar inside it, flush rail, rounded inner controls.
 ADR-0003.
 
 **D5 — A Wayland panel icon is an identity pair, not an image.** The panel showed Horizon/no icon

@@ -19,7 +19,7 @@ and the controls inside are rounded and modern.
 ## Decision
 
 1. **One rounded window.** The top-level window is transparent and the root content is clipped to
-   an 18 px radius. The titlebar, rail and content are parts of that single surface, not cards
+   a 14–18 px radius. The titlebar, rail and content are parts of that single surface, not cards
    floating inside it. The compositor may add its own shadow; we do not fake one.
 2. **Custom titlebar stays.** Drag region, minimise/maximise/close, Scoria name and launcher
    version. Controls are rounded and inset; the titlebar is full width inside the rounded shell.
