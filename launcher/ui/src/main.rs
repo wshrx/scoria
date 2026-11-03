@@ -27,6 +27,7 @@ use scoria_core::i18n::Language;
 use scoria_ui_kit::{
     badge, card, soft_card, toast, tone_for_support, Button, ButtonSize, ButtonVariant, Theme, Tone,
 };
+use serde_json::json;
 
 /// The bundled OFL fonts: Medeo Sans for text, Medeo Mono for versions and numbers.
 const FONTS: [&[u8]; 6] = [
@@ -194,6 +195,30 @@ fn label(theme: &Theme, text: &str) -> impl IntoElement {
         .child(text.to_string())
 }
 
+fn qa_snapshot(prepared: bool, playing: bool, worlds: usize) -> serde_json::Value {
+    let worlds: Vec<serde_json::Value> = (0..worlds)
+        .map(|index| {
+            let at = index.min(2);
+            let name = ["New World", "Build", "Hardcore Run"][at];
+            let mode = ["Survival", "Creative", "Hardcore"][at];
+            let last_played = ["2 h ago", "3 days ago", "last week"][at];
+            json!({
+                "folder": format!("world-{index}"),
+                "name": name,
+                "mode": mode,
+                "lastPlayed": last_played,
+            })
+        })
+        .collect();
+    json!({
+        "version": "v0.1.2-beta-game",
+        "prepared": prepared,
+        "playing": playing,
+        "worlds": worlds,
+        "offline": "Player",
+    })
+}
+
 struct Shell {
     theme: Theme,
     screen: Screen,
@@ -261,13 +286,17 @@ impl Shell {
             toast: None,
             toast_generation: 0,
         };
-        if screen == Screen::Mods && query.is_none() {
+        let qa_state = std::env::var("SCORIA_UI_STATE").ok();
+        if let Some(state) = &qa_state {
+            shell.apply_qa_state(state);
+        }
+        if qa_state.is_none() && screen == Screen::Mods && query.is_none() {
             shell.search_mods(cx);
         }
-        if std::env::var("SCORIA_AUTO_PREPARE").is_ok() {
+        if qa_state.is_none() && std::env::var("SCORIA_AUTO_PREPARE").is_ok() {
             shell.prepare(cx);
         }
-        if shell.playing_now() {
+        if qa_state.is_none() && shell.playing_now() {
             shell.poll_playing(cx);
         }
         if let Some(query) = query {
@@ -279,6 +308,98 @@ impl Shell {
             shell.search_mods(cx);
         }
         shell
+    }
+
+    /// Synthetic data for the screenshot/QA matrix. The launcher never persists it.
+    fn apply_qa_state(&mut self, state: &str) {
+        self.screen = Screen::Home;
+        self.play_message = None;
+        self.preparing = false;
+        self.prepare_percent = None;
+        self.prepare_status = None;
+        self.mods_loading = false;
+        self.mods_error = None;
+        self.mods_results.clear();
+        self.snapshot = Ok(qa_snapshot(false, false, 0));
+
+        match state {
+            "home-empty" | "no-version" => {
+                self.snapshot = Err("No version is installed yet.".to_string());
+            }
+            "home-not-prepared" => {
+                self.snapshot = Ok(qa_snapshot(false, false, 2));
+            }
+            "home-preparing" => {
+                self.snapshot = Ok(qa_snapshot(false, false, 2));
+                self.preparing = true;
+                self.prepare_percent = Some(0.42);
+                self.prepare_status = Some("Downloading Minecraft 26.3 from Mojang".to_string());
+            }
+            "home-prepared" => {
+                self.snapshot = Ok(qa_snapshot(true, false, 3));
+            }
+            "home-playing" => {
+                self.snapshot = Ok(qa_snapshot(true, true, 3));
+            }
+            "home-error" => {
+                self.snapshot = Ok(qa_snapshot(true, false, 3));
+                self.play_message = Some((
+                    false,
+                    "Could not start the game: no display is available.".to_string(),
+                ));
+            }
+            "mods-empty" => {
+                self.screen = Screen::Mods;
+            }
+            "mods-loading" => {
+                self.screen = Screen::Mods;
+                self.mods_loading = true;
+            }
+            "mods-error" => {
+                self.screen = Screen::Mods;
+                self.mods_error =
+                    Some("No connection: https://api.modrinth.com timed out.".to_string());
+            }
+            "mods-results" => {
+                self.screen = Screen::Mods;
+                self.mods_results = vec![
+                    json!({"id":"zoom","title":"Zoom","summary":"Hold a key to zoom in; the mouse wheel zooms further while you hold it.","author":"Horizon","support":"Works","source":"Horizon","installable":true}),
+                    json!({"id":"worldedit","title":"WorldEdit","summary":"Edit thousands of blocks at once with brushes, patterns and schematics.","author":"Horizon","support":"Works","source":"Horizon","installable":true}),
+                    json!({"id":"sodium","title":"Sodium","summary":"A modern rendering engine that improves frame rates and reduces micro-stutter.","author":"jellysquid3","support":"Partly","source":"Modrinth","installable":true}),
+                    json!({"id":"fabric-api","title":"Fabric API","summary":"Common hooks and intercompatibility measures for Fabric mods.","author":"modmuss50","support":"Partly","source":"Modrinth","installable":true}),
+                ];
+            }
+            "servers-empty" => {
+                self.screen = Screen::Servers;
+                self.servers = Ok(json!({"servers": []}));
+            }
+            "servers-list" => {
+                self.screen = Screen::Servers;
+                self.servers = Ok(json!({"servers": [
+                    {"index": 0, "name": "SMP", "ip": "play.example.net"},
+                    {"index": 1, "name": "Creative", "ip": "127.0.0.1:25565"}
+                ]}));
+            }
+            "servers-error" => {
+                self.screen = Screen::Servers;
+                self.servers = Err("No connection: could not read servers.json".to_string());
+            }
+            "settings" => {
+                self.screen = Screen::Settings;
+                self.settings.appearance = Appearance::Dark;
+                self.theme = Theme::dark();
+            }
+            "settings-light" => {
+                self.screen = Screen::Settings;
+                self.settings.appearance = Appearance::Light;
+                self.theme = Theme::light();
+            }
+            "compact" => {
+                self.settings.rail_collapsed = true;
+                self.snapshot = Ok(qa_snapshot(true, false, 2));
+            }
+            _ => {}
+        }
     }
 
     fn support_label(&self, support: &str) -> String {
@@ -552,6 +673,29 @@ impl Shell {
         self.snapshot = scoria_core::api::snapshot();
         if self.playing_now() {
             self.poll_playing(cx);
+        }
+        cx.notify();
+    }
+
+    fn join_server(&mut self, server: String, cx: &mut Context<Self>) {
+        match scoria_core::api::start_server(&server) {
+            Ok(started) => {
+                self.snapshot = scoria_core::api::snapshot();
+                self.screen = Screen::Home;
+                self.show_toast(
+                    Tone::Success,
+                    format!(
+                        "Joining {} on {}.",
+                        server,
+                        started["version"].as_str().unwrap_or("the game")
+                    ),
+                    cx,
+                );
+                if self.playing_now() {
+                    self.poll_playing(cx);
+                }
+            }
+            Err(error) => self.show_toast(Tone::Danger, error, cx),
         }
         cx.notify();
     }
@@ -837,6 +981,7 @@ impl Shell {
             ),
             Err(_) => (false, false),
         };
+        let no_version = self.snapshot.is_err();
         let worlds: Vec<serde_json::Value> = match &self.snapshot {
             Ok(snapshot) => snapshot["worlds"].as_array().cloned().unwrap_or_default(),
             Err(_) => Vec::new(),
@@ -873,24 +1018,29 @@ impl Shell {
             );
 
         let mut chips = div().flex().items_center().gap(px(theme.spacing.xs));
-        chips = chips.child(badge(
-            &theme,
-            if prepared {
-                self.t("Prepared")
-            } else {
-                self.t("Not prepared")
-            },
-            if prepared {
-                Tone::Success
-            } else {
-                Tone::Warning
-            },
-        ));
+        let (chip, chip_tone) = if no_version {
+            (self.t("Not installed"), Tone::Danger)
+        } else if playing {
+            (self.t("Playing"), Tone::Accent)
+        } else if prepared {
+            (self.t("Prepared"), Tone::Success)
+        } else {
+            (self.t("Not prepared"), Tone::Warning)
+        };
+        if !playing {
+            chips = chips.child(badge(&theme, chip, chip_tone));
+        }
 
         let mut tiles = div().flex().gap(px(theme.spacing.md));
         for world in worlds.iter().take(4) {
             let name = world["name"].as_str().unwrap_or("World");
             let played = world["lastPlayed"].as_str().unwrap_or("");
+            let mode = world["mode"].as_str().unwrap_or("Survival");
+            let initial = name
+                .chars()
+                .find(|character| character.is_alphanumeric())
+                .map(|character| character.to_uppercase().to_string())
+                .unwrap_or_else(|| "?".to_string());
             tiles = tiles.child(
                 div()
                     .flex()
@@ -899,6 +1049,7 @@ impl Shell {
                     .w(px(156.0))
                     .child(
                         div()
+                            .relative()
                             .w_full()
                             .h(px(92.0))
                             .rounded(px(theme.radii.lg))
@@ -908,7 +1059,35 @@ impl Shell {
                                 linear_color_stop(rgb(0x141114), 1.0),
                             ))
                             .border_1()
-                            .border_color(rgba(0xFFFFFF10)),
+                            .border_color(rgba(0xFFFFFF10))
+                            .child(
+                                div()
+                                    .absolute()
+                                    .top(px(10.0))
+                                    .left(px(12.0))
+                                    .text_size(px(30.0))
+                                    .font_weight(gpui::FontWeight::SEMIBOLD)
+                                    .text_color(rgba(0xFFFFFF38))
+                                    .child(initial),
+                            )
+                            .child(
+                                div()
+                                    .absolute()
+                                    .bottom(px(8.0))
+                                    .left(px(8.0))
+                                    .px(px(6.0))
+                                    .py(px(2.0))
+                                    .rounded(px(theme.radii.sm))
+                                    .bg(rgba(0x09080ACC))
+                                    .text_size(px(10.0))
+                                    .text_color(theme.colors.muted)
+                                    .child(self.t(match mode {
+                                        "Creative" => "Creative",
+                                        "Hardcore" => "Hardcore",
+                                        "Adventure" => "Adventure",
+                                        _ => "Survival",
+                                    })),
+                            ),
                     )
                     .child(
                         div()
@@ -926,16 +1105,56 @@ impl Shell {
 
         let mut status = div().flex().flex_col().gap(px(theme.spacing.xs));
         if let Some((ok, text)) = &self.play_message {
-            status = status.child(
-                div()
-                    .text_size(px(theme.type_scale.caption))
-                    .text_color(if *ok {
-                        theme.colors.success
-                    } else {
-                        theme.colors.danger
-                    })
-                    .child(text.clone()),
-            );
+            if *ok {
+                status = status.child(
+                    div()
+                        .text_size(px(theme.type_scale.caption))
+                        .text_color(theme.colors.success)
+                        .child(text.clone()),
+                );
+            } else {
+                let retry = Button::new("retry-game", self.t("Try again"))
+                    .variant(ButtonVariant::Secondary)
+                    .size(ButtonSize::Md)
+                    .render(
+                        &theme,
+                        Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| {
+                            let prepared = this
+                                .snapshot
+                                .as_ref()
+                                .ok()
+                                .and_then(|snapshot| snapshot["prepared"].as_bool())
+                                .unwrap_or(false);
+                            if prepared {
+                                this.play(cx);
+                            } else {
+                                this.prepare(cx);
+                            }
+                        })),
+                    );
+                status = status.child(
+                    div().w(px(480.0)).child(soft_card(
+                        &theme,
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap(px(theme.spacing.sm))
+                            .child(
+                                div()
+                                    .text_size(px(theme.type_scale.subtitle))
+                                    .text_color(theme.colors.danger)
+                                    .child(self.t("The game did not start")),
+                            )
+                            .child(
+                                div()
+                                    .text_size(px(theme.type_scale.body))
+                                    .text_color(theme.colors.muted)
+                                    .child(text.clone()),
+                            )
+                            .child(div().self_start().child(retry)),
+                    )),
+                );
+            }
         }
 
         div()
@@ -944,12 +1163,26 @@ impl Shell {
             .gap(px(theme.spacing.xl))
             .max_w(px(920.0))
             .child(
-                div().flex().flex_col().gap(px(theme.spacing.sm)).child(
-                    div()
-                        .text_size(px(if compact { 30.0 } else { 44.0 }))
-                        .font_weight(gpui::FontWeight::SEMIBOLD)
-                        .child("Minecraft 26.3"),
-                ),
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap(px(theme.spacing.sm))
+                    .child(
+                        div()
+                            .text_size(px(if compact { 30.0 } else { 44.0 }))
+                            .font_weight(gpui::FontWeight::SEMIBOLD)
+                            .child("Minecraft 26.3"),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.body))
+                            .text_color(theme.colors.muted)
+                            .child(if no_version {
+                                self.t("No version installed. Download 26.3 to install the engine.")
+                            } else {
+                                self.t("Offline profile. No Microsoft account.")
+                            }),
+                    ),
             )
             .child(
                 div()
@@ -958,47 +1191,112 @@ impl Shell {
                     .gap(px(theme.spacing.sm))
                     .child(action),
             )
-            .child(chips)
+            .children((!playing && !self.preparing).then(|| chips))
+            .children(playing.then(|| {
+                div()
+                    .text_size(px(theme.type_scale.body))
+                    .text_color(theme.colors.muted)
+                    .child(self.t("The game is running in another window."))
+            }))
+            .children(no_version.then(|| {
+                div().w(px(560.0)).child(soft_card(
+                    &theme,
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(theme.spacing.sm))
+                        .w(px(520.0))
+                        .child(
+                            div()
+                                .text_size(px(theme.type_scale.subtitle))
+                                .child(self.t("What Download does")),
+                        )
+                        .children(
+                            [
+                                "Fetches Minecraft 26.3 and the Horizon engine from Mojang.",
+                                "One download, then the game starts offline.",
+                                "Worlds, mods and settings stay in this instance.",
+                            ]
+                            .map(|line| {
+                                div()
+                                    .flex()
+                                    .items_center()
+                                    .gap(px(theme.spacing.sm))
+                                    .child(
+                                        div()
+                                            .w(px(4.0))
+                                            .h(px(4.0))
+                                            .rounded_full()
+                                            .bg(theme.colors.accent),
+                                    )
+                                    .child(
+                                        div()
+                                            .text_size(px(theme.type_scale.body))
+                                            .text_color(theme.colors.muted)
+                                            .child(self.t(line)),
+                                    )
+                            }),
+                        ),
+                ))
+            }))
             .children(self.preparing.then(|| {
                 let percent = self.prepare_percent.unwrap_or(0.0).clamp(0.0, 1.0);
+                let cancel = Button::new("cancel-prepare", self.t("Cancel"))
+                    .variant(ButtonVariant::Secondary)
+                    .size(ButtonSize::Md)
+                    .render(
+                        &theme,
+                        Some(cx.listener(|this, _, _window, cx| {
+                            scoria_core::api::cancel_prepare();
+                            this.show_toast(Tone::Neutral, "Cancelling…", cx);
+                        })),
+                    );
                 div()
                     .flex()
-                    .flex_col()
-                    .gap(px(theme.spacing.xs))
-                    .w(px(360.0))
+                    .items_end()
+                    .gap(px(theme.spacing.sm))
+                    .w(px(440.0))
                     .child(
                         div()
                             .flex()
-                            .items_center()
-                            .justify_between()
+                            .flex_col()
+                            .gap(px(theme.spacing.xs))
+                            .flex_1()
                             .child(
                                 div()
-                                    .text_size(px(theme.type_scale.caption))
-                                    .text_color(theme.colors.muted)
-                                    .child(self.prepare_status.clone().unwrap_or_default()),
+                                    .flex()
+                                    .items_center()
+                                    .justify_between()
+                                    .child(
+                                        div()
+                                            .text_size(px(theme.type_scale.caption))
+                                            .text_color(theme.colors.muted)
+                                            .child(self.prepare_status.clone().unwrap_or_default()),
+                                    )
+                                    .child(
+                                        div()
+                                            .font_family(theme.type_scale.mono)
+                                            .text_size(px(theme.type_scale.caption))
+                                            .text_color(theme.colors.foreground)
+                                            .child(format!("{:.0}%", percent * 100.0)),
+                                    ),
                             )
                             .child(
                                 div()
-                                    .font_family(theme.type_scale.mono)
-                                    .text_size(px(theme.type_scale.caption))
-                                    .text_color(theme.colors.foreground)
-                                    .child(format!("{:.0}%", percent * 100.0)),
-                            ),
-                    )
-                    .child(
-                        div()
-                            .h(px(6.0))
-                            .w_full()
-                            .rounded_full()
-                            .bg(theme.colors.surface_tertiary)
-                            .child(
-                                div()
-                                    .h_full()
-                                    .w(px(360.0 * percent))
+                                    .h(px(6.0))
+                                    .w_full()
                                     .rounded_full()
-                                    .bg(theme.colors.accent),
+                                    .bg(theme.colors.surface_tertiary)
+                                    .child(
+                                        div()
+                                            .h_full()
+                                            .w(px(360.0 * percent))
+                                            .rounded_full()
+                                            .bg(theme.colors.accent),
+                                    ),
                             ),
                     )
+                    .child(cancel)
             }))
             .child(status)
             .children((!worlds.is_empty()).then(|| {
@@ -1009,7 +1307,7 @@ impl Shell {
                     .child(
                         div()
                             .text_size(px(theme.type_scale.subtitle))
-                            .child("Your worlds"),
+                            .child(self.t("Your worlds")),
                     )
                     .child(tiles)
             }))
@@ -1027,20 +1325,58 @@ impl Shell {
 
         let mut results = div().flex().flex_col().gap(px(theme.spacing.sm));
         if self.mods_loading {
-            results = results.child(
-                div()
-                    .text_size(px(theme.type_scale.body))
-                    .text_color(theme.colors.muted)
-                    .child("Searching Modrinth…"),
-            );
+            for _ in 0..3 {
+                results = results.child(soft_card(
+                    &theme,
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(theme.spacing.sm))
+                        .child(
+                            div()
+                                .h(px(16.0))
+                                .w(px(180.0))
+                                .rounded_full()
+                                .bg(theme.colors.surface_tertiary),
+                        )
+                        .child(
+                            div()
+                                .h(px(10.0))
+                                .w_full()
+                                .rounded_full()
+                                .bg(theme.colors.surface_secondary),
+                        ),
+                ));
+            }
         }
         if let Some(error) = &self.mods_error {
-            results = results.child(
+            let retry = Button::new("retry-mods", self.t("Search"))
+                .variant(ButtonVariant::Secondary)
+                .size(ButtonSize::Md)
+                .render(
+                    &theme,
+                    Some(cx.listener(|this, _, _window, cx| this.search_mods(cx))),
+                );
+            results = results.child(soft_card(
+                &theme,
                 div()
-                    .text_size(px(theme.type_scale.body))
-                    .text_color(theme.colors.danger)
-                    .child(error.clone()),
-            );
+                    .flex()
+                    .flex_col()
+                    .gap(px(theme.spacing.sm))
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.subtitle))
+                            .text_color(theme.colors.danger)
+                            .child(self.t("Could not load the catalogue")),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.body))
+                            .text_color(theme.colors.muted)
+                            .child(error.clone()),
+                    )
+                    .child(div().self_start().child(retry)),
+            ));
         }
         if self.mods_results.is_empty() && !self.mods_loading && self.mods_error.is_none() {
             results = results.child(
@@ -1126,7 +1462,11 @@ impl Shell {
                                 div()
                                     .text_size(px(theme.type_scale.caption))
                                     .text_color(theme.colors.muted)
-                                    .child(format!("by {author} · {source}")),
+                                    .child(if author == source {
+                                        format!("by {author}")
+                                    } else {
+                                        format!("by {author} · {source}")
+                                    }),
                             )
                             .child(if installing {
                                 div()
@@ -1233,22 +1573,66 @@ impl Shell {
 
         let mut rows = div().flex().flex_col().gap(px(theme.spacing.sm));
         if let Some(error) = &error {
-            rows = rows.child(
+            let retry = Button::new("retry-servers", self.t("Try again"))
+                .variant(ButtonVariant::Secondary)
+                .size(ButtonSize::Md)
+                .render(
+                    &theme,
+                    Some(cx.listener(|this, _, _window, cx| {
+                        this.refresh_servers();
+                        cx.notify();
+                    })),
+                );
+            rows = rows.child(soft_card(
+                &theme,
                 div()
-                    .text_size(px(theme.type_scale.body))
-                    .text_color(theme.colors.danger)
-                    .child(error.clone()),
-            );
+                    .flex()
+                    .flex_col()
+                    .gap(px(theme.spacing.sm))
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.subtitle))
+                            .text_color(theme.colors.danger)
+                            .child(self.t("Could not load the servers")),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.body))
+                            .text_color(theme.colors.muted)
+                            .child(error.clone()),
+                    )
+                    .child(div().self_start().child(retry)),
+            ));
         }
         if list.is_empty() && error.is_none() {
-            rows = rows.child(
+            rows = rows.child(soft_card(
+                &theme,
                 div()
-                    .text_size(px(theme.type_scale.body))
-                    .text_color(theme.colors.muted)
+                    .flex()
+                    .flex_col()
+                    .items_center()
+                    .gap(px(theme.spacing.sm))
+                    .py(px(theme.spacing.xl))
                     .child(
-                        self.t("No saved servers yet. Add the address of an offline-mode server."),
+                        gpui::svg()
+                            .data(ICON_SERVERS)
+                            .size(px(28.0))
+                            .text_color(theme.colors.muted),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.subtitle))
+                            .child(self.t("No servers yet")),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.body))
+                            .text_color(theme.colors.muted)
+                            .child(self.t(
+                                "No saved servers yet. Add the address of an offline-mode server.",
+                            )),
                     ),
-            );
+            ));
         }
         for server in &list {
             let index = server["index"].as_u64().unwrap_or(0) as usize;
@@ -1278,14 +1662,34 @@ impl Shell {
                             ),
                     )
                     .child(
-                        Button::new(format!("remove-{index}"), self.t("Remove"))
-                            .variant(ButtonVariant::Ghost)
-                            .size(ButtonSize::Sm)
-                            .render(
-                                &theme,
-                                Some(cx.listener(move |this, _, _window, cx| {
-                                    this.remove_server(index, cx)
-                                })),
+                        div()
+                            .flex()
+                            .items_center()
+                            .gap(px(theme.spacing.xs))
+                            .child(
+                                Button::new(format!("join-{index}"), self.t("Join"))
+                                    .variant(ButtonVariant::Secondary)
+                                    .size(ButtonSize::Sm)
+                                    .render(
+                                        &theme,
+                                        Some(cx.listener({
+                                            let ip = ip.to_string();
+                                            move |this, _, _window, cx| {
+                                                this.join_server(ip.clone(), cx)
+                                            }
+                                        })),
+                                    ),
+                            )
+                            .child(
+                                Button::new(format!("remove-{index}"), self.t("Remove"))
+                                    .variant(ButtonVariant::Ghost)
+                                    .size(ButtonSize::Sm)
+                                    .render(
+                                        &theme,
+                                        Some(cx.listener(move |this, _, _window, cx| {
+                                            this.remove_server(index, cx)
+                                        })),
+                                    ),
                             ),
                     ),
             ));

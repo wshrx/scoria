@@ -1,7 +1,7 @@
 # Scoria project state
 
 Read this first after a context loss. Keep it current; this is the state, not a changelog.
-Last updated: 2026-11-02.
+Last updated: 2026-11-03.
 
 ## What this is
 
@@ -39,9 +39,13 @@ account, no telemetry, no online-mode servers, no Minecraft assets.
   `scoria-ui-kit` owns tokens and components; `scoria-ui` owns the window.
 - The titlebar shows **Scoria + the launcher version** (`0.1.1-beta`). The engine build tag is not
   shown anywhere: Scoria has one public versioning.
-- Screens: Home (prepare progress + log line, Play), Mods (Horizon registry first, Modrinth second,
-  tabs), Servers, Settings (appearance, language en/ru, offline nickname). The rail collapses and
-  the layout adapts below 1080 px.
+- Screens: Home (one action: Download 26.3 / Preparing / Play / Playing, progress bar, percent and
+  the engine's last log line), Mods (Horizon registry first, Modrinth second, tabs, loading
+  skeleton, retry card), Servers (Join and Remove per row), Settings (appearance, language en/ru,
+  offline nickname). The rail collapses and the layout adapts below 1080 px.
+- `SCORIA_UI_STATE` paints 16 synthetic states without network or game; `tools/capture_ui_states.py`
+  captures them to `~/Pictures/scoria-ui-states/` with a blank-frame check. See
+  `docs/qa/launcher-ui-states.md`. A visual change is not done until the states are looked at.
 - Home installs the newest engine bundle before preparing; progress and failures go to `ui.log`.
 - Auto-update is deliberately off (`self_update_allowed() == false`). Engine updates have a separate
   release but no in-app “Update engine” button yet.
@@ -58,7 +62,7 @@ cargo xtask gate      # everything CI runs
 cargo xtask ui        # run the window in development
 ```
 
-Current gate: **225 Rust tests** (2 skipped) and **15 pytest cases** in 3 files green. Every fixed bug
+Current gate: **226 Rust tests** (2 skipped) and **15 pytest cases** in 3 files green. Every fixed bug
 gets a test that failed before the fix.
 
 ## Engine sync (done 2026-11-02)

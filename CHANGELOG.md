@@ -13,6 +13,16 @@ tag (`v0.1.0-beta` → `## [0.1.0-beta]`).
   launcher's own recycled PID no longer counts as a live game.
 - Horizon Visuals: calmer sky haze and sun shafts, clamped before the composite.
 
+### Added
+
+- Every launcher screen has a capturable state: `SCORIA_UI_STATE` paints synthetic data and
+  `tools/capture_ui_states.py` saves all 16 states as PNGs (docs/qa/launcher-ui-states.md).
+- Home shows the game state honestly (Not installed, Not prepared, Prepared, Playing), errors in a
+  card with Try again, and world tiles with the mode and a key-art placeholder.
+- Mods show a skeleton while loading and a retry card on failure; servers can be joined directly,
+  and the server error path has a retry card.
+- Mods and servers no longer repeat an author that is also the source.
+
 ## [0.1.2-beta] — 2026-11-02
 
 The first engine sync since the beta. The game now runs Horizon's `main` at `b53cfcd14`

@@ -111,6 +111,11 @@ pub fn start_game(world: Option<&str>) -> Result<Value, String> {
     play(&json!({ "world": world }))
 }
 
+/// Launch the selected game and join `server` directly.
+pub fn start_server(server: &str) -> Result<Value, String> {
+    play(&json!({ "server": server }))
+}
+
 fn state() -> Result<Value, String> {
     let tag = selected_tag()?;
     let accounts = Accounts::load();
@@ -533,6 +538,12 @@ pub fn prepare_plan(installed: Option<&str>) -> PreparePlan {
 /// The version a window would prepare, when one is installed.
 pub fn installed_version() -> Option<String> {
     selected_tag().ok()
+}
+
+/// Ask a running prepare to stop after the files in flight. The untouched files stay for the
+/// next Download; the prepare call then returns `Download cancelled…`.
+pub fn cancel_prepare() {
+    crate::mojang::CANCEL.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
 /// Prepare with the engine's progress events forwarded to `emit` (used by the window).

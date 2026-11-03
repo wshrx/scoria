@@ -26,6 +26,38 @@ fn russian(english: &'static str) -> &'static str {
         "Download 26.3" => "Скачать 26.3",
         "Prepared" => "Готово",
         "Not prepared" => "Не готово",
+        "Not installed" => "Не установлено",
+        "What Download does" => "Что делает загрузка",
+        "Fetches Minecraft 26.3 and the Horizon engine from Mojang." => {
+            "Скачивает Minecraft 26.3 и движок Horizon с серверов Mojang."
+        }
+        "One download, then the game starts offline." => {
+            "Одна загрузка, дальше игра запускается офлайн."
+        }
+        "Worlds, mods and settings stay in this instance." => {
+            "Миры, моды и настройки остаются в этом профиле."
+        }
+        "Cancel" => "Отмена",
+        "Try again" => "Повторить",
+        "The game did not start" => "Игра не запустилась",
+        "Your worlds" => "Ваши миры",
+        "Creative" => "Творческий",
+        "Hardcore" => "Хардкор",
+        "Adventure" => "Приключение",
+        "Survival" => "Выживание",
+        "No version installed. Download 26.3 to install the engine." => {
+            "Версия не установлена. Скачайте 26.3, чтобы установить движок."
+        }
+        "Offline profile. No Microsoft account." => {
+            "Офлайн-профиль. Без аккаунта Microsoft."
+        }
+        "The game is running in another window." => {
+            "Игра запущена в другом окне."
+        }
+        "Could not load the catalogue" => "Не удалось загрузить каталог",
+        "No servers yet" => "Серверов пока нет",
+        "Could not load the servers" => "Не удалось загрузить серверы",
+        "Join" => "Войти",
         "Search" => "Поиск",
         "Search mods" => "Поиск модов",
         "Install" => "Установить",
