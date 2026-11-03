@@ -214,6 +214,7 @@ struct Shell {
     appearance_open: bool,
     language_open: bool,
     fade: f32,
+    polling: bool,
     servers: Result<serde_json::Value, String>,
     server_name: gpui::Entity<EditableTextState>,
     server_ip: gpui::Entity<EditableTextState>,
@@ -253,6 +254,7 @@ impl Shell {
             appearance_open: false,
             language_open: false,
             fade: 0.0,
+            polling: false,
             servers: scoria_core::api::saved_servers(),
             server_name: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
             server_ip: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
@@ -264,6 +266,9 @@ impl Shell {
         }
         if std::env::var("SCORIA_AUTO_PREPARE").is_ok() {
             shell.prepare(cx);
+        }
+        if shell.playing_now() {
+            shell.poll_playing(cx);
         }
         if let Some(query) = query {
             if !query.is_empty() {
@@ -496,6 +501,42 @@ impl Shell {
         .detach();
     }
 
+    fn playing_now(&self) -> bool {
+        self.snapshot
+            .as_ref()
+            .ok()
+            .and_then(|snapshot| snapshot["playing"].as_bool())
+            .unwrap_or(false)
+    }
+
+    /// The game is a separate process; refresh Home while it runs so its exit clears "Playing".
+    fn poll_playing(&mut self, cx: &mut Context<Self>) {
+        if self.polling {
+            return;
+        }
+        self.polling = true;
+        cx.spawn(async move |this, cx| loop {
+            cx.background_executor()
+                .timer(std::time::Duration::from_secs(1))
+                .await;
+            let still_playing = this
+                .update(cx, |this, cx| {
+                    this.snapshot = scoria_core::api::snapshot();
+                    let playing = this.playing_now();
+                    if !playing {
+                        this.polling = false;
+                    }
+                    cx.notify();
+                    playing
+                })
+                .unwrap_or(false);
+            if !still_playing {
+                break;
+            }
+        })
+        .detach();
+    }
+
     fn play(&mut self, cx: &mut Context<Self>) {
         self.play_message = Some(match scoria_core::api::start_game(None) {
             Ok(started) => (
@@ -509,6 +550,9 @@ impl Shell {
             Err(error) => (false, error),
         });
         self.snapshot = scoria_core::api::snapshot();
+        if self.playing_now() {
+            self.poll_playing(cx);
+        }
         cx.notify();
     }
 
@@ -798,44 +842,35 @@ impl Shell {
             Err(_) => Vec::new(),
         };
 
-        let play = Button::new(
-            "play",
-            if playing {
-                self.t("Playing")
-            } else {
-                self.t("Play")
-            },
-        )
-        .variant(if prepared {
-            ButtonVariant::Primary
+        let action_label = if playing {
+            self.t("Playing")
+        } else if self.preparing {
+            self.t("Preparing…")
+        } else if prepared {
+            self.t("Play")
         } else {
-            ButtonVariant::Secondary
-        })
-        .size(ButtonSize::Lg)
-        .disabled(playing || !prepared)
-        .render(
-            &theme,
-            Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| this.play(cx))),
-        );
-        let prepare = Button::new(
-            "prepare",
-            if self.preparing {
-                self.t("Preparing…")
-            } else {
-                self.t("Download 26.3")
-            },
-        )
-        .variant(if prepared {
-            ButtonVariant::Secondary
-        } else {
-            ButtonVariant::Primary
-        })
-        .size(ButtonSize::Lg)
-        .disabled(self.preparing || prepared)
-        .render(
-            &theme,
-            Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| this.prepare(cx))),
-        );
+            self.t("Download 26.3")
+        };
+        let action = Button::new("game-action", action_label)
+            .variant(ButtonVariant::Primary)
+            .size(ButtonSize::Lg)
+            .disabled(playing || self.preparing)
+            .render(
+                &theme,
+                Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| {
+                    let prepared = this
+                        .snapshot
+                        .as_ref()
+                        .ok()
+                        .and_then(|snapshot| snapshot["prepared"].as_bool())
+                        .unwrap_or(false);
+                    if prepared {
+                        this.play(cx);
+                    } else {
+                        this.prepare(cx);
+                    }
+                })),
+            );
 
         let mut chips = div().flex().items_center().gap(px(theme.spacing.xs));
         chips = chips.child(badge(
@@ -921,23 +956,49 @@ impl Shell {
                     .flex()
                     .items_center()
                     .gap(px(theme.spacing.sm))
-                    .child(prepare)
-                    .child(play),
+                    .child(action),
             )
             .child(chips)
             .children(self.preparing.then(|| {
-                div().flex().items_center().gap(px(theme.spacing.sm)).child(
-                    div()
-                        .text_size(px(theme.type_scale.caption))
-                        .text_color(theme.colors.muted)
-                        .child(format!(
-                            "{} {}",
-                            self.prepare_status.clone().unwrap_or_default(),
-                            self.prepare_percent
-                                .map(|p| format!("{:.0}%", p * 100.0))
-                                .unwrap_or_default()
-                        )),
-                )
+                let percent = self.prepare_percent.unwrap_or(0.0).clamp(0.0, 1.0);
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap(px(theme.spacing.xs))
+                    .w(px(360.0))
+                    .child(
+                        div()
+                            .flex()
+                            .items_center()
+                            .justify_between()
+                            .child(
+                                div()
+                                    .text_size(px(theme.type_scale.caption))
+                                    .text_color(theme.colors.muted)
+                                    .child(self.prepare_status.clone().unwrap_or_default()),
+                            )
+                            .child(
+                                div()
+                                    .font_family(theme.type_scale.mono)
+                                    .text_size(px(theme.type_scale.caption))
+                                    .text_color(theme.colors.foreground)
+                                    .child(format!("{:.0}%", percent * 100.0)),
+                            ),
+                    )
+                    .child(
+                        div()
+                            .h(px(6.0))
+                            .w_full()
+                            .rounded_full()
+                            .bg(theme.colors.surface_tertiary)
+                            .child(
+                                div()
+                                    .h_full()
+                                    .w(px(360.0 * percent))
+                                    .rounded_full()
+                                    .bg(theme.colors.accent),
+                            ),
+                    )
             }))
             .child(status)
             .children((!worlds.is_empty()).then(|| {

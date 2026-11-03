@@ -3,6 +3,16 @@
 All notable changes to Scoria. The release workflow takes the section whose heading matches the
 tag (`v0.1.0-beta` → `## [0.1.0-beta]`).
 
+## [Unreleased]
+
+### Fixed
+
+- Home has one state-aware action: Download 26.3, Preparing, or Play, with a progress bar and the
+  engine's last log line instead of a text-only percentage.
+- Leaving the game clears "Playing": the launcher polls while a game runs, and a zombie or the
+  launcher's own recycled PID no longer counts as a live game.
+- Horizon Visuals: calmer sky haze and sun shafts, clamped before the composite.
+
 ## [0.1.2-beta] — 2026-11-02
 
 The first engine sync since the beta. The game now runs Horizon's `main` at `b53cfcd14`

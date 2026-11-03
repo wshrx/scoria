@@ -41,6 +41,20 @@ pub fn release(home: &Path, pid: u32) {
     }
 }
 
+/// The game's process name. The launcher is `scoria`; a recycled launcher PID must not count as a
+/// running game.
+fn is_game_comm(name: &str) -> bool {
+    name.contains("horizon-client")
+}
+
+/// Whether a `/proc/<pid>/stat` line belongs to a zombie: it has exited, but its parent has not
+/// reaped it yet. A zombie keeps its old comm and would otherwise block Play.
+fn is_zombie_stat(stat: &str) -> bool {
+    stat.rsplit_once(')')
+        .and_then(|(_, rest)| rest.split_whitespace().next())
+        == Some("Z")
+}
+
 /// Whether `pid` belongs to a live game. Linux also checks the name, so a recycled PID does not
 /// block Play forever; other Unix systems ask `kill -0`.
 fn alive(pid: u32) -> bool {
@@ -50,12 +64,16 @@ fn alive(pid: u32) -> bool {
         if !Path::new(&proc).exists() {
             return false;
         }
-        match fs::read(format!("{proc}/comm")) {
-            Ok(name) => {
-                let name = String::from_utf8_lossy(&name);
-                name.contains("horizon-client") || name.contains("scoria")
+        // A child that has exited but not yet been reaped keeps /proc/<pid> and its old comm.
+        // Treat it as gone, or Home stays "Playing" after the player closes the window.
+        if let Ok(stat) = fs::read_to_string(format!("{proc}/stat")) {
+            if is_zombie_stat(&stat) {
+                return false;
             }
-            Err(_) => true,
+        }
+        match fs::read(format!("{proc}/comm")) {
+            Ok(name) => is_game_comm(&String::from_utf8_lossy(&name)),
+            Err(_) => false,
         }
     }
     #[cfg(all(unix, not(target_os = "linux")))]
@@ -74,8 +92,9 @@ fn alive(pid: u32) -> bool {
             .args(["/FI", &format!("PID eq {pid}"), "/FO", "CSV", "/NH"])
             .output()
             .map(|out| {
-                let text = String::from_utf8_lossy(&out.stdout).to_ascii_lowercase();
-                text.contains("horizon-client") || text.contains("scoria")
+                String::from_utf8_lossy(&out.stdout)
+                    .to_ascii_lowercase()
+                    .contains("horizon-client")
             })
             .unwrap_or(false)
     }
@@ -106,6 +125,18 @@ mod tests {
         fs::write(path(&dir), "999999").unwrap();
         assert_eq!(running(&dir), None);
         assert!(!path(&dir).exists());
+    }
+
+    #[test]
+    fn a_zombie_or_the_launcher_is_not_a_running_game() {
+        assert!(is_game_comm("horizon-client\n"));
+        assert!(!is_game_comm("scoria\n"));
+        assert!(is_zombie_stat(
+            "123 (horizon-client) Z 1 2 3 4 5 6 7 8 9 10"
+        ));
+        assert!(!is_zombie_stat(
+            "123 (horizon-client) S 1 2 3 4 5 6 7 8 9 10"
+        ));
     }
 
     #[test]
