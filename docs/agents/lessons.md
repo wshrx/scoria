@@ -64,6 +64,16 @@ release.
 
 ## UI and design
 
+**D3 — The window shell is not a card.** Rounding the titlebar and rail into a floating panel made
+the app look like a widget inside its own window and broke the match with the rest of the launcher.
+Rule: titlebar full width, rail flush, square window; only inner controls (buttons, fields, cards,
+badges, markers) are rounded. ADR-0003.
+
+**D4 — A screenshot must name its backend.** The redesign screenshots were X11 because the capture
+command forced `DISPLAY=:0`; the user saw an X11 window and asked why Wayland was missing.
+Rule: capture Wayland with `WAYLAND_DISPLAY` and no `DISPLAY`; keep the full-screen evidence. Never
+script the live compositor (next entry).
+
 **D1 — Contrast is a test, not a taste.** The light theme's ember `#E06A2C` with white text was
 3.35:1, below WCAG AA.
 Rule: the palette is checked in `scoria-ui-kit` tests at ≥ 4.5:1 for text in both themes.
@@ -74,6 +84,15 @@ Rule: 4px spacing, 8px cards, 12px fields, one primary action per screen, no cus
 mode.
 
 ## Process
+
+**P4 — Never script the live compositor for a screenshot.** A KWin D-Bus script created a temporary
+virtual desktop and moved the launcher window; KWin restarted and took the user's session with it.
+Rule: use a nested compositor, an X11 client window, or ask the user. No `workspace.createDesktop`,
+window moves or activations on the live session.
+
+**P5 — Build caches are not project state.** `launcher/target` reached 40 GB and a second worktree
+added 12 GB. Release binaries live on GitHub; the target folders are disposable.
+Rule: `cargo clean` in each launcher worktree after a build; never back up or commit `target/`.
 
 **P1 — Entire is the source of truth; GitHub is a snapshot.** Development branches never reach
 GitHub, and the public tree is an allowlist.
