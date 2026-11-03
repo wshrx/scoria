@@ -8,9 +8,19 @@ Scoria keeps two long-lived branches on both remotes. Nothing else is needed.
 | `dev` | Entire | Integration and testing; everything lands here first | Build, `cargo xtask gate` green before merging into `main` |
 | `staging` | GitHub | Exported public snapshot used by public CI | Pushed by `tools/publish_public.sh`; promoted to `main` only when green |
 
-There is no `nightly`, `lab`, `test/instances` or `feat/*` branch right now. Feature work may use a
-short-lived `feat/*` branch on Entire; merge it into `dev` and delete it. Do not publish WIP
-branches to GitHub.
+There is no `nightly`, `lab` or `test/instances` branch. Work branches are short-lived and live on
+Entire until merged or dropped:
+
+| Prefix | Use | Examples |
+|---|---|---|
+| `exp/<topic>` | throwaway experiment; never released as-is | `exp/gpui-fast`, `exp/motion` |
+| `feat/<topic>` | a shippable feature | `feat/engine-update`, `feat/installer` |
+| `fix/<topic>` | a bug fix | `fix/prepare-progress` |
+| `test/<topic>` | verification only; no release | `test/native-mods`, `test/windows-smoke` |
+| `sync/<date>` | temporary upstream sync; delete after merge | `sync/upstream-20261102` |
+
+Merge `feat/*`, `fix/*` and `test/*` into `dev` and delete the branch; keep `exp/*` only while it is
+being evaluated. Do not publish WIP branches to GitHub.
 
 ## Working
 
