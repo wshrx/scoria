@@ -288,6 +288,93 @@ impl Theme {
         }
     }
 
+    /// The arcade/Brawl-inspired variant: saturated yellow and navy, chunky radii and a red
+    /// primary. Original palette and shapes; no Supercell assets.
+    pub fn arcade(dark: bool) -> Self {
+        let colors = if dark {
+            Colors {
+                background: rgb(0x14213D),
+                surface: rgb(0x1D3557),
+                surface_secondary: rgb(0x223A5E),
+                surface_tertiary: rgb(0x2B4A73),
+                overlay: rgb(0x1D3557),
+                backdrop: rgb(0x000000),
+                foreground: rgb(0xFFF6D8),
+                muted: rgb(0xA9B8D0),
+                border: rgb(0x0B1220),
+                separator: rgb(0x2B4A73),
+                accent: rgb(0xFFD23F),
+                accent_foreground: rgb(0x14213D),
+                accent_hover: rgb(0xFFE066),
+                accent_soft: rgb(0x4A3B1A),
+                success: rgb(0x57CC99),
+                warning: rgb(0xFFB703),
+                danger: rgb(0xFF5D8F),
+                danger_foreground: rgb(0x14213D),
+                focus_ring: rgb(0xFFD23F),
+            }
+        } else {
+            Colors {
+                background: rgb(0xFFD23F),
+                surface: rgb(0xFFF6D8),
+                surface_secondary: rgb(0xFFE9A8),
+                surface_tertiary: rgb(0xFFDF7A),
+                overlay: rgb(0xFFF6D8),
+                backdrop: rgb(0x000000),
+                foreground: rgb(0x14213D),
+                muted: rgb(0x4A5578),
+                border: rgb(0x14213D),
+                separator: rgb(0xD9A400),
+                accent: rgb(0xD62828),
+                accent_foreground: rgb(0xFFFFFF),
+                accent_hover: rgb(0xB51F1F),
+                accent_soft: rgb(0xFFD6D9),
+                success: rgb(0x1F7A6B),
+                warning: rgb(0x8A5A00),
+                danger: rgb(0xD62828),
+                danger_foreground: rgb(0xFFFFFF),
+                focus_ring: rgb(0x1D3557),
+            }
+        };
+        Self {
+            dark,
+            flat: true,
+            colors,
+            radii: Radii {
+                sm: 10.0,
+                md: 14.0,
+                lg: 18.0,
+                xl: 24.0,
+                field: 14.0,
+            },
+            spacing: Spacing {
+                xs: 4.0,
+                sm: 8.0,
+                md: 12.0,
+                lg: 16.0,
+                xl: 24.0,
+            },
+            type_scale: Typography {
+                sans: "Medeo Sans",
+                mono: "Medeo Mono",
+                caption: 12.0,
+                body: 14.0,
+                subtitle: 16.0,
+                title: 22.0,
+                display: 46.0,
+            },
+            motion: Motion::new(),
+        }
+    }
+
+    pub fn arcade_dark() -> Self {
+        Self::arcade(true)
+    }
+
+    pub fn arcade_light() -> Self {
+        Self::arcade(false)
+    }
+
     pub fn blueprint_dark() -> Self {
         Self::blueprint(true)
     }

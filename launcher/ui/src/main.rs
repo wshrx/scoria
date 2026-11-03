@@ -135,7 +135,7 @@ fn menu_item(
         .h(px(34.0))
         .px(px(theme.spacing.md))
         .rounded(px(theme.radii.md))
-        .border_1()
+        .border_2()
         .border_color(theme.colors.border)
         .bg(if selected {
             theme.colors.accent_soft
@@ -225,8 +225,8 @@ impl Shell {
     fn new(cx: &mut Context<Self>, screen: Screen, query: Option<String>) -> Self {
         let settings = Settings::load();
         let theme = match settings.appearance {
-            Appearance::Light => Theme::blueprint_light(),
-            _ => Theme::blueprint_dark(),
+            Appearance::Light => Theme::arcade_light(),
+            _ => Theme::arcade_dark(),
         };
         let current = match Accounts::load().player() {
             Player::Offline(name) => name,
@@ -537,8 +537,8 @@ impl Shell {
     fn set_appearance(&mut self, cx: &mut Context<Self>, appearance: Appearance) {
         self.settings.appearance = appearance;
         self.theme = match appearance {
-            Appearance::Light => Theme::blueprint_light(),
-            _ => Theme::blueprint_dark(),
+            Appearance::Light => Theme::arcade_light(),
+            _ => Theme::arcade_dark(),
         };
         self.settings.save();
         self.appearance_open = false;
@@ -668,8 +668,8 @@ impl Shell {
                     .bottom(px(0.0))
                     .left(px(0.0))
                     .w_full()
-                    .h(px(1.0))
-                    .bg(theme.colors.border),
+                    .h(px(3.0))
+                    .bg(theme.colors.accent),
             )
     }
 
@@ -724,12 +724,12 @@ impl Shell {
                 })
                 .rounded(px(theme.radii.sm))
                 .bg(if selected {
-                    theme.colors.accent_soft
+                    theme.colors.accent
                 } else {
                     rgba(0x00000000)
                 })
                 .text_color(if selected {
-                    theme.colors.accent
+                    theme.colors.accent_foreground
                 } else {
                     theme.colors.muted
                 })
@@ -743,16 +743,7 @@ impl Shell {
                         .size(px(15.0))
                         .text_color(tint),
                 )
-                .children((!compact).then(|| self.t(screen.label())))
-                .children(selected.then(|| {
-                    div()
-                        .absolute()
-                        .left(px(0.0))
-                        .top(px(6.0))
-                        .bottom(px(6.0))
-                        .w(px(2.0))
-                        .bg(theme.colors.accent)
-                }));
+                .children((!compact).then(|| self.t(screen.label())));
             if !selected {
                 item = item.hover(move |style| style.bg(theme.colors.surface_secondary));
             }
@@ -912,7 +903,7 @@ impl Shell {
         let spec = div()
             .flex()
             .items_stretch()
-            .border_1()
+            .border_2()
             .border_color(theme.colors.border)
             .rounded(px(theme.radii.lg))
             .bg(theme.colors.surface)
@@ -967,7 +958,7 @@ impl Shell {
                             .font_weight(gpui::FontWeight::SEMIBOLD)
                             .child("Minecraft 26.3"),
                     )
-                    .child(div().h(px(2.0)).w(px(56.0)).bg(theme.colors.accent)),
+                    .child(div().h(px(4.0)).w(px(56.0)).bg(theme.colors.accent)),
             )
             .child(spec)
             .child(
@@ -1019,7 +1010,7 @@ impl Shell {
                     )
                     .child(
                         div()
-                            .border_1()
+                            .border_2()
                             .border_color(theme.colors.border)
                             .rounded(px(theme.radii.lg))
                             .bg(theme.colors.surface)
@@ -1209,7 +1200,7 @@ impl Shell {
                                 .py(px(theme.spacing.sm))
                                 .placeholder_color(theme.colors.muted)
                                 .rounded(px(theme.radii.field))
-                                .border_1()
+                                .border_2()
                                 .border_color(theme.colors.border)
                                 .bg(theme.colors.surface_secondary)
                                 .text_color(theme.colors.foreground)
@@ -1343,7 +1334,7 @@ impl Shell {
                                 .placeholder(self.t("Name"))
                                 .placeholder_color(theme.colors.muted)
                                 .rounded(px(theme.radii.field))
-                                .border_1()
+                                .border_2()
                                 .border_color(theme.colors.border)
                                 .bg(theme.colors.surface_secondary)
                                 .text_color(theme.colors.foreground)
@@ -1361,7 +1352,7 @@ impl Shell {
                                 .placeholder(self.t("host:port"))
                                 .placeholder_color(theme.colors.muted)
                                 .rounded(px(theme.radii.field))
-                                .border_1()
+                                .border_2()
                                 .border_color(theme.colors.border)
                                 .bg(theme.colors.surface_secondary)
                                 .text_color(theme.colors.foreground)
@@ -1393,7 +1384,7 @@ impl Shell {
             .p(px(4.0))
             .rounded(px(theme.radii.xl))
             .bg(theme.colors.overlay)
-            .border_1()
+            .border_2()
             .border_color(theme.colors.border);
         for (id, value, label) in [
             ("opt-dark", Appearance::Dark, "Dark"),
@@ -1443,7 +1434,7 @@ impl Shell {
             .p(px(4.0))
             .rounded(px(theme.radii.xl))
             .bg(theme.colors.overlay)
-            .border_1()
+            .border_2()
             .border_color(theme.colors.border);
         for (id, value, label) in [
             ("opt-language-system", None, "System"),
@@ -1551,7 +1542,7 @@ impl Shell {
                                         .py(px(theme.spacing.sm))
                                         .placeholder_color(theme.colors.muted)
                                         .rounded(px(theme.radii.field))
-                                        .border_1()
+                                        .border_2()
                                         .border_color(theme.colors.border)
                                         .bg(theme.colors.surface_secondary)
                                         .text_color(theme.colors.foreground)

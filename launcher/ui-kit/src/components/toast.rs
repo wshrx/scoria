@@ -19,7 +19,7 @@ pub fn toast(theme: &Theme, message: impl Into<SharedString>, tone: Tone) -> Div
         .px(px(theme.spacing.lg))
         .py(px(theme.spacing.md))
         .rounded(px(theme.radii.xl))
-        .border_1()
+        .border_2()
         .border_color(theme.colors.border)
         .bg(theme.colors.surface)
         .text_color(theme.colors.foreground)
