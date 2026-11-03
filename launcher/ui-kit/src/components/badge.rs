@@ -27,7 +27,7 @@ pub fn badge(theme: &Theme, label: impl Into<SharedString>, tone: Tone) -> Div {
         .items_center()
         .h(px(22.0))
         .px(px(theme.spacing.sm))
-        .rounded(px(theme.radii.sm))
+        .rounded_full()
         .border_2()
         .border_color(colors.border)
         .bg(background)

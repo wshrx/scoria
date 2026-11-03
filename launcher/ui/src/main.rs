@@ -12,9 +12,9 @@ use std::{
 };
 
 use gpui::{
-    div, img, point, prelude::*, px, rgba, size, Bounds, Context, Image, ImageFormat, ImageSource,
-    IntoElement, MouseButton, Render, ResizeEdge, Window, WindowBounds, WindowControlArea,
-    WindowDecorations, WindowOptions,
+    div, img, linear_color_stop, linear_gradient, point, prelude::*, px, rgba, size, Bounds,
+    Context, Image, ImageFormat, ImageSource, IntoElement, MouseButton, Render, ResizeEdge, Window,
+    WindowBounds, WindowControlArea, WindowDecorations, WindowOptions,
 };
 use gpui_ce_elements::editable_text::{
     actions::{default_bindings, DEFAULT_INPUT_CONTEXT},
@@ -225,8 +225,8 @@ impl Shell {
     fn new(cx: &mut Context<Self>, screen: Screen, query: Option<String>) -> Self {
         let settings = Settings::load();
         let theme = match settings.appearance {
-            Appearance::Light => Theme::arcade_light(),
-            _ => Theme::arcade_dark(),
+            Appearance::Light => Theme::dungeon_light(),
+            _ => Theme::dungeon_dark(),
         };
         let current = match Accounts::load().player() {
             Player::Offline(name) => name,
@@ -537,8 +537,8 @@ impl Shell {
     fn set_appearance(&mut self, cx: &mut Context<Self>, appearance: Appearance) {
         self.settings.appearance = appearance;
         self.theme = match appearance {
-            Appearance::Light => Theme::arcade_light(),
-            _ => Theme::arcade_dark(),
+            Appearance::Light => Theme::dungeon_light(),
+            _ => Theme::dungeon_dark(),
         };
         self.settings.save();
         self.appearance_open = false;
@@ -603,8 +603,13 @@ impl Shell {
             .flex()
             .items_center()
             .justify_between()
-            .h(px(44.0))
-            .px(px(theme.spacing.md))
+            .h(px(48.0))
+            .m(px(8.0))
+            .px(px(theme.spacing.lg))
+            .rounded(px(theme.radii.xl))
+            .border_2()
+            .border_color(theme.colors.border)
+            .overflow_hidden()
             .bg(theme.colors.surface)
             .child(
                 div()
@@ -679,10 +684,14 @@ impl Shell {
             .relative()
             .flex()
             .flex_col()
-            .gap(px(2.0))
+            .gap(px(4.0))
             .w(px(if compact { 64.0 } else { 188.0 }))
-            .h_full()
+            .m(px(12.0))
             .p(px(if compact { 8.0 } else { 10.0 }))
+            .rounded(px(theme.radii.xl))
+            .border_2()
+            .border_color(theme.colors.border)
+            .overflow_hidden()
             .bg(theme.colors.surface)
             .child(div().h(px(theme.spacing.sm)));
 
@@ -773,15 +782,7 @@ impl Shell {
                         .text_color(theme.colors.muted),
                 ),
         );
-        rail.child(
-            div()
-                .absolute()
-                .top(px(0.0))
-                .right(px(0.0))
-                .w(px(1.0))
-                .h_full()
-                .bg(theme.colors.border),
-        )
+        rail
     }
 
     fn home(&self, cx: &mut Context<Self>, compact: bool) -> impl IntoElement {
@@ -1622,11 +1623,11 @@ impl Render for Shell {
                     .left(px(0.0))
                     .w_full()
                     .h_full()
-                    .bg(if theme.dark {
-                        rgba(0x09080A4D)
-                    } else {
-                        rgba(0xFFFFFF2E)
-                    })
+                    .bg(linear_gradient(
+                        180.0,
+                        linear_color_stop(rgba(0x3A1E0A66), 0.0),
+                        linear_color_stop(rgba(0x071615CC), 1.0),
+                    ))
                     .opacity(if theme.flat { 0.0 } else { 1.0 }),
             )
             .child(

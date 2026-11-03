@@ -288,6 +288,93 @@ impl Theme {
         }
     }
 
+    /// The dungeon-trailer variant: mossy stone, torchlit amber, parchment and deep teal.
+    /// Everything is rounded; the backdrop stays visible under a warm-to-teal wash.
+    pub fn dungeon(dark: bool) -> Self {
+        let colors = if dark {
+            Colors {
+                background: rgb(0x071413),
+                surface: rgb(0x12241F),
+                surface_secondary: rgb(0x1A3029),
+                surface_tertiary: rgb(0x244238),
+                overlay: rgb(0x1A3029),
+                backdrop: rgb(0x000000),
+                foreground: rgb(0xF6EBD2),
+                muted: rgb(0xA9B8A3),
+                border: rgb(0x3B5A4A),
+                separator: rgb(0x2B463A),
+                accent: rgb(0xF2B84B),
+                accent_foreground: rgb(0x1A1206),
+                accent_hover: rgb(0xFFD166),
+                accent_soft: rgb(0x3A2E14),
+                success: rgb(0x79C267),
+                warning: rgb(0xE0A03A),
+                danger: rgb(0xD95D39),
+                danger_foreground: rgb(0x1A1206),
+                focus_ring: rgb(0xF2B84B),
+            }
+        } else {
+            Colors {
+                background: rgb(0xEFE3C8),
+                surface: rgb(0xFBF4E4),
+                surface_secondary: rgb(0xF3E7CE),
+                surface_tertiary: rgb(0xE8D9B9),
+                overlay: rgb(0xFBF4E4),
+                backdrop: rgb(0x000000),
+                foreground: rgb(0x2A1D12),
+                muted: rgb(0x6B5842),
+                border: rgb(0xB99B6B),
+                separator: rgb(0xD6C19A),
+                accent: rgb(0xA64B12),
+                accent_foreground: rgb(0xFFFFFF),
+                accent_hover: rgb(0x8F3D0E),
+                accent_soft: rgb(0xF5D9B8),
+                success: rgb(0x3F7A3A),
+                warning: rgb(0x8A5A00),
+                danger: rgb(0xA83232),
+                danger_foreground: rgb(0xFFFFFF),
+                focus_ring: rgb(0xA64B12),
+            }
+        };
+        Self {
+            dark,
+            flat: false,
+            colors,
+            radii: Radii {
+                sm: 14.0,
+                md: 18.0,
+                lg: 24.0,
+                xl: 30.0,
+                field: 18.0,
+            },
+            spacing: Spacing {
+                xs: 4.0,
+                sm: 8.0,
+                md: 12.0,
+                lg: 16.0,
+                xl: 24.0,
+            },
+            type_scale: Typography {
+                sans: "Medeo Sans",
+                mono: "Medeo Mono",
+                caption: 12.0,
+                body: 15.0,
+                subtitle: 17.0,
+                title: 24.0,
+                display: 46.0,
+            },
+            motion: Motion::new(),
+        }
+    }
+
+    pub fn dungeon_dark() -> Self {
+        Self::dungeon(true)
+    }
+
+    pub fn dungeon_light() -> Self {
+        Self::dungeon(false)
+    }
+
     /// The arcade/Brawl-inspired variant: saturated yellow and navy, chunky radii and a red
     /// primary. Original palette and shapes; no Supercell assets.
     pub fn arcade(dark: bool) -> Self {
