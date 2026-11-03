@@ -12,9 +12,9 @@ use std::{
 };
 
 use gpui::{
-    div, img, point, prelude::*, px, rgba, size, Bounds,
-    Context, Image, ImageFormat, ImageSource, IntoElement, MouseButton, Render, ResizeEdge, Window,
-    WindowBounds, WindowControlArea, WindowDecorations, WindowOptions,
+    div, img, point, prelude::*, px, rgba, size, Bounds, Context, Image, ImageFormat, ImageSource,
+    IntoElement, MouseButton, Render, ResizeEdge, Window, WindowBounds, WindowControlArea,
+    WindowDecorations, WindowOptions,
 };
 use gpui_ce_elements::editable_text::{
     actions::{default_bindings, DEFAULT_INPUT_CONTEXT},
@@ -735,9 +735,7 @@ impl Shell {
                 })
                 .text_size(px(theme.type_scale.body))
                 .cursor_pointer()
-                .transitions(|transitions| {
-                    transitions.bg(std::time::Duration::from_millis(120))
-                })
+                .transitions(|transitions| transitions.bg(std::time::Duration::from_millis(120)))
                 .on_click(on_click)
                 .child(
                     gpui::svg()
@@ -862,12 +860,7 @@ impl Shell {
         let mut world_rows = div().flex().flex_col();
         for (index, world) in worlds.iter().take(6).enumerate() {
             if index > 0 {
-                world_rows = world_rows.child(
-                    div()
-                        .h(px(1.0))
-                        .w_full()
-                        .bg(theme.colors.separator),
-                );
+                world_rows = world_rows.child(div().h(px(1.0)).w_full().bg(theme.colors.separator));
             }
             let name = world["name"].as_str().unwrap_or("World");
             let played = world["lastPlayed"].as_str().unwrap_or("");
@@ -879,7 +872,11 @@ impl Shell {
                     .gap(px(theme.spacing.md))
                     .px(px(theme.spacing.md))
                     .py(px(10.0))
-                    .child(div().text_size(px(theme.type_scale.body)).child(name.to_string()))
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.body))
+                            .child(name.to_string()),
+                    )
                     .child(
                         div()
                             .font_family(theme.type_scale.mono)
@@ -919,7 +916,11 @@ impl Shell {
             .border_color(theme.colors.border)
             .rounded(px(theme.radii.lg))
             .bg(theme.colors.surface)
-            .child(spec_col("Game", "26.3".to_string(), theme.colors.foreground))
+            .child(spec_col(
+                "Game",
+                "26.3".to_string(),
+                theme.colors.foreground,
+            ))
             .child(div().w(px(1.0)).bg(theme.colors.border))
             .child(spec_col("State", status_text, status_color))
             .child(div().w(px(1.0)).bg(theme.colors.border))

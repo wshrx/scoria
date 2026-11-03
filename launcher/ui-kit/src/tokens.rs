@@ -246,15 +246,15 @@ impl Theme {
                 muted: rgb(0x4F6472),
                 border: rgb(0xAEBEC9),
                 separator: rgb(0xCBD7DE),
-                accent: rgb(0xD93F15),
+                accent: rgb(0xD23A10),
                 accent_foreground: rgb(0xFFFFFF),
-                accent_hover: rgb(0xC03610),
+                accent_hover: rgb(0xB8310C),
                 accent_soft: rgb(0xF7D9CE),
                 success: rgb(0x0B6B47),
                 warning: rgb(0x8A5A00),
                 danger: rgb(0xB3261E),
                 danger_foreground: rgb(0xFFFFFF),
-                focus_ring: rgb(0xD93F15),
+                focus_ring: rgb(0xD23A10),
             }
         };
         Self {
@@ -348,7 +348,12 @@ mod tests {
 
     #[test]
     fn text_is_readable_in_both_themes() {
-        for theme in [Theme::dark(), Theme::light(), Theme::blueprint_dark(), Theme::blueprint_light()] {
+        for theme in [
+            Theme::dark(),
+            Theme::light(),
+            Theme::blueprint_dark(),
+            Theme::blueprint_light(),
+        ] {
             let colors = theme.colors;
             assert_readable(
                 &theme,
@@ -386,7 +391,12 @@ mod tests {
 
     #[test]
     fn the_scale_stays_on_the_4px_rhythm_and_the_radius_scale() {
-        for theme in [Theme::dark(), Theme::light(), Theme::blueprint_dark(), Theme::blueprint_light()] {
+        for theme in [
+            Theme::dark(),
+            Theme::light(),
+            Theme::blueprint_dark(),
+            Theme::blueprint_light(),
+        ] {
             for value in [
                 theme.spacing.xs,
                 theme.spacing.sm,
