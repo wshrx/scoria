@@ -4,7 +4,10 @@
 //! elements. Run with:
 //!   cargo run -p scoria-ui --features dev-scripts --example mimas-ui
 //! and point SCORIA_MIMAS_UI at another scene.
-use std::sync::Mutex;
+use std::{
+    sync::{Arc, Mutex},
+    time::SystemTime,
+};
 
 use gpui::{
     div, point, prelude::*, px, rgb, rgba, size, Bounds, Context, IntoElement, Render, Rgba,
@@ -81,17 +84,77 @@ fn text(x: f64, y: f64, size: f64, fill: &str, content: &str) {
 
 struct Preview {
     theme: Theme,
-    nodes: Vec<Node>,
+    nodes: Arc<Mutex<Vec<Node>>>,
+    script: std::path::PathBuf,
+    modified: Option<SystemTime>,
+    error: Option<String>,
+}
+
+fn load_scene(source: &str) -> Result<Vec<Node>, String> {
+    let mut vm = mimas::compile_source(source).map_err(|error| format!("{error:?}"))?;
+    vm.run().map_err(|error| format!("{error:?}"))?;
+    vm.call::<()>("draw", ())
+        .map_err(|error| format!("draw: {error:?}"))?;
+    Ok(SCENE.lock().map_err(|e| e.to_string())?.clone())
+}
+
+impl Preview {
+    fn reload(&mut self) {
+        match std::fs::read_to_string(&self.script) {
+            Ok(source) => match load_scene(&source) {
+                Ok(nodes) => {
+                    if let Ok(mut scene) = self.nodes.lock() {
+                        *scene = nodes;
+                    }
+                    self.error = None;
+                }
+                Err(error) => self.error = Some(error),
+            },
+            Err(error) => self.error = Some(format!("{}: {error}", self.script.display())),
+        }
+        self.modified = std::fs::metadata(&self.script)
+            .and_then(|meta| meta.modified())
+            .ok();
+    }
+
+    fn watch(&self, cx: &mut Context<Self>) {
+        let script = self.script.clone();
+        cx.spawn(async move |this, cx| loop {
+            cx.background_executor()
+                .timer(std::time::Duration::from_millis(300))
+                .await;
+            let modified = std::fs::metadata(&script)
+                .and_then(|meta| meta.modified())
+                .ok();
+            let alive = this
+                .update(cx, |this, cx| {
+                    if modified != this.modified {
+                        this.reload();
+                        cx.notify();
+                    }
+                })
+                .is_ok();
+            if !alive {
+                break;
+            }
+        })
+        .detach();
+    }
 }
 
 impl Render for Preview {
     fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+        let nodes = self
+            .nodes
+            .lock()
+            .map(|nodes| nodes.clone())
+            .unwrap_or_default();
         div()
             .relative()
             .size_full()
             .overflow_hidden()
             .bg(self.theme.colors.background)
-            .children(self.nodes.iter().cloned().map(|node| {
+            .children(nodes.into_iter().map(|node| {
                 match node {
                     Node::Rect {
                         x,
@@ -126,6 +189,20 @@ impl Render for Preview {
                         .into_any_element(),
                 }
             }))
+            .children(self.error.as_ref().map(|error| {
+                div()
+                    .absolute()
+                    .left(px(24.0))
+                    .bottom(px(24.0))
+                    .max_w(px(900.0))
+                    .rounded(px(10.0))
+                    .bg(rgba(0x2B1A1AEE))
+                    .px(px(14.0))
+                    .py(px(10.0))
+                    .text_size(px(12.0))
+                    .text_color(rgb(0xE5484D))
+                    .child(error.clone())
+            }))
     }
 }
 
@@ -135,12 +212,7 @@ fn main() {
         .unwrap_or_else(|| {
             std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("dev/mimas-ui/scene.mim")
         });
-    let source = std::fs::read_to_string(&script)
-        .unwrap_or_else(|error| panic!("{}: {error}", script.display()));
-    let mut vm = mimas::compile_source(&source).expect("the scene compiles");
-    vm.run().expect("the scene runs");
-    vm.call::<()>("draw", ()).expect("scene.draw()");
-    let nodes = SCENE.lock().expect("scene queue").clone();
+    let nodes = Arc::new(Mutex::new(Vec::new()));
 
     application().run(move |cx| {
         let bounds = Bounds::new(point(px(0.0), px(0.0)), size(px(1280.0), px(720.0)));
@@ -149,11 +221,23 @@ fn main() {
                 .window_bounds(Some(WindowBounds::Windowed(bounds)))
                 .window_decorations(WindowDecorations::Client)
                 .focus(true),
-            |_, cx| {
-                cx.new(|_| Preview {
-                    theme: Theme::dark(),
-                    nodes: nodes.clone(),
-                })
+            {
+                let script = script.clone();
+                let nodes = nodes.clone();
+                move |_, cx| {
+                    cx.new(|cx| {
+                        let mut preview = Preview {
+                            theme: Theme::dark(),
+                            nodes,
+                            script,
+                            modified: None,
+                            error: None,
+                        };
+                        preview.reload();
+                        preview.watch(cx);
+                        preview
+                    })
+                }
             },
         )
         .expect("the preview window");
