@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Scoria
+Comment=Offline-first Minecraft: Java Edition 26.3
+Exec=scoria
+Icon=horizon
+Terminal=false
+Categories=Game;

@@ -1,0 +1,198 @@
+"""Release artifact checks: catch a build that would close on a player's machine.
+
+Run against a release folder (the archives, or the unpacked `dist/windows`):
+
+    SCORIA_ARTIFACTS=dist python3 -m pytest tests/test_release_artifacts.py -q
+
+The release workflow runs it after packaging, before anything is uploaded.
+"""
+import hashlib
+import importlib.util
+import re
+import subprocess
+import sys
+import tarfile
+import zipfile
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[2]
+ARTIFACTS = Path(__import__("os").environ.get("SCORIA_ARTIFACTS", ROOT / "dist"))
+
+
+def _check_imports():
+    spec = importlib.util.spec_from_file_location(
+        "check_imports", ROOT / "tools" / "check_imports.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _launcher_zip() -> Path:
+    direct = ARTIFACTS / "scoria-launcher-windows-x64.zip"
+    if direct.is_file():
+        return direct
+    found = sorted(ARTIFACTS.glob("**/scoria-launcher-windows-x64.zip"))
+    if not found:
+        pytest.skip(f"no Windows launcher archive in {ARTIFACTS}")
+    return found[0]
+
+
+def _linux_archives():
+    found = sorted(ARTIFACTS.glob("scoria-launcher-linux-x86_64.tar.*")) + sorted(
+        ARTIFACTS.glob("**/scoria-launcher-linux-x86_64.tar.*")
+    )
+    # Prefer the zstd archive: older gzip ones may still sit in dist/ from a previous release.
+    return sorted(found, key=lambda path: (path.suffix != ".zst", str(path)))
+
+
+def _windows_folder(tmp_path: Path) -> Path:
+    with zipfile.ZipFile(_launcher_zip()) as archive:
+        archive.extractall(tmp_path)
+    return tmp_path
+
+
+def test_windows_archive_has_everything_the_launcher_needs(tmp_path):
+    folder = _windows_folder(tmp_path)
+    names = {path.name for path in folder.rglob("*")}
+    for required in ("scoria.exe", "README.txt"):
+        assert required in names, f"{required} is missing from the Windows archive"
+    assert not any(path.suffix == ".node" for path in folder.rglob("*")), (
+        "the launcher must not ship a native addon"
+    )
+
+
+def test_windows_readme_points_at_the_crash_log(tmp_path):
+    folder = _windows_folder(tmp_path)
+    readme = next(folder.rglob("README.txt")).read_text()
+    assert "crash.log" in readme, "the README must say where a crash is recorded"
+
+
+def test_windows_binaries_import_only_dlls_that_are_there(tmp_path):
+    folder = _windows_folder(tmp_path)
+    check = _check_imports()
+    shipped = {path.name.lower() for path in folder.rglob("*") if path.is_file()}
+    binaries = [
+        path
+        for path in folder.rglob("*")
+        if path.is_file() and path.suffix.lower() in {".exe", ".node", ".dll"}
+    ]
+    assert binaries, "the Windows archive has no binaries"
+    for binary in binaries:
+        names = check.pe_imports(binary.read_bytes())
+        missing = [n for n in names if not check.windows_allowed(n, shipped)]
+        assert not missing, f"{binary.name} imports {missing}, which Windows does not ship"
+
+
+def test_windows_binaries_do_not_need_the_c_runtime_unless_it_is_shipped(tmp_path):
+    folder = _windows_folder(tmp_path)
+    check = _check_imports()
+    imports_crt = [
+        path.name
+        for path in folder.rglob("*")
+        if path.is_file()
+        and path.suffix.lower() in {".exe", ".node", ".dll"}
+        and any(n.lower() == "vcruntime140.dll" for n in check.pe_imports(path.read_bytes()))
+    ]
+    if imports_crt:
+        assert any(
+            path.name.lower() == "vcruntime140.dll" for path in folder.rglob("*")
+        ), f"{imports_crt} import VCRUNTIME140.dll but the archive does not ship it"
+
+
+def test_linux_archive_is_complete():
+    archives = _linux_archives()
+    if not archives:
+        pytest.skip(f"no Linux launcher archive in {ARTIFACTS}")
+    archive = archives[0]
+    if archive.suffix == ".zst":
+        names = _zstd_members(archive)
+    else:
+        with tarfile.open(archive) as tar:
+            names = tar.getnames()
+    assert any(name.endswith("/scoria") for name in names), "no scoria binary"
+    assert any(name.endswith("/README.txt") for name in names), "no README"
+    assert not any(name.endswith(".node") for name in names), "no native addon in a release"
+
+
+def _zstd_members(archive: Path):
+    if not _has("zstd"):
+        pytest.skip("zstd is not installed")
+    with subprocess.Popen(
+        ["zstd", "-dc", str(archive)], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+    ) as decoder:
+        with tarfile.open(fileobj=decoder.stdout, mode="r|") as tar:
+            return [member.name for member in tar]
+
+
+def _has(command: str) -> bool:
+    return subprocess.run(
+        ["sh", "-c", f"command -v {command}"], capture_output=True
+    ).returncode == 0
+
+
+def test_checksums_cover_every_archive():
+    sums = ARTIFACTS / "SHA256SUMS"
+    if not sums.is_file():
+        found = sorted(ARTIFACTS.glob("**/SHA256SUMS"))
+        if not found:
+            pytest.skip(f"no SHA256SUMS in {ARTIFACTS}")
+        sums = found[0]
+    entries = {}
+    for line in sums.read_text().splitlines():
+        match = re.fullmatch(r"([0-9a-f]{64})  (.+)", line.strip())
+        assert match, f"malformed SHA256SUMS line: {line!r}"
+        entries[match.group(2)] = match.group(1)
+    for name in entries:
+        path = sums.parent / name
+        assert path.is_file(), f"SHA256SUMS lists {name}, which is not beside it"
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        assert digest == entries[name], f"{name} does not match SHA256SUMS"
+
+
+def _game_zip() -> Path:
+    direct = ARTIFACTS / "scoria-game-windows-x64.zip"
+    if direct.is_file():
+        return direct
+    found = sorted(ARTIFACTS.glob("**/scoria-game-windows-x64.zip"))
+    if not found:
+        pytest.skip(f"no Windows game archive in {ARTIFACTS}")
+    return found[0]
+
+
+def test_windows_game_archive_has_the_client_and_clean_imports(tmp_path):
+    with zipfile.ZipFile(_game_zip()) as archive:
+        archive.extractall(tmp_path)
+    check = _check_imports()
+    shipped = {path.name.lower() for path in tmp_path.rglob("*") if path.is_file()}
+    client = next(tmp_path.rglob("horizon-client.exe"), None)
+    assert client, "horizon-client.exe is missing from the Windows game archive"
+    binaries = [
+        path
+        for path in tmp_path.rglob("*")
+        if path.is_file() and path.suffix.lower() in {".exe", ".dll"}
+    ]
+    for binary in binaries:
+        missing = [
+            n
+            for n in check.pe_imports(binary.read_bytes())
+            if not check.windows_allowed(n, shipped)
+        ]
+        assert not missing, f"{binary.name} imports {missing}, which Windows does not ship"
+
+
+def test_linux_game_archive_has_the_client():
+    archives = sorted(ARTIFACTS.glob("scoria-game-linux-x86_64.tar.*")) + sorted(
+        ARTIFACTS.glob("**/scoria-game-linux-x86_64.tar.*")
+    )
+    if not archives:
+        pytest.skip(f"no Linux game archive in {ARTIFACTS}")
+    archive = archives[0]
+    if archive.suffix == ".zst":
+        names = _zstd_members(archive)
+    else:
+        with tarfile.open(archive) as tar:
+            names = tar.getnames()
+    assert any(name.endswith("/horizon-client") for name in names), "no horizon-client"
