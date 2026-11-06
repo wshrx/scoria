@@ -200,6 +200,7 @@ fn field(
 ) -> EditableTextElement {
     text_input(id)
         .state(state)
+        .h(px(40.0))
         .px(px(theme.spacing.md))
         .py(px(theme.spacing.sm))
         .placeholder_color(theme.colors.muted)
