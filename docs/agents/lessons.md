@@ -11,13 +11,13 @@ while fixing Windows, publishing, then the digest check. Users cannot tell the b
 signature is bound to the tag.
 Rule: one tag = one published build. A failed release is deleted and the next number is used.
 
-**L5 — Tag only after the staging CI is green.** Every tag run built from a commit whose CI
+**L5 — Tag only after the public dev CI is green.** Every tag run built from a commit whose CI
 had not finished yet, so a platform-only failure (xkbcommon-x11, a Windows `&str`, a macOS
 clippy note) was discovered after the release had already started. One evening went into
 re-tagging the same version.
-Rule: export, wait for the staging CI to pass, then tag. `xtask release` must do both in that order.
+Rule: export, wait for the public dev CI to pass, then tag. `xtask release` must do both in that order.
 
-**L2 — The tag belongs to the commit CI tested.** Tag after the staging run is green, on that
+**L2 — The tag belongs to the commit CI tested.** Tag after the dev run is green, on that
 commit; never move `main` first.
 Rule: `cargo xtask release` sets the tag itself and refuses a dirty tree or a missing CHANGELOG
 section.
@@ -47,7 +47,7 @@ code. Panics write `crash.log`.
 
 **C1 — Invalid workflow YAML fails before any job runs.** A duplicated `generate_release_notes`
 key made every tag run fail with the workflow path as its name.
-Rule: `cargo xtask check` validates the workflow files; a tag run that has no jobs is a YAML bug.
+Rule: `cargo xtask pytest` parses every workflow and the release job graph; a tag run that has no jobs is a YAML bug.
 
 **C2 — Upload what the publish job expects.** The publish step failed on
 `dist/*.tar.zst` because the package job uploaded only one file per matrix row.
