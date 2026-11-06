@@ -49,3 +49,27 @@ jobs:
             libvulkan-dev libasound2-dev libudev-dev zstd
       - name: Gate (fmt, clippy, tests, UI build, pytest)
         run: cargo xtask gate
+
+  # macOS is built on a self-hosted Mac (the Horizon Mac mini is the model) because GitHub's
+  # public macOS runner budget is not reliable for this repo. Set the repository variable
+  # MAC_RUNNER to a runner label (for example `macos-14` or `scoria-mac`); without it the job
+  # is skipped and Linux/Windows still gate the change.
+  macos:
+    name: launcher (macOS, self-hosted)
+    if: vars.MAC_RUNNER != ''
+    runs-on: ${{ vars.MAC_RUNNER }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "launcher -> target"
+      - uses: taiki-e/install-action@nextest
+      - name: Gate on the Mac
+        run: |
+          cargo xtask check
+          cargo xtask test
+          cargo xtask build
