@@ -1,6 +1,8 @@
 //! The launcher's state and the actions every screen shares: prepare, play, install, settings.
 //! Screens and their drawing live in `screens`, the synthetic QA states in this file.
 mod screens;
+#[cfg(feature = "scripts")]
+mod script;
 mod watch;
 
 use std::{
@@ -268,6 +270,9 @@ pub(crate) struct Shell {
     server_ip: gpui::Entity<EditableTextState>,
     toasts: Vec<Toast>,
     toast_id: u64,
+    /// A script action must not start the same hook again.
+    #[cfg(feature = "scripts")]
+    script_running: bool,
 }
 
 impl Shell {
@@ -309,6 +314,8 @@ impl Shell {
             server_ip: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
             toasts: Vec::new(),
             toast_id: 0,
+            #[cfg(feature = "scripts")]
+            script_running: false,
         };
         let qa_state = std::env::var("SCORIA_UI_STATE").ok();
         if let Some(state) = &qa_state {
@@ -333,6 +340,7 @@ impl Shell {
         }
         if qa_state.is_none() {
             shell.watch_instance(cx);
+            shell.run_scripts("on_start", cx);
         }
         shell
     }
@@ -496,6 +504,46 @@ impl Shell {
         })
         .detach();
     }
+
+    /// Run one Mimas hook, then apply what the script asked for. The guard stops a script's
+    /// `play()` from running `on_game_start` again.
+    #[cfg(feature = "scripts")]
+    fn run_scripts(&mut self, hook: &str, cx: &mut Context<Self>) {
+        if self.script_running {
+            return;
+        }
+        self.script_running = true;
+        let dir = scoria_core::backend::data_dir().join("scripts");
+        let result = script::run(hook, &dir);
+        match result {
+            Ok(actions) => {
+                for action in actions {
+                    match action {
+                        script::Action::Toast(message) => {
+                            self.show_toast(Tone::Neutral, message, cx)
+                        }
+                        script::Action::Log(message) => self.log_line(&message),
+                        script::Action::Play => self.game_action(cx),
+                        script::Action::Download => self.prepare(cx),
+                        script::Action::Screen(name) => {
+                            let screen = match name.as_str() {
+                                "mods" => Screen::Mods,
+                                "servers" => Screen::Servers,
+                                "settings" => Screen::Settings,
+                                _ => Screen::Home,
+                            };
+                            self.go(screen, cx);
+                        }
+                    }
+                }
+            }
+            Err(error) => self.show_toast(Tone::Danger, format!("script: {error}"), cx),
+        }
+        self.script_running = false;
+    }
+
+    #[cfg(not(feature = "scripts"))]
+    fn run_scripts(&mut self, _hook: &str, _cx: &mut Context<Self>) {}
 
     fn go(&mut self, screen: Screen, cx: &mut Context<Self>) {
         self.screen = screen;
@@ -739,6 +787,7 @@ impl Shell {
                         None => {
                             this.log_line("prepare: done");
                             this.show_toast(Tone::Success, this.t("26.3 is prepared."), cx);
+                            this.run_scripts("on_download_done", cx);
                         }
                     }
                 }
@@ -805,6 +854,7 @@ impl Shell {
         self.snapshot = scoria_core::api::snapshot();
         if self.playing_now() {
             self.poll_playing(cx);
+            self.run_scripts("on_game_start", cx);
         }
         cx.notify();
     }

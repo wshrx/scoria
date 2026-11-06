@@ -99,6 +99,12 @@ Rule: one table per language, read by both the CLI and the window through
 is missing or unused. Reusable layout belongs in `scoria-ui-kit`, one file per screen in
 `ui/src/app/screens/`.
 
+**D7 — A young VM is a feature, not a dependency.** Mimas is 0.4 and brings a compiler, a VM and
+a GC; putting it in the default launcher would grow every release for a feature most players never
+use.
+Rule: keep it behind `--features scripts`, with a one-level hook guard and a host API that only
+queues window actions; never let a script touch the file system or the engine directly.
+
 ## Process
 
 **P4 — Never script the live compositor for a screenshot.** A KWin D-Bus script created a temporary

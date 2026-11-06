@@ -32,6 +32,9 @@ tag (`v0.1.0-beta` → `## [0.1.0-beta]`).
 
 ### Added
 
+- Opt-in Mimas scripts (`--features scripts`) with `on_start`, `on_game_start`, `on_game_exit`
+  and `on_download_done` hooks and `toast`/`log`/`play`/`download`/`screen` host functions; see
+  `docs/mimas-scripts.md`.
 - Every launcher screen has a capturable state: `SCORIA_UI_STATE` paints synthetic data and
   `tools/capture_ui_states.py` saves all 18 states as PNGs (docs/qa/launcher-ui-states.md).
 - Home shows the game state honestly (Not installed, Not prepared, Prepared, Playing), errors in a

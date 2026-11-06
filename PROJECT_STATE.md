@@ -45,6 +45,10 @@ account, no telemetry, no online-mode servers, no Minecraft assets.
   the engine's last log line), Mods (Horizon registry first, Modrinth second, tabs, loading
   skeleton, retry card), Servers (Join and Remove per row), Settings (appearance, language en/ru,
   offline nickname). The rail collapses and the layout adapts below 1080 px.
+- The window watches the selected instance (`saves`, `mods`, `shaderpacks`, `config`,
+  `screenshots`, `options.txt`) and the launcher's servers/settings files, debounced to 350 ms.
+- Mimas scripts are an **opt-in feature** (`cargo build -p scoria-ui --features scripts`), with
+  hooks for start/game start/game exit/download done and a small host API; docs/mimas-scripts.md.
 - The window and the CLI share `launcher/lang/{ru,fr}.json` through `scoria_core::i18n::tr_in`;
   a test scans both crates for `tr`/`t` calls and fails on a missing or unused key.
 - `SCORIA_UI_STATE` paints 18 synthetic states without network or game; `tools/capture_ui_states.py`
