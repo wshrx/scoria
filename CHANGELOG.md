@@ -23,6 +23,8 @@ tag (`v0.1.0-beta` → `## [0.1.0-beta]`).
   `scoria_core::i18n`, so the CLI and the UI share one translation source; French is selectable
   again. Engine lines and errors pass through the same lookup and fall back unchanged.
 - Settings gains a Sidebar control (expanded/compact), and screen changes fade/rise for 160 ms.
+- Keyboard: `Ctrl+1..4` switches screens, `Ctrl+Enter` runs the one game action and `Esc` closes
+  the appearance/language menus; server rows gained a hover state.
 
 ### Added
 

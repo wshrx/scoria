@@ -7,11 +7,16 @@ mod assets;
 
 use std::borrow::Cow;
 
-use gpui::{point, prelude::*, px, size, Bounds, WindowBounds, WindowDecorations, WindowOptions};
+use gpui::{
+    point, prelude::*, px, size, Bounds, KeyBinding, WindowBounds, WindowDecorations, WindowOptions,
+};
 use gpui_ce_elements::editable_text::actions::{default_bindings, DEFAULT_INPUT_CONTEXT};
 use gpui_ce_platform::application;
 
-use app::{install_crash_log, start_screen, Shell};
+use app::{
+    install_crash_log, start_screen, CloseOverlay, RunGame, Shell, ShowHome, ShowMods, ShowServers,
+    ShowSettings,
+};
 use assets::FONTS;
 
 fn main() {
@@ -27,6 +32,15 @@ fn main() {
             .expect("the bundled Medeo fonts");
 
         cx.bind_keys(default_bindings().as_keybindings(Some(DEFAULT_INPUT_CONTEXT)));
+
+        cx.bind_keys([
+            KeyBinding::new("ctrl-1", ShowHome, None),
+            KeyBinding::new("ctrl-2", ShowMods, None),
+            KeyBinding::new("ctrl-3", ShowServers, None),
+            KeyBinding::new("ctrl-4", ShowSettings, None),
+            KeyBinding::new("ctrl-enter", RunGame, None),
+            KeyBinding::new("escape", CloseOverlay, None),
+        ]);
 
         cx.on_window_closed(|cx, _| {
             if cx.windows().is_empty() {

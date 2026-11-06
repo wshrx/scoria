@@ -10,10 +10,22 @@ use std::{
 };
 
 use gpui::{
-    div, ease_out_quint, img, linear_color_stop, linear_gradient, prelude::*, px, rgb, rgba,
-    Animation, AnimationExt, Context, Image, ImageFormat, ImageSource, IntoElement, MouseButton,
-    Render, ResizeEdge, SharedString, Window, WindowControlArea,
+    actions, div, ease_out_quint, img, linear_color_stop, linear_gradient, prelude::*, px, rgb,
+    rgba, Animation, AnimationExt, Context, Image, ImageFormat, ImageSource, IntoElement,
+    MouseButton, Render, ResizeEdge, SharedString, Window, WindowControlArea,
 };
+
+actions!(
+    scoria,
+    [
+        ShowHome,
+        ShowMods,
+        ShowServers,
+        ShowSettings,
+        RunGame,
+        CloseOverlay
+    ]
+);
 use gpui_ce_elements::editable_text::{
     text_input, EditableTextElement, EditableTextState, StringStorage,
 };
@@ -437,6 +449,40 @@ impl Shell {
             out = out.replace(&format!("{{{name}}}"), value);
         }
         out
+    }
+
+    fn go(&mut self, screen: Screen, cx: &mut Context<Self>) {
+        self.screen = screen;
+        match screen {
+            Screen::Home => self.snapshot = scoria_core::api::snapshot(),
+            Screen::Servers => self.refresh_servers(),
+            Screen::Mods if self.mods_results.is_empty() && !self.mods_loading => {
+                self.search_mods(cx)
+            }
+            _ => {}
+        }
+        cx.notify();
+    }
+
+    /// The one game action: prepare when the files are missing, play when they are there.
+    fn game_action(&mut self, cx: &mut Context<Self>) {
+        let prepared = self
+            .snapshot
+            .as_ref()
+            .ok()
+            .and_then(|snapshot| snapshot["prepared"].as_bool())
+            .unwrap_or(false);
+        if prepared {
+            self.play(cx);
+        } else {
+            self.prepare(cx);
+        }
+    }
+
+    fn close_overlay(&mut self, cx: &mut Context<Self>) {
+        self.appearance_open = false;
+        self.language_open = false;
+        cx.notify();
     }
 
     fn set_rail_collapsed(&mut self, collapsed: bool, cx: &mut Context<Self>) {

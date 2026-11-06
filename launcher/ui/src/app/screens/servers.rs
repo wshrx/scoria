@@ -58,6 +58,8 @@ impl Shell {
                     .flex()
                     .items_center()
                     .justify_between()
+                    .rounded(px(theme.radii.md))
+                    .hover(move |style| style.bg(theme.colors.surface_tertiary))
                     .child(
                         div()
                             .flex()

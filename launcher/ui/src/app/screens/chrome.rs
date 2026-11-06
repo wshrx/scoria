@@ -122,19 +122,8 @@ impl Shell {
 
         for screen in Screen::ALL {
             let selected = screen == self.screen;
-            let on_click = cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| {
-                this.screen = screen;
-                if screen == Screen::Home {
-                    this.snapshot = scoria_core::api::snapshot();
-                }
-                if screen == Screen::Servers {
-                    this.refresh_servers();
-                }
-                if screen == Screen::Mods && this.mods_results.is_empty() && !this.mods_loading {
-                    this.search_mods(cx);
-                }
-                cx.notify();
-            });
+            let on_click =
+                cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| this.go(screen, cx));
             let tint = if selected {
                 theme.colors.accent
             } else {

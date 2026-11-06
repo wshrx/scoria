@@ -222,6 +222,12 @@ impl Shell {
                                 .child(text.clone()),
                             None => div(),
                         }),
+                )
+                .child(
+                    div()
+                        .text_size(px(theme.type_scale.caption))
+                        .text_color(theme.colors.muted)
+                        .child(self.t("Ctrl+1–4 screens · Ctrl+Enter start · Esc close")),
                 ),
         )
         .max_w(px(880.0))

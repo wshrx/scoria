@@ -109,19 +109,7 @@ impl Shell {
             .disabled(playing || self.preparing)
             .render(
                 &theme,
-                Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| {
-                    let prepared = this
-                        .snapshot
-                        .as_ref()
-                        .ok()
-                        .and_then(|snapshot| snapshot["prepared"].as_bool())
-                        .unwrap_or(false);
-                    if prepared {
-                        this.play(cx);
-                    } else {
-                        this.prepare(cx);
-                    }
-                })),
+                Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| this.game_action(cx))),
             );
 
         let mut chips = div().flex().items_center().gap(px(theme.spacing.xs));
@@ -229,17 +217,7 @@ impl Shell {
                     .render(
                         &theme,
                         Some(cx.listener(|this, _: &gpui::ClickEvent, _window, cx| {
-                            let prepared = this
-                                .snapshot
-                                .as_ref()
-                                .ok()
-                                .and_then(|snapshot| snapshot["prepared"].as_bool())
-                                .unwrap_or(false);
-                            if prepared {
-                                this.play(cx);
-                            } else {
-                                this.prepare(cx);
-                            }
+                            this.game_action(cx)
                         })),
                     );
                 status = status.child(
