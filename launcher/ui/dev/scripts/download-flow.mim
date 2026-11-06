@@ -1,0 +1,6 @@
+// Developer flow: turn the window into a synthetic download state, then
+// cancel it with the same host action the UI button uses.
+fn on_start() {
+    state("home-not-prepared");
+    progress(42.0, "Downloading Minecraft 26.3 from Mojang");
+}
