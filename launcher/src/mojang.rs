@@ -1,0 +1,302 @@
+//! Mojang's Java runtime. The game's own files come from piston.rs (piston-meta) or from an
+//! installation the player already has (sources.rs); this module only fetches the JDK the
+//! preparer and the game's exporters need. Each runtime file is checked against the size and
+//! sha1 Mojang lists, and written whole. A download stopped half way (cancelled, no network)
+//! keeps the files it finished: the next one fetches only the rest.
+
+use crate::sources::{fetch_checked, sha1_file, sha1_hex, write_file, Fetch};
+use serde_json::Value;
+#[allow(unused_imports)] // used by the unix link step and by tests
+use std::fs;
+use std::path::{Component, Path, PathBuf};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering::Relaxed};
+use std::sync::Mutex;
+use std::time::Duration;
+
+/// The index of Mojang's Java runtimes, the one the official launcher reads.
+const JAVA_RUNTIMES: &str = "https://launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json";
+
+/// Set to stop the download under way (the window's Cancel); cleared when a preparation starts.
+pub static CANCEL: AtomicBool = AtomicBool::new(false);
+/// The download under way: files done, of how many (0 when none runs).
+static DONE: AtomicUsize = AtomicUsize::new(0);
+static TOTAL: AtomicUsize = AtomicUsize::new(0);
+
+/// How far the download under way is, files done of how many; none when none runs.
+pub fn progress() -> Option<(usize, usize)> {
+    let total = TOTAL.load(Relaxed);
+    (total > 0).then(|| (DONE.load(Relaxed).min(total), total))
+}
+
+const CANCELLED: &str = "Download cancelled. Download again to go on where it stopped.";
+
+/// One file to download, with the size Mojang lists for it when it lists one.
+pub(crate) struct File {
+    pub(crate) url: String,
+    pub(crate) sha1: String,
+    pub(crate) size: Option<u64>,
+    pub(crate) path: PathBuf,
+}
+
+/// Mojang's name for this system in its Java runtime index.
+fn java_platform() -> Option<&'static str> {
+    Some(match (std::env::consts::OS, std::env::consts::ARCH) {
+        ("macos", "aarch64") => "mac-os-arm64",
+        ("macos", "x86_64") => "mac-os",
+        ("linux", "x86_64") => "linux",
+        ("linux", "x86") => "linux-i386",
+        ("windows", "x86_64") => "windows-x64",
+        ("windows", "aarch64") => "windows-arm64",
+        ("windows", "x86") => "windows-x86",
+        _ => return None,
+    })
+}
+
+/// Downloads Mojang's Java runtime `component` (the version JSON's `javaVersion.component`, e.g.
+/// `java-runtime-epsilon`) into the game directory's `runtime` folder, as the official launcher
+/// lays it out: `<component>/<platform>/<component>/`. Each file is checked against its sha1;
+/// files already there and whole are kept. These also include javac for older release preparers;
+/// current releases can use an already installed runtime without it.
+pub fn java_runtime(
+    component: &str,
+    runtime: &Path,
+    jobs: usize,
+    fetch: Fetch,
+    cancel: &AtomicBool,
+    log: &dyn Fn(String),
+) -> Result<PathBuf, String> {
+    let platform = java_platform().ok_or("Mojang has no Java for this system")?;
+    let index: Value = serde_json::from_slice(&fetch(JAVA_RUNTIMES)?)
+        .map_err(|e| format!("Mojang's Java index: {e}"))?;
+    let entry = &index[platform][component][0];
+    if entry.is_null() {
+        return Err(format!("Mojang has no {component} for {platform}"));
+    }
+    let manifest = &entry["manifest"];
+    let manifest: Value = serde_json::from_slice(&fetch_checked(
+        fetch,
+        &text(manifest, "url")?,
+        &text(manifest, "sha1")?,
+    )?)
+    .map_err(|e| format!("Mojang's {component} manifest: {e}"))?;
+    let files = manifest["files"]
+        .as_object()
+        .ok_or_else(|| format!("Mojang's {component} manifest lists no files"))?;
+    let home = runtime.join(component).join(platform).join(component);
+    let mut downloads = Vec::new();
+    let mut executables = Vec::new();
+    let mut links = Vec::new();
+    for (name, file) in files {
+        let path = home.join(relative(name)?);
+        match file["type"].as_str() {
+            Some("file") => {
+                let raw = &file["downloads"]["raw"];
+                if file["executable"] == true {
+                    executables.push(path.clone());
+                }
+                downloads.push(File {
+                    url: text(raw, "url")?,
+                    sha1: text(raw, "sha1")?,
+                    size: raw["size"].as_u64(),
+                    path,
+                });
+            }
+            Some("link") => links.push((path, text(file, "target")?)),
+            _ => {}
+        }
+    }
+    let name = entry["version"]["name"].as_str().unwrap_or(component);
+    log(format!(
+        "Downloading Minecraft's Java {name} from Mojang ({} files)",
+        downloads.len()
+    ));
+    fetch_all(&downloads, jobs, fetch, cancel, log)?;
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        for path in &executables {
+            fs::set_permissions(path, fs::Permissions::from_mode(0o755))
+                .map_err(|e| format!("{}: {e}", path.display()))?;
+        }
+        for (path, target) in &links {
+            if !link_stays_inside(name_in(&home, path), target) {
+                return Err(format!(
+                    "Unsafe link {target:?} in Mojang's {component} manifest"
+                ));
+            }
+            let _ = fs::remove_file(path);
+            fs::create_dir_all(path.parent().unwrap())
+                .and_then(|_| std::os::unix::fs::symlink(target, path))
+                .map_err(|e| format!("{}: {e}", path.display()))?;
+        }
+    }
+    #[cfg(not(unix))]
+    let _ = (executables, links);
+    Ok(home)
+}
+
+// Used by the unix link step below; the path-traversal check itself is tested on every
+// platform, so these stay compiled and are allowed to look unused elsewhere.
+#[cfg_attr(not(unix), allow(dead_code))]
+fn name_in<'a>(home: &Path, path: &'a Path) -> &'a Path {
+    path.strip_prefix(home).unwrap_or(path)
+}
+
+/// Whether a link at `link` (relative to the runtime's home) pointing at `target` stays in the
+/// home.
+#[cfg_attr(not(unix), allow(dead_code))]
+fn link_stays_inside(link: &Path, target: &str) -> bool {
+    let mut depth = link.components().count().saturating_sub(1);
+    for c in Path::new(target).components() {
+        match c {
+            Component::Normal(_) => depth += 1,
+            Component::CurDir => {}
+            Component::ParentDir if depth > 0 => depth -= 1,
+            _ => return false,
+        }
+    }
+    true
+}
+
+fn text(v: &Value, key: &str) -> Result<String, String> {
+    v[key]
+        .as_str()
+        .map(String::from)
+        .ok_or_else(|| format!("The version file has no {key} in {v}"))
+}
+
+/// A path from the version file, refused if it could leave the folder.
+fn relative(path: &str) -> Result<PathBuf, String> {
+    let safe = !path.contains('\\')
+        && Path::new(path)
+            .components()
+            .all(|c| matches!(c, Component::Normal(_)));
+    safe.then(|| PathBuf::from(path))
+        .ok_or_else(|| format!("Unsafe path {path:?} in the version file"))
+}
+
+/// Whether a library's rules let this system (`osx`, `windows`, `linux`) use it: the last
+/// rule that matches decides.
+/// The asset index's objects, once each.
+fn fetch_file(fetch: Fetch, file: &File) -> Result<Vec<u8>, String> {
+    let body = fetch(&file.url)?;
+    if let Some(size) = file.size.filter(|&size| size != body.len() as u64) {
+        return Err(format!(
+            "is {} bytes, not the {size} Mojang lists",
+            body.len()
+        ));
+    }
+    match sha1_hex(&body) {
+        actual if actual == file.sha1 => Ok(body),
+        actual => Err(format!("is not the one Horizon pins (sha1 {actual})")),
+    }
+}
+
+/// How often one file is tried before it is counted as failed.
+const ATTEMPTS: usize = 5;
+/// How many files may fail before the run stops. The asset set is ~5 200 files and one broken
+/// route can drop a handful; the old cap of 8 aborted the whole download for a transient blip.
+const MAX_ERRORS: usize = 64;
+
+/// Downloads the files not already there, `jobs` at a time, with a line every second; retries a
+/// file, keeps the files that did land, and stops after a few failures or once `cancel` is set.
+fn fetch_all(
+    files: &[File],
+    jobs: usize,
+    fetch: Fetch,
+    cancel: &AtomicBool,
+    log: &dyn Fn(String),
+) -> Result<(), String> {
+    fetch_all_with(files, jobs, fetch, cancel, log, &|_, _| {})
+}
+
+/// [`fetch_all`], reporting each finished file to `progress` as it lands.
+pub(crate) fn fetch_all_with(
+    files: &[File],
+    jobs: usize,
+    fetch: Fetch,
+    cancel: &AtomicBool,
+    log: &dyn Fn(String),
+    progress: &dyn Fn(usize, usize),
+) -> Result<(), String> {
+    let next = AtomicUsize::new(0);
+    let done = AtomicUsize::new(0);
+    let failed = Mutex::new(None);
+    let errors = AtomicUsize::new(0);
+    let stopped = AtomicBool::new(false);
+    DONE.store(0, Relaxed);
+    TOTAL.store(files.len(), Relaxed);
+    std::thread::scope(|scope| {
+        let workers: Vec<_> = (0..jobs.clamp(1, files.len().max(1)))
+            .map(|_| {
+                scope.spawn(|| {
+                    while let Some(file) = files.get(next.fetch_add(1, Relaxed)) {
+                        if stopped.load(Relaxed) {
+                            break;
+                        }
+                        if cancel.load(Relaxed) {
+                            failed.lock().unwrap().get_or_insert(CANCELLED.to_string());
+                            stopped.store(true, Relaxed);
+                            break;
+                        }
+                        if sha1_file(&file.path).as_ref() != Some(&file.sha1) {
+                            let mut got = Err(String::new());
+                            for attempt in 0..ATTEMPTS {
+                                got = fetch_file(fetch, file)
+                                    .map_err(|e| format!("{} {e}", file.url))
+                                    .and_then(|body| write_file(&file.path, &body));
+                                if got.is_ok() {
+                                    break;
+                                }
+                                if attempt + 1 < ATTEMPTS {
+                                    std::thread::sleep(Duration::from_millis(
+                                        250 * (attempt as u64 + 1),
+                                    ));
+                                }
+                            }
+                            if let Err(e) = got {
+                                failed.lock().unwrap().get_or_insert(e);
+                                if errors.fetch_add(1, Relaxed) + 1 >= MAX_ERRORS {
+                                    stopped.store(true, Relaxed);
+                                }
+                            }
+                        }
+                        let finished = done.fetch_add(1, Relaxed) + 1;
+                        DONE.store(finished, Relaxed);
+                    }
+                })
+            })
+            .collect();
+        let mut waited = 0;
+        let mut reported = usize::MAX;
+        while !workers.iter().all(|w| w.is_finished()) {
+            std::thread::sleep(Duration::from_millis(100));
+            waited += 1;
+            let finished = done.load(Relaxed);
+            if finished != reported {
+                progress(finished, files.len());
+                reported = finished;
+            }
+            if waited % 10 == 0 {
+                log(format!("{} of {} files", finished, files.len()));
+            }
+        }
+        progress(done.load(Relaxed), files.len());
+    });
+    TOTAL.store(0, Relaxed);
+    match failed.into_inner().unwrap() {
+        None => Ok(()),
+        Some(error) if error == CANCELLED => Err(error),
+        Some(error) => {
+            let failed = errors.load(Relaxed);
+            Err(format!(
+                "{error}. {failed} file(s) could not be downloaded; the ones already here are kept.                  Try again to fetch only the rest."
+            ))
+        }
+    }
+}
+
+#[cfg(test)]
+#[path = "mojang_tests.rs"]
+mod tests;

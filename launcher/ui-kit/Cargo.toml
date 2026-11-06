@@ -1,0 +1,8 @@
+[package]
+name = "scoria-ui-kit"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+gpui-ce = { workspace = true }

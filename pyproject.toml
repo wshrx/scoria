@@ -1,0 +1,29 @@
+[project]
+name = "scoria-tests"
+version = "0.0.0"
+description = "Black-box tests for Scoria: CLI contract, release artifacts, logs, E2E without the network."
+requires-python = ">=3.12"
+dependencies = [
+  "pytest>=8.3",
+  "pytest-timeout>=2.3",
+]
+
+[tool.uv]
+# The repository is not a Python package: uv only manages the test environment.
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests/pytest"]
+addopts = "-q --strict-markers --timeout=120"
+markers = [
+  "network: needs the network; skipped by default",
+  "slow: minutes-long check, run before a release",
+]
+filterwarnings = ["error"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
