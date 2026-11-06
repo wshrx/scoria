@@ -1,4 +1,4 @@
-//! The window shell: backdrop, titlebar + rail + screen, resize grips, toast.
+//! The window shell: backdrop, topbar + screen, resize grips, toast.
 use super::super::*;
 
 impl Render for Shell {
@@ -7,7 +7,7 @@ impl Render for Shell {
         // Below ~1080px the rail drops its labels and the hero shrinks.
         let width = window.viewport_size().width;
         let compact = width < px(1080.0) || self.settings.rail_collapsed;
-        let wide = width >= px(1500.0);
+        let wide = width >= px(1280.0);
         let body = match self.screen {
             Screen::Home => div().child(self.home(cx, compact, wide)),
             Screen::Mods => div().child(self.mods(cx)),
@@ -58,9 +58,9 @@ impl Render for Shell {
                     .w_full()
                     .h_full()
                     .bg(if theme.dark {
-                        rgba(0x09080A4D)
+                        rgba(0x0B0B0DB8)
                     } else {
-                        rgba(0xFFFFFF2E)
+                        rgba(0xF1F1F1D9)
                     }),
             )
             .child(
@@ -69,26 +69,28 @@ impl Render for Shell {
                     .flex_col()
                     .size_full()
                     .overflow_hidden()
-                    .child(self.titlebar(cx))
+                    .child(self.topbar(cx, compact))
                     .child(
                         div()
                             .flex()
+                            .flex_col()
                             .flex_1()
                             .min_h(px(0.0))
-                            .overflow_hidden()
-                            .child(self.rail(cx, compact))
-                            .child(
-                                div()
-                                    .flex()
-                                    .flex_col()
-                                    .flex_1()
-                                    .min_h(px(0.0))
-                                    .id("screen")
-                                    .p(px(if compact { 20.0 } else { 32.0 }))
-                                    .gap(px(theme.spacing.lg))
-                                    .overflow_y_scroll()
-                                    .child(body),
-                            ),
+                            .id("screen")
+                            .p(px(if compact {
+                                theme.spacing.xl
+                            } else {
+                                theme.spacing.page
+                            }))
+                            .pt(px(if compact {
+                                theme.spacing.lg
+                            } else {
+                                theme.spacing.xl
+                            }))
+                            .pb(px(theme.spacing.xl))
+                            .gap(px(theme.spacing.lg))
+                            .overflow_y_scroll()
+                            .child(body),
                     ),
             );
         let edge = |id: &'static str, edge: ResizeEdge| {

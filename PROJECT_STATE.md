@@ -1,7 +1,7 @@
 # Scoria project state
 
 Read this first after a context loss. Keep it current; this is the state, not a changelog.
-Last updated: 2026-11-03.
+Last updated: 2026-11-06.
 
 ## What this is
 
@@ -22,6 +22,8 @@ account, no telemetry, no online-mode servers, no Minecraft assets.
 
 ## Current release
 
+- **Target `v0.1.3-beta`**: the D · Signal redesign, E · White light tokens, Stop action and the
+  prepared launcher fixes below. Not tagged yet; push is blocked by Entire's region error.
 - **GitHub `v0.1.2-beta`** is a normal Release (not pre-release) and the Latest release. It carries
   only the launcher: `scoria-launcher-linux-x86_64.tar.zst`,
   `scoria-launcher-windows-x64.zip`, `SHA256SUMS`, `SHA256SUMS.sig`.
@@ -41,8 +43,8 @@ account, no telemetry, no online-mode servers, no Minecraft assets.
   split into `app.rs` (state/actions/QA), `app/screens/` (one file per screen) and `assets.rs`.
 - The titlebar shows **Scoria + the launcher version** (`0.1.1-beta`). The engine build tag is not
   shown anywhere: Scoria has one public versioning.
-- Screens: Home (one action: Download 26.3 / Preparing / Play / Playing, progress bar, percent and
-  the engine's last log line), Mods (Horizon registry first, Modrinth second, tabs, loading
+- Screens: Home in the D · Signal layout (topbar, no rail, 640 px hero, one action
+  Download/Preparing/Play/Stop, selected-world poster, 64 px world rows), Mods (Horizon registry first, Modrinth second, tabs, loading
   skeleton, retry card), Servers (Join and Remove per row), Settings (appearance, language en/ru,
   offline nickname). The rail collapses and the layout adapts below 1080 px.
 - The window watches the selected instance (`saves`, `mods`, `shaderpacks`, `config`,
@@ -51,7 +53,7 @@ account, no telemetry, no online-mode servers, no Minecraft assets.
   hooks for start/game start/game exit/download done and a small host API; docs/mimas-scripts.md.
 - The window and the CLI share `launcher/lang/{ru,fr}.json` through `scoria_core::i18n::tr_in`;
   a test scans both crates for `tr`/`t` calls and fails on a missing or unused key.
-- `SCORIA_UI_STATE` paints 18 synthetic states without network or game; `tools/capture_ui_states.py`
+- `SCORIA_UI_STATE` paints 19 synthetic states without network or game; `tools/capture_ui_states.py`
   captures them to `~/Pictures/scoria-ui-states/` with a blank-frame check. See
   `docs/qa/launcher-ui-states.md`. A visual change is not done until the states are looked at.
 - Home installs the newest engine bundle before preparing; progress and failures go to `ui.log`.
@@ -70,7 +72,7 @@ cargo xtask gate      # everything CI runs
 cargo xtask ui        # run the window in development
 ```
 
-Current gate: **227 Rust tests** (2 skipped) and **15 pytest cases** in 3 files green. Every fixed bug
+Current gate: **228 Rust tests** (2 skipped) and **15 pytest cases** in 3 files green. Every fixed bug
 gets a test that failed before the fix.
 
 ## Engine sync (done 2026-11-02)

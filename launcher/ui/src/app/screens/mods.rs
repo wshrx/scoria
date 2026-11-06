@@ -161,7 +161,7 @@ impl Shell {
             ));
         }
 
-        card(
+        div().flex().justify_center().w_full().child(card(
             &theme,
             div()
                 .flex()
@@ -193,6 +193,7 @@ impl Shell {
                 )
                 .child(results),
         )
-        .max_w(px(880.0))
+        .w_full()
+        .max_w(px(1100.0)))
     }
 }

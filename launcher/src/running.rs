@@ -25,6 +25,26 @@ pub fn running(home: &Path) -> Option<u32> {
     None
 }
 
+/// Ask the game in `home` to exit. The waiter clears the mark after the process is gone.
+pub fn stop(home: &Path) -> Result<u32, String> {
+    let pid = running(home).ok_or("Scoria is not running.")?;
+    #[cfg(unix)]
+    {
+        std::process::Command::new("kill")
+            .args(["-TERM", &pid.to_string()])
+            .status()
+            .map_err(|e| format!("kill {pid}: {e}"))?;
+    }
+    #[cfg(windows)]
+    {
+        std::process::Command::new("taskkill")
+            .args(["/PID", &pid.to_string(), "/T", "/F"])
+            .status()
+            .map_err(|e| format!("taskkill {pid}: {e}"))?;
+    }
+    Ok(pid)
+}
+
 /// Take the mark for a spawned game.
 pub fn hold(home: &Path, pid: u32) -> Result<(), String> {
     fs::create_dir_all(home).map_err(|e| format!("{}: {e}", home.display()))?;

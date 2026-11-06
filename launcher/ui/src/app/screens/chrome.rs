@@ -1,4 +1,5 @@
-//! Custom titlebar and the navigation rail that every screen shares.
+//! The window's topbar: brand, the three screens, search, status and the system controls.
+//! There is no rail; the redesign gives the content the full width.
 use super::super::*;
 
 impl Shell {
@@ -7,13 +8,32 @@ impl Shell {
             ImageFormat::Png,
             MARK.to_vec(),
         ))))
-        .w(px(26.0))
-        .h(px(26.0))
+        .w(px(22.0))
+        .h(px(22.0))
     }
 
-    pub(super) fn titlebar(&self, cx: &mut Context<Self>) -> impl IntoElement {
+    fn status(&self) -> (String, gpui::Rgba) {
         let theme = self.theme;
-        let _ = cx;
+        let playing = self
+            .snapshot
+            .as_ref()
+            .ok()
+            .and_then(|snapshot| snapshot["playing"].as_bool())
+            .unwrap_or(false);
+        if self.preparing {
+            (self.t("Downloading"), theme.colors.accent)
+        } else if playing {
+            (self.t("In game"), theme.colors.success)
+        } else if self.snapshot.is_err() {
+            (self.t("Not installed"), theme.colors.danger)
+        } else {
+            (self.t("Offline"), theme.colors.success)
+        }
+    }
+
+    pub(super) fn topbar(&self, cx: &mut Context<Self>, compact: bool) -> impl IntoElement {
+        let theme = self.theme;
+        let (status, status_color) = self.status();
         let control =
             |id: &'static str, icon: &'static [u8], hover: gpui::Rgba, action: fn(&mut Window)| {
                 div()
@@ -34,94 +54,10 @@ impl Shell {
                             .text_color(theme.colors.muted),
                     )
             };
-        div()
-            .flex()
-            .items_center()
-            .justify_between()
-            .h(px(40.0))
-            .px(px(theme.spacing.md))
-            .child(
-                div()
-                    .id("titlebar-drag")
-                    .flex()
-                    .items_center()
-                    .gap(px(theme.spacing.sm))
-                    .flex_1()
-                    .h_full()
-                    .window_control_area(WindowControlArea::Drag)
-                    .on_mouse_down(MouseButton::Left, |_, window, _| window.start_window_move())
-                    .child(Self::mark())
-                    .child(
-                        div()
-                            .flex()
-                            .items_center()
-                            .gap(px(theme.spacing.xs))
-                            .child(
-                                div()
-                                    .text_size(px(13.0))
-                                    .font_weight(gpui::FontWeight::SEMIBOLD)
-                                    .child("Scoria"),
-                            )
-                            .child(
-                                div()
-                                    .text_size(px(11.0))
-                                    .text_color(theme.colors.muted)
-                                    .child(env!("SCORIA_VERSION")),
-                            ),
-                    ),
-            )
-            .child(
-                div()
-                    .flex()
-                    .items_center()
-                    .gap(px(2.0))
-                    .child(control(
-                        "tb-min",
-                        ICON_WIN_MIN,
-                        theme.colors.surface_tertiary,
-                        |window| window.minimize_window(),
-                    ))
-                    .child(control(
-                        "tb-max",
-                        ICON_WIN_MAX,
-                        theme.colors.surface_tertiary,
-                        |window| window.zoom_window(),
-                    ))
-                    .child(control(
-                        "tb-close",
-                        ICON_WIN_CLOSE,
-                        rgba(0xE5484D44),
-                        |window| window.remove_window(),
-                    )),
-            )
-    }
 
-    pub(super) fn rail(&self, cx: &mut Context<Self>, compact: bool) -> impl IntoElement {
-        let theme = self.theme;
-        let mut rail = div()
-            .flex()
-            .flex_col()
-            .gap(px(2.0))
-            .w(px(if compact { 64.0 } else { 196.0 }))
-            .m(px(theme.spacing.md))
-            .p(px(theme.spacing.md))
-            .rounded(px(theme.radii.xl))
-            .bg(if theme.dark {
-                rgba(0x121014A8)
-            } else {
-                rgba(0xFFFBF6D9)
-            })
-            .backdrop_blur(px(24.0))
-            .border_1()
-            .border_color(if theme.dark {
-                rgba(0xFFFFFF14)
-            } else {
-                rgba(0x1D151010)
-            })
-            .child(div().h(px(theme.spacing.xs)));
-
-        for screen in Screen::ALL {
-            let selected = screen == self.screen;
+        let mut nav = div().flex().items_center().gap(px(4.0));
+        for screen in [Screen::Home, Screen::Mods, Screen::Servers] {
+            let selected = self.screen == screen;
             let on_click =
                 cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| this.go(screen, cx));
             let tint = if selected {
@@ -129,24 +65,105 @@ impl Shell {
             } else {
                 theme.colors.muted
             };
-            let mut item = div()
-                .id(("rail", screen as usize))
+            nav = nav.child(
+                div()
+                    .id(("topbar-nav", screen as usize))
+                    .relative()
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .gap(px(8.0))
+                    .h(px(56.0))
+                    .px(px(if compact { 10.0 } else { 14.0 }))
+                    .cursor_pointer()
+                    .text_color(if selected {
+                        theme.colors.foreground
+                    } else {
+                        theme.colors.muted
+                    })
+                    .hover(move |style| style.text_color(theme.colors.foreground))
+                    .on_click(on_click)
+                    .child(
+                        gpui::svg()
+                            .data(screen.icon())
+                            .size(px(14.0))
+                            .text_color(tint),
+                    )
+                    .children((!compact).then(|| self.t(screen.label())))
+                    .children(selected.then(|| {
+                        div()
+                            .absolute()
+                            .bottom(px(0.0))
+                            .left(px(14.0))
+                            .right(px(14.0))
+                            .h(px(2.0))
+                            .rounded_full()
+                            .bg(theme.colors.accent)
+                    })),
+            );
+        }
+
+        let search = (!compact).then(|| {
+            div()
                 .flex()
                 .items_center()
-                .justify_start()
-                .gap(px(theme.spacing.sm))
-                .h(px(34.0))
-                .px(px(theme.spacing.sm))
-                .when(compact, |item| {
-                    item.w(px(40.0))
-                        .h(px(40.0))
+                .gap(px(8.0))
+                .w(px(220.0))
+                .h(px(32.0))
+                .px(px(10.0))
+                .rounded(px(theme.radii.md))
+                .border_1()
+                .border_color(theme.colors.border)
+                .bg(theme.colors.surface_secondary)
+                .text_color(theme.colors.muted)
+                .text_size(px(11.0))
+                .child(
+                    gpui::svg()
+                        .data(ICON_SEARCH)
+                        .size(px(14.0))
+                        .text_color(theme.colors.muted),
+                )
+                .child(
+                    text_input("topbar-query")
+                        .state(self.mods_query.downgrade())
+                        .flex_1()
+                        .min_w(px(0.0))
                         .px(px(0.0))
-                        .justify_center()
-                        .self_center()
-                })
+                        .py(px(0.0))
+                        .placeholder_color(theme.colors.muted)
+                        .text_color(theme.colors.foreground)
+                        .text_size(px(11.0))
+                        .whitespace_nowrap()
+                        .min_h_auto()
+                        .max_h_auto()
+                        .placeholder(self.t("Search worlds and mods"))
+                        .on_key_down(cx.listener(|this, event: &gpui::KeyDownEvent, _, cx| {
+                            if event.keystroke.key == "enter" {
+                                this.go(Screen::Mods, cx);
+                                this.search_mods(cx);
+                            }
+                        })),
+                )
+                .child(
+                    div()
+                        .font_family(theme.type_scale.mono)
+                        .text_size(px(10.0))
+                        .child("Ctrl K"),
+                )
+        });
+
+        let settings = {
+            let selected = self.screen == Screen::Settings;
+            div()
+                .id("topbar-settings")
+                .flex()
+                .items_center()
+                .justify_center()
+                .w(px(32.0))
+                .h(px(32.0))
                 .rounded(px(theme.radii.md))
                 .bg(if selected {
-                    rgba(0xFF8A4C1F)
+                    theme.colors.surface_secondary
                 } else {
                     rgba(0x00000000)
                 })
@@ -155,57 +172,107 @@ impl Shell {
                 } else {
                     theme.colors.muted
                 })
-                .text_size(px(theme.type_scale.body))
                 .cursor_pointer()
-                .transitions(|transitions| transitions.bg(std::time::Duration::from_millis(140)))
-                .on_click(on_click)
+                .hover(move |style| style.bg(theme.colors.surface_secondary))
+                .on_click(cx.listener(|this, _, _window, cx| this.go(Screen::Settings, cx)))
                 .child(
                     gpui::svg()
-                        .data(screen.icon())
-                        .size(px(15.0))
-                        .text_color(tint),
-                )
-                .children((!compact).then(|| self.t(screen.label())));
-            if !selected {
-                let hover = if theme.dark {
-                    rgba(0xFFFFFF0A)
-                } else {
-                    rgba(0x1D15100A)
-                };
-                item = item.hover(move |style| style.bg(hover));
-            }
-            rail = rail.child(item);
-        }
-        rail = rail.child(div().flex_1()).child(
-            div()
-                .id("rail-toggle")
-                .flex()
-                .items_center()
-                .justify_center()
-                .when(compact, |button| {
-                    button.w(px(40.0)).h(px(40.0)).self_center()
-                })
-                .when(!compact, |button| {
-                    button.w(px(34.0)).h(px(34.0)).self_start()
-                })
-                .rounded(px(theme.radii.md))
-                .text_color(theme.colors.muted)
-                .cursor_pointer()
-                .hover(move |style| {
-                    style.bg(if theme.dark {
-                        rgba(0xFFFFFF0A)
-                    } else {
-                        rgba(0x1D15100A)
-                    })
-                })
-                .on_click(cx.listener(|this, _, _window, cx| this.toggle_rail(cx)))
-                .child(
-                    gpui::svg()
-                        .data(ICON_MENU)
+                        .data(ICON_SETTINGS)
                         .size(px(14.0))
-                        .text_color(theme.colors.muted),
-                ),
-        );
-        rail
+                        .text_color(if selected {
+                            theme.colors.foreground
+                        } else {
+                            theme.colors.muted
+                        }),
+                )
+        };
+
+        div()
+            .flex()
+            .flex_col()
+            .child(
+                div()
+                    .flex()
+                    .items_center()
+                    .h(px(56.0))
+                    .px(px(if compact { 16.0 } else { 32.0 }))
+                    .child(
+                        div()
+                            .id("topbar-drag")
+                            .flex()
+                            .items_center()
+                            .gap(px(8.0))
+                            .w(px(if compact { 150.0 } else { 230.0 }))
+                            .h_full()
+                            .window_control_area(WindowControlArea::Drag)
+                            .on_mouse_down(MouseButton::Left, |_, window, _| {
+                                window.start_window_move()
+                            })
+                            .children(theme.dark.then(|| Self::mark()))
+                            .child(
+                                div()
+                                    .text_size(px(14.0))
+                                    .font_weight(gpui::FontWeight::SEMIBOLD)
+                                    .child("Scoria"),
+                            )
+                            .child(
+                                div()
+                                    .font_family(theme.type_scale.mono)
+                                    .text_size(px(10.0))
+                                    .text_color(theme.colors.muted)
+                                    .child(env!("SCORIA_VERSION")),
+                            ),
+                    )
+                    .child(div().flex_1().h_full().flex().justify_center().child(nav))
+                    .child(
+                        div()
+                            .flex()
+                            .items_center()
+                            .gap(px(8.0))
+                            .children(search)
+                            .child(
+                                div()
+                                    .flex()
+                                    .items_center()
+                                    .gap(px(7.0))
+                                    .h(px(32.0))
+                                    .px(px(10.0))
+                                    .rounded(px(theme.radii.md))
+                                    .bg(theme.colors.surface_secondary)
+                                    .text_size(px(theme.type_scale.caption))
+                                    .text_color(theme.colors.foreground)
+                                    .child(
+                                        div().w(px(6.0)).h(px(6.0)).rounded_full().bg(status_color),
+                                    )
+                                    .child(status),
+                            )
+                            .child(settings)
+                            .child(
+                                div()
+                                    .flex()
+                                    .items_center()
+                                    .gap(px(2.0))
+                                    .child(control(
+                                        "tb-min",
+                                        ICON_WIN_MIN,
+                                        theme.colors.surface_tertiary,
+                                        |window| window.minimize_window(),
+                                    ))
+                                    .child(control(
+                                        "tb-max",
+                                        ICON_WIN_MAX,
+                                        theme.colors.surface_tertiary,
+                                        |window| window.zoom_window(),
+                                    ))
+                                    .child(control(
+                                        "tb-close",
+                                        ICON_WIN_CLOSE,
+                                        rgba(0xE5484D44),
+                                        |window| window.remove_window(),
+                                    )),
+                            ),
+                    ),
+            )
+            .child(div().h(px(1.0)).w_full().bg(theme.colors.separator))
     }
 }

@@ -16,7 +16,8 @@ pub fn page_header(
         .gap(px(theme.spacing.xs))
         .child(
             div()
-                .text_size(px(theme.type_scale.title))
+                .text_size(px(theme.type_scale.heading))
+                .font_weight(gpui::FontWeight::SEMIBOLD)
                 .child(title.into()),
         )
         .child(

@@ -111,6 +111,13 @@ pub fn start_game(world: Option<&str>) -> Result<Value, String> {
     play(&json!({ "world": world }))
 }
 
+/// Ask the selected instance's game to exit.
+pub fn stop_game() -> Result<Value, String> {
+    let instance = crate::instances::selected();
+    let pid = crate::running::stop(&instance.home)?;
+    Ok(json!({ "stopped": pid }))
+}
+
 /// Launch the selected game and join `server` directly.
 pub fn start_server(server: &str) -> Result<Value, String> {
     play(&json!({ "server": server }))

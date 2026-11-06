@@ -40,6 +40,7 @@ STATES = {
     "servers-error": ("servers.json cannot be read", "1280x720"),
     "settings": ("Settings, dark", "1280x720"),
     "settings-light": ("Settings, light", "1280x720"),
+    "home-light": ("Home, E White light tokens", "1280x720"),
     "compact": ("Rail collapsed, 900x640", "900x640"),
     "small": ("1024x600, the compact breakpoint", "1024x600"),
     "wide": ("1920x1080, a wide window", "1920x1080"),
@@ -111,15 +112,18 @@ def capture(binary: Path, state: str, out_dir: Path) -> Path:
         # The first frame may still be black while the GPU surface is created.
         time.sleep(0.8)
         out = out_dir / f"{state}.png"
-        subprocess.run(
-            ["import", "-window", hex(window.id), str(out)],
-            check=True,
-            env=env,
-        )
         # A window that mapped before its first GPU frame captures as a near-empty PNG.
-        if out.stat().st_size < 20_000:
-            raise RuntimeError(f"{state}: capture looks blank ({out.stat().st_size} bytes)")
-        return out
+        # Retry a few frames instead of failing a whole capture run on a slow first paint.
+        for attempt in range(4):
+            subprocess.run(
+                ["import", "-window", hex(window.id), str(out)],
+                check=True,
+                env=env,
+            )
+            if out.stat().st_size >= 20_000:
+                return out
+            time.sleep(0.4)
+        raise RuntimeError(f"{state}: capture looks blank ({out.stat().st_size} bytes)")
     finally:
         try:
             os.killpg(proc.pid, signal.SIGTERM)

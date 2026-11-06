@@ -15,7 +15,7 @@ use std::{
 use gpui::{
     actions, div, ease_out_quint, img, linear_color_stop, linear_gradient, prelude::*, px, rgb,
     rgba, Animation, AnimationExt, Context, Image, ImageFormat, ImageSource, IntoElement,
-    MouseButton, Render, ResizeEdge, SharedString, Window, WindowControlArea,
+    MouseButton, ObjectFit, Render, ResizeEdge, SharedString, Window, WindowControlArea,
 };
 
 actions!(
@@ -36,8 +36,8 @@ use scoria_core::account::{Accounts, Player};
 use scoria_core::backend::{Appearance, Settings};
 use scoria_core::i18n::Language;
 use scoria_ui_kit::{
-    badge, card, clamp_fraction, empty_state, error_panel, page_header, progress_bar, soft_card,
-    toast, tone_for_support, Button, ButtonSize, ButtonVariant, Theme, Tone,
+    badge, card, clamp_fraction, empty_state, error_panel, page_header, soft_card, toast,
+    tone_for_support, Button, ButtonSize, ButtonVariant, Theme, Tone,
 };
 use serde_json::json;
 
@@ -58,13 +58,6 @@ pub(crate) enum Screen {
 }
 
 impl Screen {
-    const ALL: [Screen; 4] = [
-        Screen::Home,
-        Screen::Mods,
-        Screen::Servers,
-        Screen::Settings,
-    ];
-
     fn icon(self) -> &'static [u8] {
         match self {
             Screen::Home => ICON_PLAY,
@@ -182,6 +175,16 @@ fn segment(
         .child(label)
 }
 
+/// The engine's mode strings as the static keys the translation table uses.
+fn mode_key(mode: &str) -> &'static str {
+    match mode {
+        "Creative" => "Creative",
+        "Hardcore" => "Hardcore",
+        "Adventure" => "Adventure",
+        _ => "Survival",
+    }
+}
+
 fn label(theme: &Theme, text: &str) -> impl IntoElement {
     div()
         .text_size(px(theme.type_scale.subtitle))
@@ -219,11 +222,17 @@ fn qa_snapshot(prepared: bool, playing: bool, worlds: usize) -> serde_json::Valu
             let name = ["New World", "Build", "Hardcore Run"][at];
             let mode = ["Survival", "Creative", "Hardcore"][at];
             let last_played = ["2 h ago", "3 days ago", "last week"][at];
+            let age_ms = [2 * 3600, 3 * 86400, 7 * 86400][at] * 1000;
+            let now = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map(|duration| duration.as_millis() as u64)
+                .unwrap_or(0);
             json!({
                 "folder": format!("world-{index}"),
                 "name": name,
                 "mode": mode,
                 "lastPlayed": last_played,
+                "lastPlayedAt": now.saturating_sub(age_ms),
             })
         })
         .collect();
@@ -264,6 +273,8 @@ pub(crate) struct Shell {
     fade: f32,
     polling: bool,
     servers: Result<serde_json::Value, String>,
+    /// The world whose poster Home shows; None means the newest world.
+    selected_world: Option<String>,
     /// Keeps the filesystem watcher alive while the window is open.
     watcher: Option<watch::Keep>,
     server_name: gpui::Entity<EditableTextState>,
@@ -309,6 +320,7 @@ impl Shell {
             fade: 0.0,
             polling: false,
             servers: scoria_core::api::saved_servers(),
+            selected_world: None,
             watcher: None,
             server_name: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
             server_ip: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
@@ -429,6 +441,11 @@ impl Shell {
                 self.settings.appearance = Appearance::Light;
                 self.theme = Theme::light();
             }
+            "home-light" => {
+                self.settings.appearance = Appearance::Light;
+                self.theme = Theme::light();
+                self.snapshot = Ok(qa_snapshot(true, false, 3));
+            }
             "compact" => {
                 self.settings.rail_collapsed = true;
                 self.snapshot = Ok(qa_snapshot(true, false, 2));
@@ -455,6 +472,63 @@ impl Shell {
 
     fn t(&self, english: &'static str) -> String {
         scoria_core::i18n::tr_in(self.language(), english).to_string()
+    }
+
+    /// A world's last-played time in the window's language, from the timestamp the snapshot
+    /// carries. Older snapshots only have the English sentence, which is used as a fallback.
+    fn ago(&self, world: &serde_json::Value) -> String {
+        let at = world["lastPlayedAt"].as_u64().unwrap_or(0);
+        if at == 0 {
+            return world["lastPlayed"].as_str().unwrap_or("").to_string();
+        }
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_millis() as u64)
+            .unwrap_or(at);
+        let seconds = now.saturating_sub(at) / 1000;
+        let (value, unit) = if seconds < 60 {
+            (0, "now")
+        } else if seconds < 3600 {
+            (seconds / 60, "min")
+        } else if seconds < 86_400 {
+            (seconds / 3600, "hour")
+        } else if seconds < 604_800 {
+            (seconds / 86_400, "day")
+        } else if seconds < 2_592_000 {
+            (seconds / 604_800, "week")
+        } else if seconds < 31_536_000 {
+            (seconds / 2_592_000, "month")
+        } else {
+            (seconds / 31_536_000, "year")
+        };
+        let unit = match (self.language(), unit) {
+            (Language::Russian, "min") => "мин",
+            (Language::Russian, "hour") => "ч",
+            (Language::Russian, "day") => "дн",
+            (Language::Russian, "week") => "нед",
+            (Language::Russian, "month") => "мес",
+            (Language::Russian, "year") => "г.",
+            (Language::French, "min") => "min",
+            (Language::French, "hour") => "h",
+            (Language::French, "day") => "j",
+            (Language::French, "week") => "sem",
+            (Language::French, "month") => "mois",
+            (Language::French, "year") => "an",
+            (_, "hour") => "h",
+            (_, "day") => "d",
+            (_, "week") => "w",
+            (_, "month") => "mo",
+            (_, "year") => "y",
+            (_, other) => other,
+        };
+        match (self.language(), value) {
+            (Language::Russian, 0) => "только что".to_string(),
+            (Language::Russian, n) => format!("{n} {unit} назад"),
+            (Language::French, 0) => "à l'instant".to_string(),
+            (Language::French, n) => format!("il y a {n} {unit}"),
+            (_, 0) => "just now".to_string(),
+            (_, n) => format!("{n} {unit} ago"),
+        }
     }
 
     /// A runtime string (an engine error or log line) through the same table: a known line is
@@ -560,6 +634,15 @@ impl Shell {
 
     /// The one game action: prepare when the files are missing, play when they are there.
     fn game_action(&mut self, cx: &mut Context<Self>) {
+        if self.playing_now() {
+            self.stop_game(cx);
+            return;
+        }
+        if self.preparing {
+            scoria_core::api::cancel_prepare();
+            self.show_toast(Tone::Neutral, self.t("Cancelling…"), cx);
+            return;
+        }
         let prepared = self
             .snapshot
             .as_ref()
@@ -573,22 +656,22 @@ impl Shell {
         }
     }
 
+    fn stop_game(&mut self, cx: &mut Context<Self>) {
+        self.play_message = Some(match scoria_core::api::stop_game() {
+            Ok(_) => (true, self.t("Stopping…")),
+            Err(error) => (false, self.td(&error)),
+        });
+        self.snapshot = scoria_core::api::snapshot();
+        if self.playing_now() {
+            self.poll_playing(cx);
+        }
+        cx.notify();
+    }
+
     fn close_overlay(&mut self, cx: &mut Context<Self>) {
         self.appearance_open = false;
         self.language_open = false;
         cx.notify();
-    }
-
-    fn set_rail_collapsed(&mut self, collapsed: bool, cx: &mut Context<Self>) {
-        if self.settings.rail_collapsed != collapsed {
-            self.settings.rail_collapsed = collapsed;
-            self.settings.save();
-            cx.notify();
-        }
-    }
-
-    fn toggle_rail(&mut self, cx: &mut Context<Self>) {
-        self.set_rail_collapsed(!self.settings.rail_collapsed, cx);
     }
 
     fn show_toast(&mut self, tone: Tone, message: impl Into<String>, cx: &mut Context<Self>) {
@@ -838,7 +921,11 @@ impl Shell {
     }
 
     fn play(&mut self, cx: &mut Context<Self>) {
-        self.play_message = Some(match scoria_core::api::start_game(None) {
+        self.play_world(None, cx);
+    }
+
+    fn play_world(&mut self, world: Option<String>, cx: &mut Context<Self>) {
+        self.play_message = Some(match scoria_core::api::start_game(world.as_deref()) {
             Ok(started) => (
                 true,
                 self.tf(

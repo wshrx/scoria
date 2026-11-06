@@ -31,7 +31,8 @@ is offline. Nothing is persisted.
 | `servers-error` | `servers.json` cannot be read; retry card |
 | `settings` | Settings, dark |
 | `settings-light` | Settings, light |
-| `compact` | Collapsed rail in a 900x640 window |
+| `home-light` | Home, E White light tokens |
+| `compact` | Compact topbar in a 900x640 window |
 | `small` | 1024x600, just under the compact breakpoint |
 | `wide` | 1920x1080, two-column Home |
 

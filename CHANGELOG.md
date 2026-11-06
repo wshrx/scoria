@@ -3,7 +3,7 @@
 All notable changes to Scoria. The release workflow takes the section whose heading matches the
 tag (`v0.1.0-beta` → `## [0.1.0-beta]`).
 
-## [Unreleased]
+## [0.1.3-beta] — 2026-11-06
 
 ### Fixed
 
@@ -15,14 +15,18 @@ tag (`v0.1.0-beta` → `## [0.1.0-beta]`).
 
 ### Changed
 
-- The download is a card: a title, the engine's last line, a large mono percentage, a full-width
-  progress track and a quiet Cancel, instead of a 360 px bar squeezed beside the button.
+- Redesign to **D · Signal**: a 56 px topbar with the three screens, search and status; no rail;
+  a 640 px hero with one action, a status line and 64 px world rows; a 472×560 selected-world
+  poster. The light theme uses the **E · White** tokens (white shell, `#F1F1F1` canvas, black
+  accent, no coloured accent).
 - The window is split into `app.rs`, `app/screens/` and `assets.rs`; `scoria-ui-kit` owns page
   headers, empty/error states and the progress bar.
 - The window uses the launcher's existing `launcher/lang/{ru,fr}.json` tables through
   `scoria_core::i18n`, so the CLI and the UI share one translation source; French is selectable
   again. Engine lines and errors pass through the same lookup and fall back unchanged.
-- Settings gains a Sidebar control (expanded/compact), and screen changes fade/rise for 160 ms.
+- Preparing shows the percentage and a 3 px progress line inside the action, and the status line
+  carries the engine's last line; a running game gets a Stop action. Settings loses the rail
+  control with the rail itself and keeps the shortcut line. Screen changes fade/rise for 160 ms.
 - Keyboard: `Ctrl+1..4` switches screens, `Ctrl+Enter` runs the one game action and `Esc` closes
   the appearance/language menus; server rows gained a hover state.
 - The window watches `saves/`, `mods/`, `shaderpacks/`, `config/`, `screenshots/`, `options.txt`
@@ -36,9 +40,9 @@ tag (`v0.1.0-beta` → `## [0.1.0-beta]`).
   and `on_download_done` hooks and `toast`/`log`/`play`/`download`/`screen` host functions; see
   `docs/mimas-scripts.md`.
 - Every launcher screen has a capturable state: `SCORIA_UI_STATE` paints synthetic data and
-  `tools/capture_ui_states.py` saves all 18 states as PNGs (docs/qa/launcher-ui-states.md).
-- Home shows the game state honestly (Not installed, Not prepared, Prepared, Playing), errors in a
-  card with Try again, and world tiles with the mode and a key-art placeholder.
+  `tools/capture_ui_states.py` saves all 19 states as PNGs (docs/qa/launcher-ui-states.md).
+- Home shows the game state honestly (Install, Preparing, Ready, Playing, Error), a selected-world
+  poster, world rows with mode and last-played time, and an install card when no version exists.
 - Mods show a skeleton while loading and a retry card on failure; servers can be joined directly,
   and the server error path has a retry card.
 - Mods and servers no longer repeat an author that is also the source.

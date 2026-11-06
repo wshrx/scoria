@@ -38,6 +38,7 @@ fn main() {
             KeyBinding::new("ctrl-2", ShowMods, None),
             KeyBinding::new("ctrl-3", ShowServers, None),
             KeyBinding::new("ctrl-4", ShowSettings, None),
+            KeyBinding::new("ctrl-k", ShowMods, None),
             KeyBinding::new("ctrl-enter", RunGame, None),
             KeyBinding::new("escape", CloseOverlay, None),
         ]);

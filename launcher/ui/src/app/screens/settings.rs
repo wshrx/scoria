@@ -109,127 +109,96 @@ impl Shell {
             language = language.child(language_menu);
         }
 
-        card(
-            &theme,
-            div()
-                .flex()
-                .flex_col()
-                .gap(px(theme.spacing.lg))
-                .child(page_header(
-                    &theme,
-                    self.t("Settings"),
-                    self.t("Appearance and language are saved to the launcher's settings."),
-                ))
-                .child(
-                    div()
-                        .flex()
-                        .flex_col()
-                        .gap(px(theme.spacing.sm))
-                        .child(label(&theme, &self.t("Appearance")))
-                        .child(appearance),
-                )
-                .child(
-                    div()
-                        .flex()
-                        .flex_col()
-                        .gap(px(theme.spacing.sm))
-                        .child(label(&theme, &self.t("Sidebar")))
-                        .child({
-                            let mut control = div()
-                                .flex()
-                                .self_start()
-                                .gap(px(2.0))
-                                .p(px(3.0))
-                                .rounded(px(theme.radii.lg))
-                                .bg(if theme.dark {
-                                    rgba(0xFFFFFF08)
-                                } else {
-                                    rgba(0x1D15100A)
-                                });
-                            for (id, collapsed, label) in [
-                                ("rail-expanded", false, self.t("Expanded")),
-                                ("rail-compact", true, self.t("Compact")),
-                            ] {
-                                control = control.child(segment(
-                                    theme,
-                                    id,
-                                    label,
-                                    self.settings.rail_collapsed == collapsed,
-                                    cx.listener(move |this, _, _window, cx| {
-                                        this.set_rail_collapsed(collapsed, cx)
-                                    }),
-                                ));
-                            }
-                            control
-                        }),
-                )
-                .child(
-                    div()
-                        .flex()
-                        .flex_col()
-                        .gap(px(theme.spacing.sm))
-                        .child(label(&theme, &self.t("Language")))
-                        .child(language),
-                )
-                .child(
-                    div()
-                        .flex()
-                        .flex_col()
-                        .gap(px(theme.spacing.sm))
-                        .child(label(&theme, &self.t("Nickname")))
-                        .child(
-                            div()
-                                .text_size(px(theme.type_scale.caption))
-                                .text_color(theme.colors.muted)
-                                .child(
-                                    self.t("No Microsoft account: this name is what servers see."),
-                                ),
-                        )
-                        .child(
-                            div()
-                                .flex()
-                                .items_center()
-                                .gap(px(theme.spacing.sm))
-                                .child(
-                                    field(
-                                        &theme,
-                                        "offline-name",
-                                        self.name.downgrade(),
-                                        self.t("Your offline name"),
-                                    )
-                                    .w(px(280.0)),
-                                )
-                                .child(
-                                    Button::new("save-name", self.t("Save"))
-                                        .variant(ButtonVariant::Primary)
-                                        .size(ButtonSize::Lg)
-                                        .render(
-                                            &theme,
-                                            Some(cx.listener(|this, _, _window, cx| {
-                                                this.save_name(cx)
-                                            })),
+        div().flex().justify_center().w_full().child(
+            card(
+                &theme,
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap(px(theme.spacing.lg))
+                    .child(page_header(
+                        &theme,
+                        self.t("Settings"),
+                        self.t("Appearance and language are saved to the launcher's settings."),
+                    ))
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap(px(theme.spacing.sm))
+                            .child(label(&theme, &self.t("Appearance")))
+                            .child(appearance),
+                    )
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap(px(theme.spacing.sm))
+                            .child(label(&theme, &self.t("Language")))
+                            .child(language),
+                    )
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap(px(theme.spacing.sm))
+                            .child(label(&theme, &self.t("Nickname")))
+                            .child(
+                                div()
+                                    .text_size(px(theme.type_scale.caption))
+                                    .text_color(theme.colors.muted)
+                                    .child(
+                                        self.t(
+                                            "No Microsoft account: this name is what servers see.",
                                         ),
-                                ),
-                        )
-                        .child(match &self.name_message {
-                            Some((ok, text)) => div()
-                                .text_size(px(theme.type_scale.caption))
-                                .text_color(if *ok {
-                                    theme.colors.success
-                                } else {
-                                    theme.colors.danger
-                                })
-                                .child(text.clone()),
-                            None => div(),
-                        }),
-                )
-                .child(
-                    div()
-                        .text_size(px(theme.type_scale.caption))
-                        .text_color(theme.colors.muted)
-                        .child(self.t("Ctrl+1–4 screens · Ctrl+Enter start · Esc close")),
-                ),
+                                    ),
+                            )
+                            .child(
+                                div()
+                                    .flex()
+                                    .items_center()
+                                    .gap(px(theme.spacing.sm))
+                                    .child(
+                                        field(
+                                            &theme,
+                                            "offline-name",
+                                            self.name.downgrade(),
+                                            self.t("Your offline name"),
+                                        )
+                                        .w(px(280.0)),
+                                    )
+                                    .child(
+                                        Button::new("save-name", self.t("Save"))
+                                            .variant(ButtonVariant::Primary)
+                                            .size(ButtonSize::Lg)
+                                            .render(
+                                                &theme,
+                                                Some(cx.listener(|this, _, _window, cx| {
+                                                    this.save_name(cx)
+                                                })),
+                                            ),
+                                    ),
+                            )
+                            .child(match &self.name_message {
+                                Some((ok, text)) => div()
+                                    .text_size(px(theme.type_scale.caption))
+                                    .text_color(if *ok {
+                                        theme.colors.success
+                                    } else {
+                                        theme.colors.danger
+                                    })
+                                    .child(text.clone()),
+                                None => div(),
+                            }),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(theme.type_scale.caption))
+                            .text_color(theme.colors.muted)
+                            .child(self.t("Ctrl+1–4 screens · Ctrl+Enter start · Esc close")),
+                    ),
+            )
+            .w(px(880.0)),
         )
-        .max_w(px(880.0))
     }
 }

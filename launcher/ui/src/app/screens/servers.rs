@@ -111,44 +111,48 @@ impl Shell {
             ));
         }
 
-        card(
-            &theme,
-            div()
-                .flex()
-                .flex_col()
-                .gap(px(theme.spacing.lg))
-                .child(page_header(
-                    &theme,
-                    self.t("Servers"),
-                    self.t("Saved servers for this instance. LAN worlds appear inside the game."),
-                ))
-                .child(
-                    div()
-                        .flex()
-                        .items_center()
-                        .gap(px(theme.spacing.sm))
-                        .child(
-                            field(
-                                &theme,
-                                "server-name",
-                                self.server_name.downgrade(),
-                                self.t("Name"),
+        div().flex().justify_center().w_full().child(
+            card(
+                &theme,
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap(px(theme.spacing.lg))
+                    .child(page_header(
+                        &theme,
+                        self.t("Servers"),
+                        self.t(
+                            "Saved servers for this instance. LAN worlds appear inside the game.",
+                        ),
+                    ))
+                    .child(
+                        div()
+                            .flex()
+                            .items_center()
+                            .gap(px(theme.spacing.sm))
+                            .child(
+                                field(
+                                    &theme,
+                                    "server-name",
+                                    self.server_name.downgrade(),
+                                    self.t("Name"),
+                                )
+                                .flex_1(),
                             )
-                            .flex_1(),
-                        )
-                        .child(
-                            field(
-                                &theme,
-                                "server-ip",
-                                self.server_ip.downgrade(),
-                                self.t("host:port"),
+                            .child(
+                                field(
+                                    &theme,
+                                    "server-ip",
+                                    self.server_ip.downgrade(),
+                                    self.t("host:port"),
+                                )
+                                .flex_1(),
                             )
-                            .flex_1(),
-                        )
-                        .child(add),
-                )
-                .child(rows),
+                            .child(add),
+                    )
+                    .child(rows),
+            )
+            .w(px(880.0)),
         )
-        .max_w(px(880.0))
     }
 }

@@ -1,0 +1,7756 @@
+[
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 1280,
+   "height": 720,
+   "props": {
+    "fill": "#0B0B0D",
+    "clip": true
+   },
+   "name": "D Signal"
+  }
+ },
+ {
+  "command": "shape.ellipse",
+  "params": {
+   "x": 600,
+   "y": -220,
+   "width": 900,
+   "height": 900,
+   "props": {
+    "fills": [
+     {
+      "type": "radialGradient",
+      "stops": [
+       "#3A1B10",
+       "#0B0B0D00"
+      ],
+      "from": [
+       0.5,
+       0.5
+      ],
+      "to": [
+       1,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 56,
+   "width": 1280,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF08"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/launcher/ui/assets/scoria-mark.png",
+   "x": 32,
+   "y": 18,
+   "width": 20,
+   "height": 20,
+   "mode": "fit",
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Scoria",
+   "x": 60,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 14,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 65,
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "0.1.2",
+   "x": 112,
+   "y": 18,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 39,
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 525.4,
+   "y": 18.4,
+   "width": 12.4,
+   "height": 14.0,
+   "path": "M5 4l14 8-14 8z",
+   "props": {
+    "stroke": "#F4F0EA",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Играть",
+   "x": 550,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 56,
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 606.3846153846154,
+   "y": 19.384615384615383,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M12 3l9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Моды",
+   "x": 630,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 48,
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 679.1860465116279,
+   "y": 20.186046511627907,
+   "width": 14.000000000000002,
+   "height": 14.000000000000002,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Серверы",
+   "x": 702,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 72,
+   "parent": 2
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 550,
+   "y": 50,
+   "width": 44,
+   "height": 2,
+   "props": {
+    "fill": "#FF6A3D",
+    "cornerRadius": 1
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 800,
+   "y": 12,
+   "width": 220,
+   "height": 32,
+   "props": {
+    "fill": "#141416",
+    "cornerRadius": 8,
+    "stroke": "#26262A",
+    "strokeWeight": 1,
+    "strokeAlign": "inside"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 813.4,
+   "y": 18.4,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4.3-4.3",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Поиск миров и модов",
+   "x": 838,
+   "y": 12,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 11,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 32,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 118,
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Ctrl K",
+   "x": 968,
+   "y": 12,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 9,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 32,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 44,
+   "parent": 2
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 1040,
+   "y": 16,
+   "width": 72,
+   "height": 24,
+   "props": {
+    "fill": "#141416",
+    "cornerRadius": 6
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "shape.ellipse",
+  "params": {
+   "x": 1050,
+   "y": 25,
+   "width": 6,
+   "height": 6,
+   "props": {
+    "fill": "#6FBF8B"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Офлайн",
+   "x": 1062,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 10,
+    "fontStyle": "Medium",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 44,
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 1127.0285714285715,
+   "y": 17.02857142857143,
+   "width": 16.0,
+   "height": 12.342857142857142,
+   "path": "M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 1176,
+   "y": 28.3,
+   "width": 10,
+   "height": 1.4,
+   "props": {
+    "fill": "#9C948C"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 1200.1612903225807,
+   "y": 18.161290322580644,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M5 5h14v14H5z",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.4,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 1228.5555555555557,
+   "y": 16.555555555555557,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M6 6l12 12M18 6L6 18",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.4,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "ПОСЛЕДНИЙ ЗАПУСК · 2 Ч НАЗАД",
+   "x": 64,
+   "y": 112,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle",
+    "letterSpacing": "5%"
+   },
+   "width": 184,
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Minecraft 26.3",
+   "x": 64,
+   "y": 136,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 72,
+    "fontStyle": "Bold",
+    "fill": "#F4F0EA",
+    "lineHeight": "92%",
+    "letterSpacing": "-1%"
+   },
+   "width": 600,
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Ваши миры, моды и серверы.\nБез аккаунта Microsoft и телеметрии.",
+   "x": 64,
+   "y": 226,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 14,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "lineHeight": "150%"
+   },
+   "width": 520,
+   "parent": 2
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 64,
+   "y": 300,
+   "width": 192,
+   "height": 52,
+   "props": {
+    "fill": "#FF6A3D",
+    "cornerRadius": 12
+   },
+   "name": "Primary button",
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 55.77142857142857,
+   "y": 17.771428571428572,
+   "width": 10.628571428571428,
+   "height": 12.0,
+   "path": "M5 4l14 8-14 8z",
+   "props": {
+    "fill": "#1A0A04"
+   },
+   "parent": 29
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Играть",
+   "x": 82,
+   "y": 0,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 16,
+    "fontStyle": "SemiBold",
+    "fill": "#1A0A04",
+    "height": 52,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 90,
+   "parent": 29
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Настройки",
+   "x": 320,
+   "y": 300,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 52,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 82,
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 406.55555555555554,
+   "y": 313.55555555555554,
+   "width": 7.777777777777778,
+   "height": 14.0,
+   "path": "M9 6l6 6-6 6",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 61.77142857142857,
+   "y": 392.1142857142857,
+   "width": 12.0,
+   "height": 8.571428571428571,
+   "path": "M4 12l5 5L20 6",
+   "props": {
+    "stroke": "#6FBF8B",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Готово к запуску",
+   "x": 84,
+   "y": 388,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "Regular",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 130,
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "26.3 · 1 024 МБ",
+   "x": 220,
+   "y": 388,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 102,
+   "parent": 2
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 64,
+   "y": 432,
+   "width": 640,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF0A"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Ваши миры",
+   "x": 64,
+   "y": 456,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 14,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 93,
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "4",
+   "x": 168,
+   "y": 456,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 24,
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Все миры",
+   "x": 624,
+   "y": 456,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 11,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 80,
+   "parent": 2
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 64,
+   "y": 484,
+   "width": 640,
+   "height": 56,
+   "props": {
+    "fill": "#111113",
+    "cornerRadius": 8
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 56,
+   "y": 492,
+   "width": 2,
+   "height": 40,
+   "props": {
+    "fill": "#FF6A3D",
+    "cornerRadius": 1
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 64,
+   "y": 492,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "cornerRadius": 8,
+    "clip": true
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/thumb-new-world.png",
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "mode": "fill",
+   "parent": 43
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#00000000",
+       "#00000055"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 43
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "N",
+   "x": 10,
+   "y": 4,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 26.400000000000002,
+    "fontStyle": "Bold",
+    "fill": "#FFFFFF10",
+    "lineHeight": "90%"
+   },
+   "parent": 43
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "New World",
+   "x": 144,
+   "y": 492,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 15,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 99,
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Выживание · x 128 z -64",
+   "x": 144,
+   "y": 514,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 152,
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 499.30232558139534,
+   "y": 497.30232558139534,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "2 ч назад",
+   "x": 520,
+   "y": 492,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 120,
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 677.3333333333333,
+   "y": 501.3333333333333,
+   "width": 6.666666666666666,
+   "height": 12.0,
+   "path": "M9 6l6 6-6 6",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 64,
+   "y": 546,
+   "width": 640,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF07"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 64,
+   "y": 556,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "cornerRadius": 8,
+    "clip": true
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/thumb-build.png",
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "mode": "fill",
+   "parent": 53
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#00000000",
+       "#00000055"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 53
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "B",
+   "x": 10,
+   "y": 4,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 26.400000000000002,
+    "fontStyle": "Bold",
+    "fill": "#FFFFFF10",
+    "lineHeight": "90%"
+   },
+   "parent": 53
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Build",
+   "x": 144,
+   "y": 556,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 15,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 59,
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Творческий · 14 скриншотов",
+   "x": 144,
+   "y": 578,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 171,
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 499.30232558139534,
+   "y": 561.3023255813954,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "3 дня назад",
+   "x": 520,
+   "y": 556,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 120,
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 677.3333333333333,
+   "y": 565.3333333333334,
+   "width": 6.666666666666666,
+   "height": 12.0,
+   "path": "M9 6l6 6-6 6",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 64,
+   "y": 610,
+   "width": 640,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF07"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 64,
+   "y": 620,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "cornerRadius": 8,
+    "clip": true
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/thumb-hardcore.png",
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "mode": "fill",
+   "parent": 63
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#00000000",
+       "#00000055"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 63
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "H",
+   "x": 10,
+   "y": 4,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 26.400000000000002,
+    "fontStyle": "Bold",
+    "fill": "#FFFFFF10",
+    "lineHeight": "90%"
+   },
+   "parent": 63
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Hardcore Run",
+   "x": 144,
+   "y": 620,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 15,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 130,
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Хардкор · без смерти",
+   "x": 144,
+   "y": 642,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 134,
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 499.30232558139534,
+   "y": 625.3023255813954,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "на прошлой неделе",
+   "x": 520,
+   "y": 620,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 120,
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 677.3333333333333,
+   "y": 629.3333333333334,
+   "width": 6.666666666666666,
+   "height": 12.0,
+   "path": "M9 6l6 6-6 6",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 64,
+   "y": 674,
+   "width": 640,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF07"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 744,
+   "y": 112,
+   "width": 472,
+   "height": 560,
+   "props": {
+    "fill": "#141416",
+    "cornerRadius": 20,
+    "stroke": "#26262A",
+    "strokeWeight": 1,
+    "strokeAlign": "inside",
+    "clip": true
+   },
+   "name": "World poster",
+   "parent": 2
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/hero-new-world.png",
+   "x": 0,
+   "y": 0,
+   "width": 472,
+   "height": 560,
+   "mode": "fill",
+   "parent": 73
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 472,
+   "height": 560,
+   "props": {
+    "fill": "#0B0B0D4D"
+   },
+   "parent": 73
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 472,
+   "height": 132,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#0B0B0DCC",
+       "#0B0B0D00"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 73
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 24,
+   "y": 24,
+   "width": 132,
+   "height": 24,
+   "props": {
+    "fill": "#0B0B0D99",
+    "cornerRadius": 6
+   },
+   "parent": 73
+  }
+ },
+ {
+  "command": "shape.ellipse",
+  "params": {
+   "x": 34,
+   "y": 33,
+   "width": 6,
+   "height": 6,
+   "props": {
+    "fill": "#FF6A3D"
+   },
+   "parent": 73
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "ВЫБРАННЫЙ МИР",
+   "x": 46,
+   "y": 24,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle",
+    "letterSpacing": "6%"
+   },
+   "width": 100,
+   "parent": 73
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 300,
+   "width": 472,
+   "height": 260,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#0B0B0D00",
+       "#0B0B0DE6",
+       "#0B0B0D"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 73
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 24,
+   "y": 408,
+   "width": 424,
+   "height": 128,
+   "props": {
+    "fill": "#0B0B0DCC",
+    "cornerRadius": 16,
+    "stroke": "#FFFFFF14",
+    "strokeWeight": 1,
+    "strokeAlign": "inside"
+   },
+   "parent": 73
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "New World",
+   "x": 20,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 26,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA"
+   },
+   "parent": 81
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 19.302325581395348,
+   "y": 55.30232558139535,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 81
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Выживание · 2 ч назад",
+   "x": 40,
+   "y": 50,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 11,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 153,
+   "parent": 81
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 20,
+   "y": 78,
+   "width": 116,
+   "height": 24,
+   "props": {
+    "fill": "#FFFFFF0E",
+    "cornerRadius": 6
+   },
+   "parent": 81
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 27.30232558139535,
+   "y": 83.30232558139535,
+   "width": 9.767441860465116,
+   "height": 12.0,
+   "path": "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0M12 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 81
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "x 128 · z -64",
+   "x": 48,
+   "y": 78,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 84,
+   "parent": 81
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Открыть мир",
+   "x": 280,
+   "y": 78,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 11,
+    "fontStyle": "SemiBold",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 94,
+   "parent": 81
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 383.4782608695652,
+   "y": 77.47826086956522,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M7 17L17 7M7 7h10v10",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 81
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 688,
+   "width": 1280,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF08"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 63.30232558139535,
+   "y": 701.3023255813953,
+   "width": 12.0,
+   "height": 7.534883720930233,
+   "path": "M2 6h20v12H2zM6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01M10 14h4",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Ctrl+K  Команды",
+   "x": 84,
+   "y": 700,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 102,
+   "parent": 2
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 209.30232558139534,
+   "y": 701.3023255813954,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "F1  Помощь",
+   "x": 230,
+   "y": 700,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 71,
+   "parent": 2
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Scoria 0.1.2",
+   "x": 1100,
+   "y": 700,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 116,
+   "parent": 2
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 1280,
+   "y": 0,
+   "width": 1280,
+   "height": 720,
+   "props": {
+    "fill": "#0B0B0D",
+    "clip": true
+   },
+   "name": "D Preparing"
+  }
+ },
+ {
+  "command": "shape.ellipse",
+  "params": {
+   "x": 600,
+   "y": -220,
+   "width": 900,
+   "height": 900,
+   "props": {
+    "fills": [
+     {
+      "type": "radialGradient",
+      "stops": [
+       "#3A1B10",
+       "#0B0B0D00"
+      ],
+      "from": [
+       0.5,
+       0.5
+      ],
+      "to": [
+       1,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 56,
+   "width": 1280,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF08"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/launcher/ui/assets/scoria-mark.png",
+   "x": 32,
+   "y": 18,
+   "width": 20,
+   "height": 20,
+   "mode": "fit",
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Scoria",
+   "x": 60,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 14,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 65,
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "0.1.2",
+   "x": 112,
+   "y": 18,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 39,
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 525.4,
+   "y": 18.4,
+   "width": 12.4,
+   "height": 14.0,
+   "path": "M5 4l14 8-14 8z",
+   "props": {
+    "stroke": "#F4F0EA",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Играть",
+   "x": 550,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 56,
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 606.3846153846154,
+   "y": 19.384615384615383,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M12 3l9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Моды",
+   "x": 630,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 48,
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 679.1860465116279,
+   "y": 20.186046511627907,
+   "width": 14.000000000000002,
+   "height": 14.000000000000002,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Серверы",
+   "x": 702,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 72,
+   "parent": 96
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 550,
+   "y": 50,
+   "width": 44,
+   "height": 2,
+   "props": {
+    "fill": "#FF6A3D",
+    "cornerRadius": 1
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 800,
+   "y": 12,
+   "width": 220,
+   "height": 32,
+   "props": {
+    "fill": "#141416",
+    "cornerRadius": 8,
+    "stroke": "#26262A",
+    "strokeWeight": 1,
+    "strokeAlign": "inside"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 813.4,
+   "y": 18.4,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4.3-4.3",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Поиск миров и модов",
+   "x": 838,
+   "y": 12,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 11,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 32,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 118,
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Ctrl K",
+   "x": 968,
+   "y": 12,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 9,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 32,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 44,
+   "parent": 96
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 1040,
+   "y": 16,
+   "width": 72,
+   "height": 24,
+   "props": {
+    "fill": "#141416",
+    "cornerRadius": 6
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "shape.ellipse",
+  "params": {
+   "x": 1050,
+   "y": 25,
+   "width": 6,
+   "height": 6,
+   "props": {
+    "fill": "#6FBF8B"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Офлайн",
+   "x": 1062,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 10,
+    "fontStyle": "Medium",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 44,
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 1127.0285714285715,
+   "y": 17.02857142857143,
+   "width": 16.0,
+   "height": 12.342857142857142,
+   "path": "M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 1176,
+   "y": 28.3,
+   "width": 10,
+   "height": 1.4,
+   "props": {
+    "fill": "#9C948C"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 1200.1612903225807,
+   "y": 18.161290322580644,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M5 5h14v14H5z",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.4,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 1228.5555555555557,
+   "y": 16.555555555555557,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M6 6l12 12M18 6L6 18",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.4,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "ПОДГОТОВКА · 26.3",
+   "x": 64,
+   "y": 112,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle",
+    "letterSpacing": "5%"
+   },
+   "width": 115,
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Minecraft 26.3",
+   "x": 64,
+   "y": 136,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 72,
+    "fontStyle": "Bold",
+    "fill": "#F4F0EA",
+    "lineHeight": "92%",
+    "letterSpacing": "-1%"
+   },
+   "width": 600,
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Ваши миры, моды и серверы.\nБез аккаунта Microsoft и телеметрии.",
+   "x": 64,
+   "y": 226,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 14,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "lineHeight": "150%"
+   },
+   "width": 520,
+   "parent": 96
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 64,
+   "y": 300,
+   "width": 192,
+   "height": 52,
+   "props": {
+    "fill": "#2A1710",
+    "cornerRadius": 12,
+    "stroke": "#FF6A3D",
+    "strokeWeight": 1,
+    "strokeAlign": "inside"
+   },
+   "name": "Primary button",
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Подготовка 42%",
+   "x": 0,
+   "y": 0,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 14,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 52,
+    "textAutoResize": "none",
+    "textAlign": "center",
+    "textAlignVertical": "middle"
+   },
+   "width": 192,
+   "parent": 123
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 1,
+   "y": 47,
+   "width": 79,
+   "height": 3,
+   "props": {
+    "fill": "#FF6A3D",
+    "cornerRadius": 2
+   },
+   "parent": 123
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Настройки",
+   "x": 320,
+   "y": 300,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 52,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 82,
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 406.55555555555554,
+   "y": 313.55555555555554,
+   "width": 7.777777777777778,
+   "height": 14.0,
+   "path": "M9 6l6 6-6 6",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 62.61538461538461,
+   "y": 392.61538461538464,
+   "width": 10.76923076923077,
+   "height": 12.0,
+   "path": "M12 3v12M7 11l5 5 5-5M4 21h16",
+   "props": {
+    "stroke": "#FF6A3D",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Скачиваем 26.3",
+   "x": 84,
+   "y": 388,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "Regular",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 130,
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "42% · 1 024 МБ · 00:38",
+   "x": 220,
+   "y": 388,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 146,
+   "parent": 96
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 64,
+   "y": 432,
+   "width": 640,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF0A"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Ваши миры",
+   "x": 64,
+   "y": 456,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 14,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 93,
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "4",
+   "x": 168,
+   "y": 456,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 24,
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Все миры",
+   "x": 624,
+   "y": 456,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 11,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 80,
+   "parent": 96
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 64,
+   "y": 484,
+   "width": 640,
+   "height": 56,
+   "props": {
+    "fill": "#111113",
+    "cornerRadius": 8
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 56,
+   "y": 492,
+   "width": 2,
+   "height": 40,
+   "props": {
+    "fill": "#FF6A3D",
+    "cornerRadius": 1
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 64,
+   "y": 492,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "cornerRadius": 8,
+    "clip": true
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/thumb-new-world.png",
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "mode": "fill",
+   "parent": 137
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#00000000",
+       "#00000055"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 137
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "N",
+   "x": 10,
+   "y": 4,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 26.400000000000002,
+    "fontStyle": "Bold",
+    "fill": "#FFFFFF10",
+    "lineHeight": "90%"
+   },
+   "parent": 137
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "New World",
+   "x": 144,
+   "y": 492,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 15,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 99,
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Выживание · x 128 z -64",
+   "x": 144,
+   "y": 514,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 152,
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 499.30232558139534,
+   "y": 497.30232558139534,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "2 ч назад",
+   "x": 520,
+   "y": 492,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 120,
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 677.3333333333333,
+   "y": 501.3333333333333,
+   "width": 6.666666666666666,
+   "height": 12.0,
+   "path": "M9 6l6 6-6 6",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 64,
+   "y": 546,
+   "width": 640,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF07"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 64,
+   "y": 556,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "cornerRadius": 8,
+    "clip": true
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/thumb-build.png",
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "mode": "fill",
+   "parent": 147
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#00000000",
+       "#00000055"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 147
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "B",
+   "x": 10,
+   "y": 4,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 26.400000000000002,
+    "fontStyle": "Bold",
+    "fill": "#FFFFFF10",
+    "lineHeight": "90%"
+   },
+   "parent": 147
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Build",
+   "x": 144,
+   "y": 556,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 15,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 59,
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Творческий · 14 скриншотов",
+   "x": 144,
+   "y": 578,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 171,
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 499.30232558139534,
+   "y": 561.3023255813954,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "3 дня назад",
+   "x": 520,
+   "y": 556,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 120,
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 677.3333333333333,
+   "y": 565.3333333333334,
+   "width": 6.666666666666666,
+   "height": 12.0,
+   "path": "M9 6l6 6-6 6",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 64,
+   "y": 610,
+   "width": 640,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF07"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 64,
+   "y": 620,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "cornerRadius": 8,
+    "clip": true
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/thumb-hardcore.png",
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "mode": "fill",
+   "parent": 157
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#00000000",
+       "#00000055"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 157
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "H",
+   "x": 10,
+   "y": 4,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 26.400000000000002,
+    "fontStyle": "Bold",
+    "fill": "#FFFFFF10",
+    "lineHeight": "90%"
+   },
+   "parent": 157
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Hardcore Run",
+   "x": 144,
+   "y": 620,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 15,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 130,
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Хардкор · без смерти",
+   "x": 144,
+   "y": 642,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 134,
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 499.30232558139534,
+   "y": 625.3023255813954,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "на прошлой неделе",
+   "x": 520,
+   "y": 620,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 120,
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 677.3333333333333,
+   "y": 629.3333333333334,
+   "width": 6.666666666666666,
+   "height": 12.0,
+   "path": "M9 6l6 6-6 6",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 64,
+   "y": 674,
+   "width": 640,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF07"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 744,
+   "y": 112,
+   "width": 472,
+   "height": 560,
+   "props": {
+    "fill": "#141416",
+    "cornerRadius": 20,
+    "stroke": "#26262A",
+    "strokeWeight": 1,
+    "strokeAlign": "inside",
+    "clip": true
+   },
+   "name": "World poster",
+   "parent": 96
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/hero-new-world.png",
+   "x": 0,
+   "y": 0,
+   "width": 472,
+   "height": 560,
+   "mode": "fill",
+   "parent": 167
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 472,
+   "height": 560,
+   "props": {
+    "fill": "#0B0B0D4D"
+   },
+   "parent": 167
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 472,
+   "height": 132,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#0B0B0DCC",
+       "#0B0B0D00"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 167
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 24,
+   "y": 24,
+   "width": 132,
+   "height": 24,
+   "props": {
+    "fill": "#0B0B0D99",
+    "cornerRadius": 6
+   },
+   "parent": 167
+  }
+ },
+ {
+  "command": "shape.ellipse",
+  "params": {
+   "x": 34,
+   "y": 33,
+   "width": 6,
+   "height": 6,
+   "props": {
+    "fill": "#FF6A3D"
+   },
+   "parent": 167
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "ВЫБРАННЫЙ МИР",
+   "x": 46,
+   "y": 24,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle",
+    "letterSpacing": "6%"
+   },
+   "width": 100,
+   "parent": 167
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 300,
+   "width": 472,
+   "height": 260,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#0B0B0D00",
+       "#0B0B0DE6",
+       "#0B0B0D"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 167
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 24,
+   "y": 408,
+   "width": 424,
+   "height": 128,
+   "props": {
+    "fill": "#0B0B0DCC",
+    "cornerRadius": 16,
+    "stroke": "#FFFFFF14",
+    "strokeWeight": 1,
+    "strokeAlign": "inside"
+   },
+   "parent": 167
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "New World",
+   "x": 20,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 26,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA"
+   },
+   "parent": 175
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 19.302325581395348,
+   "y": 55.30232558139535,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 175
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Выживание · 2 ч назад",
+   "x": 40,
+   "y": 50,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 11,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 153,
+   "parent": 175
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 20,
+   "y": 78,
+   "width": 116,
+   "height": 24,
+   "props": {
+    "fill": "#FFFFFF0E",
+    "cornerRadius": 6
+   },
+   "parent": 175
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 27.30232558139535,
+   "y": 83.30232558139535,
+   "width": 9.767441860465116,
+   "height": 12.0,
+   "path": "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0M12 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 175
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "x 128 · z -64",
+   "x": 48,
+   "y": 78,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 84,
+   "parent": 175
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Открыть мир",
+   "x": 280,
+   "y": 78,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 11,
+    "fontStyle": "SemiBold",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 94,
+   "parent": 175
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 383.4782608695652,
+   "y": 77.47826086956522,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M7 17L17 7M7 7h10v10",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 175
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 688,
+   "width": 1280,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF08"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 63.30232558139535,
+   "y": 701.3023255813953,
+   "width": 12.0,
+   "height": 7.534883720930233,
+   "path": "M2 6h20v12H2zM6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01M10 14h4",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Ctrl+K  Команды",
+   "x": 84,
+   "y": 700,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 102,
+   "parent": 96
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 209.30232558139534,
+   "y": 701.3023255813954,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "F1  Помощь",
+   "x": 230,
+   "y": 700,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 71,
+   "parent": 96
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Scoria 0.1.2",
+   "x": 1100,
+   "y": 700,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 116,
+   "parent": 96
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 2560,
+   "y": 0,
+   "width": 1280,
+   "height": 720,
+   "props": {
+    "fill": "#0B0B0D",
+    "clip": true
+   },
+   "name": "D Playing"
+  }
+ },
+ {
+  "command": "shape.ellipse",
+  "params": {
+   "x": 600,
+   "y": -220,
+   "width": 900,
+   "height": 900,
+   "props": {
+    "fills": [
+     {
+      "type": "radialGradient",
+      "stops": [
+       "#3A1B10",
+       "#0B0B0D00"
+      ],
+      "from": [
+       0.5,
+       0.5
+      ],
+      "to": [
+       1,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 56,
+   "width": 1280,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF08"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/launcher/ui/assets/scoria-mark.png",
+   "x": 32,
+   "y": 18,
+   "width": 20,
+   "height": 20,
+   "mode": "fit",
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Scoria",
+   "x": 60,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 14,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 65,
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "0.1.2",
+   "x": 112,
+   "y": 18,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 39,
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 525.4,
+   "y": 18.4,
+   "width": 12.4,
+   "height": 14.0,
+   "path": "M5 4l14 8-14 8z",
+   "props": {
+    "stroke": "#F4F0EA",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Играть",
+   "x": 550,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 56,
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 606.3846153846154,
+   "y": 19.384615384615383,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M12 3l9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Моды",
+   "x": 630,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 48,
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 679.1860465116279,
+   "y": 20.186046511627907,
+   "width": 14.000000000000002,
+   "height": 14.000000000000002,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Серверы",
+   "x": 702,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 72,
+   "parent": 190
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 550,
+   "y": 50,
+   "width": 44,
+   "height": 2,
+   "props": {
+    "fill": "#FF6A3D",
+    "cornerRadius": 1
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 800,
+   "y": 12,
+   "width": 220,
+   "height": 32,
+   "props": {
+    "fill": "#141416",
+    "cornerRadius": 8,
+    "stroke": "#26262A",
+    "strokeWeight": 1,
+    "strokeAlign": "inside"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 813.4,
+   "y": 18.4,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4.3-4.3",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Поиск миров и модов",
+   "x": 838,
+   "y": 12,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 11,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 32,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 118,
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Ctrl K",
+   "x": 968,
+   "y": 12,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 9,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 32,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 44,
+   "parent": 190
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 1040,
+   "y": 16,
+   "width": 72,
+   "height": 24,
+   "props": {
+    "fill": "#141416",
+    "cornerRadius": 6
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "shape.ellipse",
+  "params": {
+   "x": 1050,
+   "y": 25,
+   "width": 6,
+   "height": 6,
+   "props": {
+    "fill": "#6FBF8B"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Офлайн",
+   "x": 1062,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 10,
+    "fontStyle": "Medium",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 44,
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 1127.0285714285715,
+   "y": 17.02857142857143,
+   "width": 16.0,
+   "height": 12.342857142857142,
+   "path": "M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 1176,
+   "y": 28.3,
+   "width": 10,
+   "height": 1.4,
+   "props": {
+    "fill": "#9C948C"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 1200.1612903225807,
+   "y": 18.161290322580644,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M5 5h14v14H5z",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.4,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 1228.5555555555557,
+   "y": 16.555555555555557,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M6 6l12 12M18 6L6 18",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.4,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "СЕЙЧАС В ИГРЕ",
+   "x": 64,
+   "y": 112,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle",
+    "letterSpacing": "5%"
+   },
+   "width": 89,
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Minecraft 26.3",
+   "x": 64,
+   "y": 136,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 72,
+    "fontStyle": "Bold",
+    "fill": "#F4F0EA",
+    "lineHeight": "92%",
+    "letterSpacing": "-1%"
+   },
+   "width": 600,
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Ваши миры, моды и серверы.\nБез аккаунта Microsoft и телеметрии.",
+   "x": 64,
+   "y": 226,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 14,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "lineHeight": "150%"
+   },
+   "width": 520,
+   "parent": 190
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 64,
+   "y": 300,
+   "width": 192,
+   "height": 52,
+   "props": {
+    "fill": "#1A1A1D",
+    "cornerRadius": 12,
+    "stroke": "#FF6A3D",
+    "strokeWeight": 1,
+    "strokeAlign": "inside"
+   },
+   "name": "Primary button",
+   "parent": 190
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 58,
+   "y": 21,
+   "width": 10,
+   "height": 10,
+   "props": {
+    "fill": "#FF6A3D",
+    "cornerRadius": 2
+   },
+   "parent": 217
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Остановить",
+   "x": 84,
+   "y": 0,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 14,
+    "fontStyle": "SemiBold",
+    "fill": "#FF6A3D",
+    "height": 52,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 92,
+   "parent": 217
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Настройки",
+   "x": 320,
+   "y": 300,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 52,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 82,
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 406.55555555555554,
+   "y": 313.55555555555554,
+   "width": 7.777777777777778,
+   "height": 14.0,
+   "path": "M9 6l6 6-6 6",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 61.77142857142857,
+   "y": 391.77142857142854,
+   "width": 10.628571428571428,
+   "height": 12.0,
+   "path": "M5 4l14 8-14 8z",
+   "props": {
+    "stroke": "#6FBF8B",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "В игре · 12:04",
+   "x": 84,
+   "y": 388,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "Regular",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 130,
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "26.3 · 60 FPS",
+   "x": 220,
+   "y": 388,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 89,
+   "parent": 190
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 64,
+   "y": 432,
+   "width": 640,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF0A"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Ваши миры",
+   "x": 64,
+   "y": 456,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 14,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 93,
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "4",
+   "x": 168,
+   "y": 456,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 24,
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Все миры",
+   "x": 624,
+   "y": 456,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 11,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 80,
+   "parent": 190
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 64,
+   "y": 484,
+   "width": 640,
+   "height": 56,
+   "props": {
+    "fill": "#111113",
+    "cornerRadius": 8
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 56,
+   "y": 492,
+   "width": 2,
+   "height": 40,
+   "props": {
+    "fill": "#FF6A3D",
+    "cornerRadius": 1
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 64,
+   "y": 492,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "cornerRadius": 8,
+    "clip": true
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/thumb-new-world.png",
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "mode": "fill",
+   "parent": 231
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#00000000",
+       "#00000055"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 231
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "N",
+   "x": 10,
+   "y": 4,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 26.400000000000002,
+    "fontStyle": "Bold",
+    "fill": "#FFFFFF10",
+    "lineHeight": "90%"
+   },
+   "parent": 231
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "New World",
+   "x": 144,
+   "y": 492,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 15,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 99,
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Выживание · x 128 z -64",
+   "x": 144,
+   "y": 514,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 152,
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 499.30232558139534,
+   "y": 497.30232558139534,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "2 ч назад",
+   "x": 520,
+   "y": 492,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 120,
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 677.3333333333333,
+   "y": 501.3333333333333,
+   "width": 6.666666666666666,
+   "height": 12.0,
+   "path": "M9 6l6 6-6 6",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 64,
+   "y": 546,
+   "width": 640,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF07"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 64,
+   "y": 556,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "cornerRadius": 8,
+    "clip": true
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/thumb-build.png",
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "mode": "fill",
+   "parent": 241
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#00000000",
+       "#00000055"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 241
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "B",
+   "x": 10,
+   "y": 4,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 26.400000000000002,
+    "fontStyle": "Bold",
+    "fill": "#FFFFFF10",
+    "lineHeight": "90%"
+   },
+   "parent": 241
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Build",
+   "x": 144,
+   "y": 556,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 15,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 59,
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Творческий · 14 скриншотов",
+   "x": 144,
+   "y": 578,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 171,
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 499.30232558139534,
+   "y": 561.3023255813954,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "3 дня назад",
+   "x": 520,
+   "y": 556,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 120,
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 677.3333333333333,
+   "y": 565.3333333333334,
+   "width": 6.666666666666666,
+   "height": 12.0,
+   "path": "M9 6l6 6-6 6",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 64,
+   "y": 610,
+   "width": 640,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF07"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 64,
+   "y": 620,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "cornerRadius": 8,
+    "clip": true
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/thumb-hardcore.png",
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "mode": "fill",
+   "parent": 251
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 64,
+   "height": 48,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#00000000",
+       "#00000055"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 251
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "H",
+   "x": 10,
+   "y": 4,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 26.400000000000002,
+    "fontStyle": "Bold",
+    "fill": "#FFFFFF10",
+    "lineHeight": "90%"
+   },
+   "parent": 251
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Hardcore Run",
+   "x": 144,
+   "y": 620,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 15,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 130,
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Хардкор · без смерти",
+   "x": 144,
+   "y": 642,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 134,
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 499.30232558139534,
+   "y": 625.3023255813954,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "на прошлой неделе",
+   "x": 520,
+   "y": 620,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 120,
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 677.3333333333333,
+   "y": 629.3333333333334,
+   "width": 6.666666666666666,
+   "height": 12.0,
+   "path": "M9 6l6 6-6 6",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 64,
+   "y": 674,
+   "width": 640,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF07"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 744,
+   "y": 112,
+   "width": 472,
+   "height": 560,
+   "props": {
+    "fill": "#141416",
+    "cornerRadius": 20,
+    "stroke": "#26262A",
+    "strokeWeight": 1,
+    "strokeAlign": "inside",
+    "clip": true
+   },
+   "name": "World poster",
+   "parent": 190
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/hero-new-world.png",
+   "x": 0,
+   "y": 0,
+   "width": 472,
+   "height": 560,
+   "mode": "fill",
+   "parent": 261
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 472,
+   "height": 560,
+   "props": {
+    "fill": "#0B0B0D4D"
+   },
+   "parent": 261
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 472,
+   "height": 132,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#0B0B0DCC",
+       "#0B0B0D00"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 261
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 24,
+   "y": 24,
+   "width": 132,
+   "height": 24,
+   "props": {
+    "fill": "#0B0B0D99",
+    "cornerRadius": 6
+   },
+   "parent": 261
+  }
+ },
+ {
+  "command": "shape.ellipse",
+  "params": {
+   "x": 34,
+   "y": 33,
+   "width": 6,
+   "height": 6,
+   "props": {
+    "fill": "#FF6A3D"
+   },
+   "parent": 261
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "ВЫБРАННЫЙ МИР",
+   "x": 46,
+   "y": 24,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle",
+    "letterSpacing": "6%"
+   },
+   "width": 100,
+   "parent": 261
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 300,
+   "width": 472,
+   "height": 260,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#0B0B0D00",
+       "#0B0B0DE6",
+       "#0B0B0D"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 261
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 24,
+   "y": 408,
+   "width": 424,
+   "height": 128,
+   "props": {
+    "fill": "#0B0B0DCC",
+    "cornerRadius": 16,
+    "stroke": "#FFFFFF14",
+    "strokeWeight": 1,
+    "strokeAlign": "inside"
+   },
+   "parent": 261
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "New World",
+   "x": 20,
+   "y": 16,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 26,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA"
+   },
+   "parent": 269
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 19.302325581395348,
+   "y": 55.30232558139535,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 269
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Выживание · 2 ч назад",
+   "x": 40,
+   "y": 50,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 11,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 153,
+   "parent": 269
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 20,
+   "y": 78,
+   "width": 116,
+   "height": 24,
+   "props": {
+    "fill": "#FFFFFF0E",
+    "cornerRadius": 6
+   },
+   "parent": 269
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 27.30232558139535,
+   "y": 83.30232558139535,
+   "width": 9.767441860465116,
+   "height": 12.0,
+   "path": "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0M12 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 269
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "x 128 · z -64",
+   "x": 48,
+   "y": 78,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 84,
+   "parent": 269
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Открыть мир",
+   "x": 280,
+   "y": 78,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 11,
+    "fontStyle": "SemiBold",
+    "fill": "#9C948C",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 94,
+   "parent": 269
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 383.4782608695652,
+   "y": 77.47826086956522,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M7 17L17 7M7 7h10v10",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 269
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 688,
+   "width": 1280,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF08"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 63.30232558139535,
+   "y": 701.3023255813953,
+   "width": 12.0,
+   "height": 7.534883720930233,
+   "path": "M2 6h20v12H2zM6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01M10 14h4",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Ctrl+K  Команды",
+   "x": 84,
+   "y": 700,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 102,
+   "parent": 190
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 209.30232558139534,
+   "y": 701.3023255813954,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01",
+   "props": {
+    "stroke": "#9C948C",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "F1  Помощь",
+   "x": 230,
+   "y": 700,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 71,
+   "parent": 190
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Scoria 0.1.2",
+   "x": 1100,
+   "y": 700,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 116,
+   "parent": 190
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 0,
+   "y": 800,
+   "width": 1280,
+   "height": 720,
+   "props": {
+    "fill": "#0B0B0D",
+    "clip": true
+   },
+   "name": "D States"
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 1280,
+   "height": 1,
+   "props": {
+    "fill": "#FFFFFF08"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "D · Signal",
+   "x": 64,
+   "y": 56,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 28,
+    "fontStyle": "Bold",
+    "fill": "#F4F0EA",
+    "height": 36,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 198,
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "состояния primary-кнопки и интерфейса",
+   "x": 64,
+   "y": 92,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 64,
+   "y": 160,
+   "width": 192,
+   "height": 52,
+   "props": {
+    "fill": "#FF6A3D",
+    "cornerRadius": 12
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 55.77142857142857,
+   "y": 17.771428571428572,
+   "width": 10.628571428571428,
+   "height": 12.0,
+   "path": "M5 4l14 8-14 8z",
+   "props": {
+    "fill": "#1A0A04"
+   },
+   "parent": 288
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Играть",
+   "x": 82,
+   "y": 0,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 16,
+    "fontStyle": "SemiBold",
+    "fill": "#1A0A04",
+    "height": 52,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 90,
+   "parent": 288
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Ready",
+   "x": 64,
+   "y": 220,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "основное действие",
+   "x": 64,
+   "y": 234,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 320,
+   "y": 160,
+   "width": 192,
+   "height": 52,
+   "props": {
+    "fill": "#FF7B52",
+    "cornerRadius": 12
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 55.77142857142857,
+   "y": 17.771428571428572,
+   "width": 10.628571428571428,
+   "height": 12.0,
+   "path": "M5 4l14 8-14 8z",
+   "props": {
+    "fill": "#1A0A04"
+   },
+   "parent": 293
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Играть",
+   "x": 82,
+   "y": 0,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 16,
+    "fontStyle": "SemiBold",
+    "fill": "#1A0A04",
+    "height": 52,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 90,
+   "parent": 293
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Hover",
+   "x": 320,
+   "y": 220,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "accent_hover",
+   "x": 320,
+   "y": 234,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 576,
+   "y": 160,
+   "width": 192,
+   "height": 52,
+   "props": {
+    "fill": "#E0522A",
+    "cornerRadius": 12
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 55.77142857142857,
+   "y": 17.771428571428572,
+   "width": 10.628571428571428,
+   "height": 12.0,
+   "path": "M5 4l14 8-14 8z",
+   "props": {
+    "fill": "#1A0A04"
+   },
+   "parent": 298
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Играть",
+   "x": 82,
+   "y": 0,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 16,
+    "fontStyle": "SemiBold",
+    "fill": "#1A0A04",
+    "height": 52,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 90,
+   "parent": 298
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Pressed",
+   "x": 576,
+   "y": 220,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "accent_pressed",
+   "x": 576,
+   "y": 234,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 60,
+   "y": 276,
+   "width": 200,
+   "height": 60,
+   "props": {
+    "fill": "none",
+    "cornerRadius": 16,
+    "stroke": "#FF6A3D",
+    "strokeWeight": 2,
+    "strokeAlign": "inside",
+    "opacity": 0.55
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 64,
+   "y": 280,
+   "width": 192,
+   "height": 52,
+   "props": {
+    "fill": "#FF6A3D",
+    "cornerRadius": 12
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 55.77142857142857,
+   "y": 17.771428571428572,
+   "width": 10.628571428571428,
+   "height": 12.0,
+   "path": "M5 4l14 8-14 8z",
+   "props": {
+    "fill": "#1A0A04"
+   },
+   "parent": 304
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Играть",
+   "x": 82,
+   "y": 0,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 16,
+    "fontStyle": "SemiBold",
+    "fill": "#1A0A04",
+    "height": 52,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 90,
+   "parent": 304
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Focus",
+   "x": 64,
+   "y": 340,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "2 px ring · 4 px offset",
+   "x": 64,
+   "y": 354,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 320,
+   "y": 280,
+   "width": 192,
+   "height": 52,
+   "props": {
+    "fill": "#2A1710",
+    "cornerRadius": 12,
+    "stroke": "#FF6A3D",
+    "strokeWeight": 1,
+    "strokeAlign": "inside"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Подготовка 42%",
+   "x": 0,
+   "y": 0,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 14,
+    "fontStyle": "SemiBold",
+    "fill": "#F4F0EA",
+    "height": 52,
+    "textAutoResize": "none",
+    "textAlign": "center",
+    "textAlignVertical": "middle"
+   },
+   "width": 192,
+   "parent": 309
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 1,
+   "y": 47,
+   "width": 79,
+   "height": 3,
+   "props": {
+    "fill": "#FF6A3D",
+    "cornerRadius": 2
+   },
+   "parent": 309
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Preparing 42%",
+   "x": 320,
+   "y": 340,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "прогресс внутри кнопки",
+   "x": 320,
+   "y": 354,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 576,
+   "y": 280,
+   "width": 192,
+   "height": 52,
+   "props": {
+    "fill": "#1A1A1D",
+    "cornerRadius": 12,
+    "stroke": "#FF6A3D",
+    "strokeWeight": 1,
+    "strokeAlign": "inside"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 50,
+   "y": 22,
+   "width": 8,
+   "height": 8,
+   "props": {
+    "fill": "#FF6A3D",
+    "cornerRadius": 2
+   },
+   "parent": 314
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Остановить",
+   "x": 70,
+   "y": 0,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 14,
+    "fontStyle": "SemiBold",
+    "fill": "#FF6A3D",
+    "height": 52,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 92,
+   "parent": 314
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Playing",
+   "x": 576,
+   "y": 340,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "остановить игру",
+   "x": 576,
+   "y": 354,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 64,
+   "y": 400,
+   "width": 192,
+   "height": 52,
+   "props": {
+    "fill": "#FF6A3D",
+    "cornerRadius": 12
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 42.61538461538461,
+   "y": 18.615384615384617,
+   "width": 10.76923076923077,
+   "height": 12.0,
+   "path": "M12 3v12M7 11l5 5 5-5M4 21h16",
+   "props": {
+    "stroke": "#1A0A04",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 319
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Скачать 26.3",
+   "x": 64,
+   "y": 0,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "SemiBold",
+    "fill": "#1A0A04",
+    "height": 52,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 120,
+   "parent": 319
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Download",
+   "x": 64,
+   "y": 460,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "первый запуск",
+   "x": 64,
+   "y": 474,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 320,
+   "y": 400,
+   "width": 192,
+   "height": 52,
+   "props": {
+    "fill": "#1A0F0F",
+    "cornerRadius": 12,
+    "stroke": "#E5484D",
+    "strokeWeight": 1,
+    "strokeAlign": "inside"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 48.63427109974425,
+   "y": 18.618925831202045,
+   "width": 11.969309462915602,
+   "height": 12.0,
+   "path": "M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5",
+   "props": {
+    "stroke": "#E5484D",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 324
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Повторить",
+   "x": 70,
+   "y": 0,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "SemiBold",
+    "fill": "#E5484D",
+    "height": 52,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 120,
+   "parent": 324
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Error / Retry",
+   "x": 320,
+   "y": 460,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "danger outline",
+   "x": 320,
+   "y": 474,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 576,
+   "y": 400,
+   "width": 192,
+   "height": 52,
+   "props": {
+    "fill": "#1A1A1D",
+    "cornerRadius": 12,
+    "stroke": "#26262A",
+    "strokeWeight": 1,
+    "strokeAlign": "inside",
+    "opacity": 0.55
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Недоступно",
+   "x": 0,
+   "y": 0,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 13,
+    "fontStyle": "SemiBold",
+    "fill": "#9C948C",
+    "height": 52,
+    "textAutoResize": "none",
+    "textAlign": "center",
+    "textAlignVertical": "middle",
+    "opacity": 0.7
+   },
+   "width": 192,
+   "parent": 329
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Disabled",
+   "x": 576,
+   "y": 460,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "нет подготовки",
+   "x": 576,
+   "y": 474,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "СТАТУСЫ",
+   "x": 860,
+   "y": 132,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 9,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "letterSpacing": "6%"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 860,
+   "y": 156,
+   "width": 240,
+   "height": 32,
+   "props": {
+    "fill": "#1A1A1D",
+    "cornerRadius": 8
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "shape.ellipse",
+  "params": {
+   "x": 872,
+   "y": 169,
+   "width": 6,
+   "height": 6,
+   "props": {
+    "fill": "#6FBF8B"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Готово к запуску",
+   "x": 886,
+   "y": 156,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 12,
+    "fontStyle": "Medium",
+    "fill": "#F4F0EA",
+    "height": 32,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 200,
+   "parent": 284
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 860,
+   "y": 196,
+   "width": 240,
+   "height": 32,
+   "props": {
+    "fill": "#1A1A1D",
+    "cornerRadius": 8
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "shape.ellipse",
+  "params": {
+   "x": 872,
+   "y": 209,
+   "width": 6,
+   "height": 6,
+   "props": {
+    "fill": "#FF6A3D"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Подготовка 42%",
+   "x": 886,
+   "y": 196,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 12,
+    "fontStyle": "Medium",
+    "fill": "#F4F0EA",
+    "height": 32,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 200,
+   "parent": 284
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 860,
+   "y": 236,
+   "width": 240,
+   "height": 32,
+   "props": {
+    "fill": "#1A1A1D",
+    "cornerRadius": 8
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "shape.ellipse",
+  "params": {
+   "x": 872,
+   "y": 249,
+   "width": 6,
+   "height": 6,
+   "props": {
+    "fill": "#7FE0D0"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "В игре · 12:04",
+   "x": 886,
+   "y": 236,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 12,
+    "fontStyle": "Medium",
+    "fill": "#F4F0EA",
+    "height": 32,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 200,
+   "parent": 284
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 860,
+   "y": 276,
+   "width": 240,
+   "height": 32,
+   "props": {
+    "fill": "#2B1A1A",
+    "cornerRadius": 8
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "shape.ellipse",
+  "params": {
+   "x": 872,
+   "y": 289,
+   "width": 6,
+   "height": 6,
+   "props": {
+    "fill": "#E5484D"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Ошибка подготовки",
+   "x": 886,
+   "y": 276,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 12,
+    "fontStyle": "Medium",
+    "fill": "#F4F0EA",
+    "height": 32,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 200,
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "ПРОГРЕСС",
+   "x": 860,
+   "y": 332,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 9,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "letterSpacing": "6%"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 860,
+   "y": 356,
+   "width": 280,
+   "height": 6,
+   "props": {
+    "fill": "#26262A",
+    "cornerRadius": 3
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 860,
+   "y": 356,
+   "width": 118,
+   "height": 6,
+   "props": {
+    "fill": "#FF6A3D",
+    "cornerRadius": 3
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "42% · 1 024 МБ · 00:38",
+   "x": 860,
+   "y": 370,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 9,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "ТОСТ",
+   "x": 860,
+   "y": 410,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 9,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "letterSpacing": "6%"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 860,
+   "y": 434,
+   "width": 280,
+   "height": 48,
+   "props": {
+    "fill": "#1A1A1D",
+    "cornerRadius": 8,
+    "stroke": "#E5484D44",
+    "strokeWeight": 1,
+    "strokeAlign": "inside"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "26.3 не скачался",
+   "x": 876,
+   "y": 434,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 11,
+    "fontStyle": "Medium",
+    "fill": "#F4F0EA",
+    "height": 48,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 160,
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Повторить",
+   "x": 1050,
+   "y": 434,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 10,
+    "fontStyle": "SemiBold",
+    "fill": "#E5484D",
+    "height": 48,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 74,
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "АНАТОМИЯ",
+   "x": 860,
+   "y": 510,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 9,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "letterSpacing": "6%"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "192 × 52 · radius 12",
+   "x": 860,
+   "y": 534,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "play 12 · gap 12 · text 16",
+   "x": 860,
+   "y": 552,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "focus ring 2 px · 4 px offset",
+   "x": 860,
+   "y": 570,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "hover 120 ms · press 120 ms",
+   "x": 860,
+   "y": 588,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#9C948C"
+   },
+   "parent": 284
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Scoria 0.1.2 · Signal",
+   "x": 64,
+   "y": 700,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 9,
+    "fontStyle": "Regular",
+    "fill": "#9C948C",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 127,
+   "parent": 284
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 1280,
+   "y": 800,
+   "width": 1280,
+   "height": 720,
+   "props": {
+    "fill": "#F1F1F1",
+    "clip": true
+   },
+   "name": "E White"
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 16,
+   "y": 16,
+   "width": 1248,
+   "height": 688,
+   "props": {
+    "fill": "#FFFFFF",
+    "cornerRadius": 24,
+    "stroke": "#E3E3E3",
+    "strokeWeight": 1,
+    "strokeAlign": "inside",
+    "clip": true
+   },
+   "name": "Shell",
+   "parent": 360
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Scoria",
+   "x": 48,
+   "y": 36,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 15,
+    "fontStyle": "SemiBold",
+    "fill": "#111214",
+    "height": 32,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 69,
+   "parent": 361
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "0.1.2",
+   "x": 104,
+   "y": 38,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#6E7175",
+    "height": 28,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 39,
+   "parent": 361
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Играть",
+   "x": 528,
+   "y": 36,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 13,
+    "fontStyle": "SemiBold",
+    "fill": "#111214",
+    "height": 32,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 56,
+   "parent": 361
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Моды",
+   "x": 608,
+   "y": 36,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 13,
+    "fontStyle": "Regular",
+    "fill": "#6E7175",
+    "height": 32,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 48,
+   "parent": 361
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Серверы",
+   "x": 680,
+   "y": 36,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 13,
+    "fontStyle": "Regular",
+    "fill": "#6E7175",
+    "height": 32,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 72,
+   "parent": 361
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 528,
+   "y": 68,
+   "width": 56,
+   "height": 2,
+   "props": {
+    "fill": "#111214",
+    "cornerRadius": 1
+   },
+   "parent": 361
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 1060,
+   "y": 40,
+   "width": 82,
+   "height": 24,
+   "props": {
+    "fill": "#F2F2F2",
+    "cornerRadius": 8
+   },
+   "parent": 361
+  }
+ },
+ {
+  "command": "shape.ellipse",
+  "params": {
+   "x": 1070,
+   "y": 49,
+   "width": 6,
+   "height": 6,
+   "props": {
+    "fill": "#6E7175"
+   },
+   "parent": 361
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Офлайн",
+   "x": 1082,
+   "y": 40,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 10,
+    "fontStyle": "Medium",
+    "fill": "#111214",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 52,
+   "parent": 361
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 1162,
+   "y": 51.3,
+   "width": 10,
+   "height": 1.4,
+   "props": {
+    "fill": "#6E7175"
+   },
+   "parent": 361
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 1186.1612903225807,
+   "y": 41.16129032258065,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M5 5h14v14H5z",
+   "props": {
+    "stroke": "#6E7175",
+    "strokeWeight": 1.4,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 361
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 1214.5555555555557,
+   "y": 39.55555555555556,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M6 6l12 12M18 6L6 18",
+   "props": {
+    "stroke": "#6E7175",
+    "strokeWeight": 1.4,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 361
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 48,
+   "y": 76,
+   "width": 1184,
+   "height": 1,
+   "props": {
+    "fill": "#ECECEC"
+   },
+   "parent": 361
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 48,
+   "y": 100,
+   "width": 640,
+   "height": 320,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#F4F4F4",
+       "#FFFFFF",
+       "#F7F7F7"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       1,
+       1
+      ]
+     }
+    ],
+    "cornerRadius": 20,
+    "clip": true
+   },
+   "name": "Continue card",
+   "parent": 361
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 320,
+   "y": 0,
+   "width": 320,
+   "height": 320,
+   "props": {
+    "clip": true
+   },
+   "parent": 375
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/hero-soft.png",
+   "x": 0,
+   "y": 0,
+   "width": 320,
+   "height": 320,
+   "mode": "fill",
+   "parent": 376
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 300,
+   "y": 0,
+   "width": 120,
+   "height": 320,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#FFFFFF",
+       "#FFFFFF00"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       1,
+       0
+      ]
+     }
+    ]
+   },
+   "parent": 375
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 320,
+   "y": 0,
+   "width": 1,
+   "height": 320,
+   "props": {
+    "fill": "#D8D8D8"
+   },
+   "parent": 375
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 31.302325581395348,
+   "y": 29.302325581395348,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2",
+   "props": {
+    "stroke": "#6E7175",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 375
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "ПРОДОЛЖИТЬ",
+   "x": 52,
+   "y": 28,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#6E7175",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle",
+    "letterSpacing": "6%"
+   },
+   "width": 71,
+   "parent": 375
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "New World",
+   "x": 32,
+   "y": 52,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 40,
+    "fontStyle": "ExtraBold",
+    "fill": "#111214",
+    "lineHeight": "100%",
+    "letterSpacing": "-0.5%"
+   },
+   "width": 460,
+   "parent": 375
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 31.30232558139535,
+   "y": 105.30232558139535,
+   "width": 9.767441860465116,
+   "height": 12.0,
+   "path": "M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0M12 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
+   "props": {
+    "stroke": "#6E7175",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 375
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Выживание · x 128 · z -64 · 2 ч назад",
+   "x": 52,
+   "y": 104,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 12,
+    "fontStyle": "Regular",
+    "fill": "#6E7175",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 260,
+   "parent": 375
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 32,
+   "y": 216,
+   "width": 184,
+   "height": 48,
+   "props": {
+    "fill": "#111214",
+    "cornerRadius": 14
+   },
+   "name": "Primary button",
+   "parent": 375
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 55.77142857142857,
+   "y": 15.771428571428572,
+   "width": 10.628571428571428,
+   "height": 12.0,
+   "path": "M5 4l14 8-14 8z",
+   "props": {
+    "fill": "#FFFFFF"
+   },
+   "parent": 385
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Играть",
+   "x": 82,
+   "y": 0,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 15,
+    "fontStyle": "SemiBold",
+    "fill": "#FFFFFF",
+    "height": 48,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 76,
+   "parent": 385
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "26.3 · 1 024 МБ",
+   "x": 32,
+   "y": 276,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#6E7175",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 102,
+   "parent": 375
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 712,
+   "y": 100,
+   "width": 520,
+   "height": 152,
+   "props": {
+    "fill": "#FFFFFF",
+    "cornerRadius": 18,
+    "stroke": "#ECECEC",
+    "strokeWeight": 1,
+    "strokeAlign": "inside"
+   },
+   "name": "Status card",
+   "parent": 361
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "СОСТОЯНИЕ",
+   "x": 24,
+   "y": 20,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#6E7175",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle",
+    "letterSpacing": "6%"
+   },
+   "width": 64,
+   "parent": 389
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 21.4,
+   "y": 42.8,
+   "width": 14.0,
+   "height": 10.0,
+   "path": "M4 12l5 5L20 6",
+   "props": {
+    "stroke": "#111214",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 389
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Готово",
+   "x": 52,
+   "y": 36,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 26,
+    "fontStyle": "Bold",
+    "fill": "#111214",
+    "height": 32,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 114,
+   "parent": 389
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 23.302325581395348,
+   "y": 77.30232558139535,
+   "width": 12.0,
+   "height": 9.767441860465116,
+   "path": "M22 12H2M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11zM6 16h.01M10 16h.01",
+   "props": {
+    "stroke": "#6E7175",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 389
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "26.3 · 1 024 МБ",
+   "x": 44,
+   "y": 76,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#6E7175",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 102,
+   "parent": 389
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 24,
+   "y": 110,
+   "width": 472,
+   "height": 6,
+   "props": {
+    "fill": "#EDEDED",
+    "cornerRadius": 3
+   },
+   "parent": 389
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 24,
+   "y": 110,
+   "width": 472,
+   "height": 6,
+   "props": {
+    "fill": "#111214",
+    "cornerRadius": 3
+   },
+   "parent": 389
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "100%",
+   "x": 452,
+   "y": 122,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#6E7175",
+    "textAlign": "right",
+    "features": {
+     "tnum": true
+    }
+   },
+   "width": 44,
+   "parent": 389
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 712,
+   "y": 268,
+   "width": 520,
+   "height": 152,
+   "props": {
+    "fill": "#FFFFFF",
+    "cornerRadius": 18,
+    "stroke": "#ECECEC",
+    "strokeWeight": 1,
+    "strokeAlign": "inside"
+   },
+   "name": "Stats card",
+   "parent": 361
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 22.384615384615383,
+   "y": 15.666666666666666,
+   "width": 14.0,
+   "height": 9.692307692307692,
+   "path": "M3 7h7l2 2h9v10H3z",
+   "props": {
+    "stroke": "#6E7175",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 398
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "4",
+   "x": 24,
+   "y": 34,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 30,
+    "fontStyle": "ExtraBold",
+    "fill": "#111214",
+    "features": {
+     "tnum": true
+    }
+   },
+   "parent": 398
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "мира",
+   "x": 24,
+   "y": 80,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 11,
+    "fontStyle": "Regular",
+    "fill": "#6E7175"
+   },
+   "parent": 398
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 130,
+   "y": 22,
+   "width": 1,
+   "height": 66,
+   "props": {
+    "fill": "#ECECEC"
+   },
+   "parent": 398
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 140.3846153846154,
+   "y": 16.384615384615383,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M12 3l9 5v8l-9 5-9-5V8zM3 8l9 5 9-5M12 13v8",
+   "props": {
+    "stroke": "#6E7175",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 398
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "12",
+   "x": 142,
+   "y": 34,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 30,
+    "fontStyle": "ExtraBold",
+    "fill": "#111214",
+    "features": {
+     "tnum": true
+    }
+   },
+   "parent": 398
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "модов",
+   "x": 142,
+   "y": 80,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 11,
+    "fontStyle": "Regular",
+    "fill": "#6E7175"
+   },
+   "parent": 398
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 248,
+   "y": 22,
+   "width": 1,
+   "height": 66,
+   "props": {
+    "fill": "#ECECEC"
+   },
+   "parent": 398
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 257.4,
+   "y": 15.4,
+   "width": 14.0,
+   "height": 14.0,
+   "path": "M4 4h16v6H4zM4 14h16v6H4zM8 7h.01M8 17h.01",
+   "props": {
+    "stroke": "#6E7175",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 398
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "2",
+   "x": 260,
+   "y": 34,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 30,
+    "fontStyle": "ExtraBold",
+    "fill": "#111214",
+    "features": {
+     "tnum": true
+    }
+   },
+   "parent": 398
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "сервера",
+   "x": 260,
+   "y": 80,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 11,
+    "fontStyle": "Regular",
+    "fill": "#6E7175"
+   },
+   "parent": 398
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 366,
+   "y": 22,
+   "width": 1,
+   "height": 66,
+   "props": {
+    "fill": "#ECECEC"
+   },
+   "parent": 398
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 377.1860465116279,
+   "y": 17.186046511627907,
+   "width": 14.000000000000002,
+   "height": 14.000000000000002,
+   "path": "M19.69 14a6.9 6.9 0 0 0 .31-2V5l-8-3-3.16 1.18M4.73 4.73L4 5v7c0 6 8 10 8 10a20.29 20.29 0 0 0 5.62-4.38M2 2l20 20",
+   "props": {
+    "stroke": "#6E7175",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 398
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "0",
+   "x": 378,
+   "y": 34,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 30,
+    "fontStyle": "ExtraBold",
+    "fill": "#111214",
+    "features": {
+     "tnum": true
+    }
+   },
+   "parent": 398
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "телеметрии",
+   "x": 378,
+   "y": 80,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 11,
+    "fontStyle": "Regular",
+    "fill": "#6E7175"
+   },
+   "parent": 398
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Ваши миры",
+   "x": 48,
+   "y": 448,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 14,
+    "fontStyle": "SemiBold",
+    "fill": "#111214",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 93,
+   "parent": 361
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "4",
+   "x": 140,
+   "y": 448,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#6E7175",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 24,
+   "parent": 361
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Все миры",
+   "x": 1100,
+   "y": 448,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 11,
+    "fontStyle": "Regular",
+    "fill": "#6E7175",
+    "height": 24,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 132,
+   "parent": 361
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 48,
+   "y": 476,
+   "width": 376,
+   "height": 168,
+   "props": {
+    "fill": "#FFFFFF",
+    "cornerRadius": 18,
+    "stroke": "#ECECEC",
+    "strokeWeight": 1,
+    "strokeAlign": "inside",
+    "clip": true
+   },
+   "name": "World New World",
+   "parent": 361
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 12,
+   "y": 12,
+   "width": 352,
+   "height": 92,
+   "props": {
+    "cornerRadius": 12,
+    "clip": true
+   },
+   "parent": 417
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/thumb-new-world.png",
+   "x": 0,
+   "y": 0,
+   "width": 352,
+   "height": 92,
+   "mode": "fill",
+   "parent": 418
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 352,
+   "height": 92,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#00000000",
+       "#00000055"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 418
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "N",
+   "x": 10,
+   "y": 4,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 50.6,
+    "fontStyle": "Bold",
+    "fill": "#FFFFFF14",
+    "lineHeight": "90%"
+   },
+   "parent": 418
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "New World",
+   "x": 16,
+   "y": 112,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 15,
+    "fontStyle": "SemiBold",
+    "fill": "#111214"
+   },
+   "width": 270,
+   "parent": 417
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Выживание",
+   "x": 16,
+   "y": 136,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#6E7175"
+   },
+   "parent": 417
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Открыть",
+   "x": 276,
+   "y": 132,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 10,
+    "fontStyle": "SemiBold",
+    "fill": "#111214",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 70,
+   "parent": 417
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 349.4782608695652,
+   "y": 129.47826086956522,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M7 17L17 7M7 7h10v10",
+   "props": {
+    "stroke": "#111214",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 417
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 452,
+   "y": 476,
+   "width": 376,
+   "height": 168,
+   "props": {
+    "fill": "#FFFFFF",
+    "cornerRadius": 18,
+    "stroke": "#ECECEC",
+    "strokeWeight": 1,
+    "strokeAlign": "inside",
+    "clip": true
+   },
+   "name": "World Build",
+   "parent": 361
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 12,
+   "y": 12,
+   "width": 352,
+   "height": 92,
+   "props": {
+    "cornerRadius": 12,
+    "clip": true
+   },
+   "parent": 426
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/thumb-build.png",
+   "x": 0,
+   "y": 0,
+   "width": 352,
+   "height": 92,
+   "mode": "fill",
+   "parent": 427
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 352,
+   "height": 92,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#00000000",
+       "#00000055"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 427
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "B",
+   "x": 10,
+   "y": 4,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 50.6,
+    "fontStyle": "Bold",
+    "fill": "#FFFFFF14",
+    "lineHeight": "90%"
+   },
+   "parent": 427
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Build",
+   "x": 16,
+   "y": 112,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 15,
+    "fontStyle": "SemiBold",
+    "fill": "#111214"
+   },
+   "width": 270,
+   "parent": 426
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Творческий",
+   "x": 16,
+   "y": 136,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#6E7175"
+   },
+   "parent": 426
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Открыть",
+   "x": 276,
+   "y": 132,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 10,
+    "fontStyle": "SemiBold",
+    "fill": "#111214",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 70,
+   "parent": 426
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 349.4782608695652,
+   "y": 129.47826086956522,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M7 17L17 7M7 7h10v10",
+   "props": {
+    "stroke": "#111214",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 426
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 856,
+   "y": 476,
+   "width": 376,
+   "height": 168,
+   "props": {
+    "fill": "#FFFFFF",
+    "cornerRadius": 18,
+    "stroke": "#ECECEC",
+    "strokeWeight": 1,
+    "strokeAlign": "inside",
+    "clip": true
+   },
+   "name": "World Hardcore Run",
+   "parent": 361
+  }
+ },
+ {
+  "command": "frame.create",
+  "params": {
+   "x": 12,
+   "y": 12,
+   "width": 352,
+   "height": 92,
+   "props": {
+    "cornerRadius": 12,
+    "clip": true
+   },
+   "parent": 435
+  }
+ },
+ {
+  "command": "image.place",
+  "params": {
+   "path": "/home/shrx/dev/scoria/design/figcraft/art/thumb-hardcore.png",
+   "x": 0,
+   "y": 0,
+   "width": 352,
+   "height": 92,
+   "mode": "fill",
+   "parent": 436
+  }
+ },
+ {
+  "command": "shape.rectangle",
+  "params": {
+   "x": 0,
+   "y": 0,
+   "width": 352,
+   "height": 92,
+   "props": {
+    "fills": [
+     {
+      "type": "linearGradient",
+      "stops": [
+       "#00000000",
+       "#00000055"
+      ],
+      "from": [
+       0,
+       0
+      ],
+      "to": [
+       0,
+       1
+      ]
+     }
+    ]
+   },
+   "parent": 436
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "H",
+   "x": 10,
+   "y": 4,
+   "props": {
+    "fontFamily": "Medeo Sans",
+    "fontSize": 50.6,
+    "fontStyle": "Bold",
+    "fill": "#FFFFFF14",
+    "lineHeight": "90%"
+   },
+   "parent": 436
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Hardcore Run",
+   "x": 16,
+   "y": 112,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 15,
+    "fontStyle": "SemiBold",
+    "fill": "#111214"
+   },
+   "width": 270,
+   "parent": 435
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Хардкор",
+   "x": 16,
+   "y": 136,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#6E7175"
+   },
+   "parent": 435
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Открыть",
+   "x": 276,
+   "y": 132,
+   "props": {
+    "fontFamily": "Onest",
+    "fontSize": 10,
+    "fontStyle": "SemiBold",
+    "fill": "#111214",
+    "height": 20,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 70,
+   "parent": 435
+  }
+ },
+ {
+  "command": "vector.create",
+  "params": {
+   "x": 349.4782608695652,
+   "y": 129.47826086956522,
+   "width": 12.0,
+   "height": 12.0,
+   "path": "M7 17L17 7M7 7h10v10",
+   "props": {
+    "stroke": "#111214",
+    "strokeWeight": 1.5,
+    "strokeCap": "round",
+    "strokeJoin": "round",
+    "fill": "none"
+   },
+   "parent": 435
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Локальные миры · Modrinth",
+   "x": 48,
+   "y": 668,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#6E7175",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlignVertical": "middle"
+   },
+   "width": 165,
+   "parent": 361
+  }
+ },
+ {
+  "command": "text.create",
+  "params": {
+   "text": "Scoria 0.1.2",
+   "x": 1100,
+   "y": 668,
+   "props": {
+    "fontFamily": "Medeo Mono",
+    "fontSize": 10,
+    "fontStyle": "Regular",
+    "fill": "#6E7175",
+    "height": 16,
+    "textAutoResize": "none",
+    "textAlign": "right",
+    "textAlignVertical": "middle"
+   },
+   "width": 132,
+   "parent": 361
+  }
+ }
+]
