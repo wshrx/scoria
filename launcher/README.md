@@ -159,6 +159,10 @@ The opening, then Play ([clip](docs/opening.webm)):
   `horizon-launcher settings language system|en|fr|ru`. The window uses the same tables.
 - **Keyboard**: `Ctrl+1`–`Ctrl+4` switch Home, Mods, Servers and Settings; `Ctrl+Enter` runs the
   one game action (download, retry or play); `Esc` closes the appearance and language menus.
+- **Live folders**: the window watches the selected instance's `saves/`, `mods/`, `shaderpacks/`,
+  `config/`, `screenshots/`, `options.txt` and the launcher's `servers.json`/`settings.json`.
+  A world or pack written by the game or a development build appears in about 350 ms; toasts
+  stack up to three.
 - **Skin and cape**: each offline name's **Skin…** in Settings > Account shows the front of its
   skin and cape, takes a skin PNG (64×64, or the older 64×32) and a cape PNG (64×32), and picks
   classic or slim arms. The launcher keeps copies in its `skins/` folder and gives the game

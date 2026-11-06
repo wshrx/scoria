@@ -170,13 +170,21 @@ impl Render for Shell {
             );
         }
 
-        if let Some((tone, message)) = &self.toast {
+        if !self.toasts.is_empty() {
             root = root.child(
                 div()
                     .absolute()
                     .bottom(px(theme.spacing.xl))
                     .right(px(theme.spacing.xl))
-                    .child(toast(&theme, message.clone(), *tone)),
+                    .flex()
+                    .flex_col()
+                    .items_end()
+                    .gap(px(theme.spacing.sm))
+                    .children(
+                        self.toasts
+                            .iter()
+                            .map(|item| toast(&theme, item.message.clone(), item.tone)),
+                    ),
             );
         }
         root

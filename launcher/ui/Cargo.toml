@@ -19,3 +19,5 @@ gpui_ce_elements = "0.3.0"
 scoria-ui-kit = { path = "../ui-kit" }
 scoria-core = { path = "..", package = "horizon-launcher" }
 serde_json = "1"
+# The window refreshes worlds/mods/packs when the selected instance changes on disk.
+notify = "8"

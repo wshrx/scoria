@@ -25,6 +25,10 @@ tag (`v0.1.0-beta` → `## [0.1.0-beta]`).
 - Settings gains a Sidebar control (expanded/compact), and screen changes fade/rise for 160 ms.
 - Keyboard: `Ctrl+1..4` switches screens, `Ctrl+Enter` runs the one game action and `Esc` closes
   the appearance/language menus; server rows gained a hover state.
+- The window watches `saves/`, `mods/`, `shaderpacks/`, `config/`, `screenshots/`, `options.txt`
+  and the launcher's `servers.json`/`settings.json`, so a world or pack written by the game (or a
+  dev build) appears in about 350 ms without a restart. Toasts now stack up to three instead of
+  replacing each other.
 
 ### Added
 

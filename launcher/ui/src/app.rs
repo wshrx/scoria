@@ -1,6 +1,7 @@
 //! The launcher's state and the actions every screen shares: prepare, play, install, settings.
 //! Screens and their drawing live in `screens`, the synthetic QA states in this file.
 mod screens;
+mod watch;
 
 use std::{
     fs::OpenOptions,
@@ -233,6 +234,12 @@ fn qa_snapshot(prepared: bool, playing: bool, worlds: usize) -> serde_json::Valu
     })
 }
 
+struct Toast {
+    id: u64,
+    tone: Tone,
+    message: String,
+}
+
 pub(crate) struct Shell {
     theme: Theme,
     screen: Screen,
@@ -255,10 +262,12 @@ pub(crate) struct Shell {
     fade: f32,
     polling: bool,
     servers: Result<serde_json::Value, String>,
+    /// Keeps the filesystem watcher alive while the window is open.
+    watcher: Option<watch::Keep>,
     server_name: gpui::Entity<EditableTextState>,
     server_ip: gpui::Entity<EditableTextState>,
-    toast: Option<(Tone, String)>,
-    toast_generation: u64,
+    toasts: Vec<Toast>,
+    toast_id: u64,
 }
 
 impl Shell {
@@ -295,10 +304,11 @@ impl Shell {
             fade: 0.0,
             polling: false,
             servers: scoria_core::api::saved_servers(),
+            watcher: None,
             server_name: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
             server_ip: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
-            toast: None,
-            toast_generation: 0,
+            toasts: Vec::new(),
+            toast_id: 0,
         };
         let qa_state = std::env::var("SCORIA_UI_STATE").ok();
         if let Some(state) = &qa_state {
@@ -320,6 +330,9 @@ impl Shell {
                     .update(cx, |state, cx| state.emplace(&query, cx));
             }
             shell.search_mods(cx);
+        }
+        if qa_state.is_none() {
+            shell.watch_instance(cx);
         }
         shell
     }
@@ -451,6 +464,39 @@ impl Shell {
         out
     }
 
+    /// Refresh Home and Servers when the game (or a dev build) writes a save, mod, pack or
+    /// `servers.json`. The watcher stays alive in `self.watcher`.
+    fn watch_instance(&mut self, cx: &mut Context<Self>) {
+        if self.watcher.is_some() {
+            return;
+        }
+        let instance = scoria_core::instances::selected();
+        let data = scoria_core::backend::data_dir();
+        let Some((keep, changes)) = watch::start(&instance.home, &data) else {
+            return;
+        };
+        self.watcher = Some(keep);
+        cx.spawn(async move |this, cx| loop {
+            cx.background_executor().timer(watch::DEBOUNCE).await;
+            let mut changed = false;
+            while changes.try_recv().is_ok() {
+                changed = true;
+            }
+            if !changed {
+                continue;
+            }
+            let alive = this.update(cx, |this, cx| {
+                this.snapshot = scoria_core::api::snapshot();
+                this.refresh_servers();
+                cx.notify();
+            });
+            if alive.is_err() {
+                break;
+            }
+        })
+        .detach();
+    }
+
     fn go(&mut self, screen: Screen, cx: &mut Context<Self>) {
         self.screen = screen;
         match screen {
@@ -498,19 +544,25 @@ impl Shell {
     }
 
     fn show_toast(&mut self, tone: Tone, message: impl Into<String>, cx: &mut Context<Self>) {
-        self.toast_generation += 1;
-        let generation = self.toast_generation;
-        self.toast = Some((tone, message.into()));
+        self.toast_id += 1;
+        let id = self.toast_id;
+        self.toasts.push(Toast {
+            id,
+            tone,
+            message: message.into(),
+        });
+        // Never cover the window with a toast pile; the oldest leaves first.
+        if self.toasts.len() > 3 {
+            self.toasts.remove(0);
+        }
         cx.notify();
         cx.spawn(async move |this, cx| {
             cx.background_executor()
-                .timer(std::time::Duration::from_secs(3))
+                .timer(std::time::Duration::from_secs(4))
                 .await;
             this.update(cx, |this, cx| {
-                if this.toast_generation == generation {
-                    this.toast = None;
-                    cx.notify();
-                }
+                this.toasts.retain(|toast| toast.id != id);
+                cx.notify();
             })
             .ok();
         })
