@@ -149,6 +149,9 @@ The opening, then Play ([clip](docs/opening.webm)):
   white on the Play button at 4.5:1 and the accent at 3:1 on every background (a test holds every
   accent in both looks to it). The picture is copied into the data folder.
   `horizon-launcher settings accent NAME`, `settings background PATH|default`.
+- **Offline accounts**: Settings → Offline account adds names (3–16 letters, digits or `_`, any
+  script), switches the selected name and removes one. `accounts.json` keeps the list; there is no
+  sign-in and no account service.
 - **Language**: English, French and Russian (the languages Horizon's own game menus have).
   The window follows the system's language unless the player picks one in Settings > Launcher
   (each named in itself); a string a table lacks shows in English. The tables are

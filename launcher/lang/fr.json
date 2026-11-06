@@ -51,9 +51,6 @@
   "host:port": "hôte:port",
   "Appearance": "Apparence",
   "Language": "Langue",
-  "Nickname": "Pseudo",
-  "Save": "Enregistrer",
-  "Your offline name": "Votre pseudo hors ligne",
   "3 to 16 letters, digits or _ (any script).": "3 à 16 lettres, chiffres ou _ (tout alphabet).",
   "Downloading": "Téléchargement",
   "Added {name}.": "Ajouté : {name}.",
@@ -99,5 +96,11 @@
   "The game did not start": "Le jeu n'a pas démarré",
   "Screens": "Écrans",
   "Run": "Lancer",
-  "Close": "Fermer"
+  "Close": "Fermer",
+  "Offline account": "Compte hors ligne",
+  "Add account": "Ajouter un compte",
+  "New offline name": "Nouveau nom hors ligne",
+  "Use": "Utiliser",
+  "Selected": "Sélectionné",
+  "Removed {name}.": "{name} supprimé."
 }

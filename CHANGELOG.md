@@ -39,6 +39,8 @@ tag (`v0.1.0-beta` → `## [0.1.0-beta]`).
 
 ### Added
 
+- Settings manages multiple offline accounts: add a name, switch the selected one, or remove it.
+  `accounts.json` keeps the list; no Microsoft account or keychain entry is involved.
 - Developer-only Mimas harness (`--features dev-scripts` + `SCORIA_DEV_SCRIPTS`) for driving
   download progress, synthetic states and screen smoke tests; it adds `state`, `progress`,
   `cancel`, `stop`, `prepared` and `playing` beside `toast`/`log`/`play`/`download`/`screen`, so a

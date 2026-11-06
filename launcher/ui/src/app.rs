@@ -255,6 +255,7 @@ pub(crate) struct Shell {
     theme: Theme,
     screen: Screen,
     settings: Settings,
+    accounts: Accounts,
     name: gpui::Entity<EditableTextState>,
     name_message: Option<(bool, String)>,
     snapshot: Result<serde_json::Value, String>,
@@ -293,7 +294,8 @@ impl Shell {
             Appearance::Light => Theme::light(),
             _ => Theme::dark(),
         };
-        let current = match Accounts::load().player() {
+        let accounts = Accounts::load();
+        let current = match accounts.player() {
             Player::Offline(name) => name,
             Player::GameName => String::new(),
         };
@@ -302,6 +304,7 @@ impl Shell {
             theme,
             screen,
             settings,
+            accounts,
             name,
             name_message: None,
             snapshot: scoria_core::api::snapshot(),
@@ -435,11 +438,15 @@ impl Shell {
                 self.screen = Screen::Settings;
                 self.settings.appearance = Appearance::Dark;
                 self.theme = Theme::dark();
+                self.accounts.offline = vec!["Player".to_string(), "Builder".to_string()];
+                self.accounts.offline_selected = Some("Player".to_string());
             }
             "settings-light" => {
                 self.screen = Screen::Settings;
                 self.settings.appearance = Appearance::Light;
                 self.theme = Theme::light();
+                self.accounts.offline = vec!["Player".to_string(), "Builder".to_string()];
+                self.accounts.offline_selected = Some("Player".to_string());
             }
             "home-light" => {
                 self.settings.appearance = Appearance::Light;
@@ -1000,6 +1007,37 @@ impl Shell {
         cx.notify();
     }
 
+    fn use_account(&mut self, name: String, cx: &mut Context<Self>) {
+        let mut accounts = self.accounts.clone();
+        let result = accounts
+            .play_as(Player::Offline(name.clone()))
+            .and_then(|()| accounts.save());
+        match result {
+            Ok(()) => {
+                self.accounts = accounts;
+                self.name_message =
+                    Some((true, self.tf("Now playing as {name}.", &[("name", &name)])));
+            }
+            Err(error) => self.name_message = Some((false, self.td(&error))),
+        }
+        cx.notify();
+    }
+
+    fn remove_account(&mut self, name: String, cx: &mut Context<Self>) {
+        let mut accounts = self.accounts.clone();
+        let result = accounts
+            .remove_offline(&name)
+            .and_then(|()| accounts.save());
+        match result {
+            Ok(()) => {
+                self.accounts = accounts;
+                self.name_message = Some((true, self.tf("Removed {name}.", &[("name", &name)])));
+            }
+            Err(error) => self.name_message = Some((false, self.td(&error))),
+        }
+        cx.notify();
+    }
+
     fn save_name(&mut self, cx: &mut Context<Self>) {
         let name = self.name.read(cx).as_str().trim().to_string();
         if !scoria_core::account::valid_offline_name(&name) {
@@ -1007,13 +1045,16 @@ impl Shell {
             cx.notify();
             return;
         }
-        let result = (|| {
-            let mut accounts = Accounts::load();
-            accounts.play_as(Player::Offline(name.clone()))?;
-            accounts.save()
-        })();
+        let mut accounts = self.accounts.clone();
+        let result = accounts
+            .play_as(Player::Offline(name.clone()))
+            .and_then(|()| accounts.save());
         self.name_message = Some(match result {
-            Ok(()) => (true, self.tf("Now playing as {name}.", &[("name", &name)])),
+            Ok(()) => {
+                self.accounts = accounts;
+                self.name.update(cx, |state, cx| state.emplace("", cx));
+                (true, self.tf("Now playing as {name}.", &[("name", &name)]))
+            }
             Err(error) => (false, self.td(&error)),
         });
         cx.notify();

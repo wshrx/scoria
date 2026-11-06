@@ -142,7 +142,7 @@ impl Shell {
                             .flex()
                             .flex_col()
                             .gap(px(theme.spacing.sm))
-                            .child(label(&theme, &self.t("Nickname")))
+                            .child(label(&theme, &self.t("Offline account")))
                             .child(
                                 div()
                                     .text_size(px(theme.type_scale.caption))
@@ -153,6 +153,77 @@ impl Shell {
                                         ),
                                     ),
                             )
+                            .children((!self.accounts.offline.is_empty()).then(|| {
+                                let mut list = div().flex().flex_col().gap(px(4.0)).w(px(460.0));
+                                for account in &self.accounts.offline {
+                                    let label = account.clone();
+                                    let selected =
+                                        self.accounts.offline_selected.as_deref() == Some(account);
+                                    let mut actions = div().flex().items_center().gap(px(4.0));
+                                    if !selected {
+                                        let account = account.clone();
+                                        actions = actions.child(
+                                            Button::new(
+                                                format!("use-account-{account}"),
+                                                self.t("Use"),
+                                            )
+                                            .variant(ButtonVariant::Secondary)
+                                            .size(ButtonSize::Sm)
+                                            .render(
+                                                &theme,
+                                                Some(cx.listener(move |this, _, _window, cx| {
+                                                    this.use_account(account.clone(), cx)
+                                                })),
+                                            ),
+                                        );
+                                    }
+                                    let account = account.clone();
+                                    actions = actions.child(
+                                        Button::new(
+                                            format!("remove-account-{account}"),
+                                            self.t("Remove"),
+                                        )
+                                        .variant(ButtonVariant::Ghost)
+                                        .size(ButtonSize::Sm)
+                                        .render(
+                                            &theme,
+                                            Some(cx.listener(move |this, _, _window, cx| {
+                                                this.remove_account(account.clone(), cx)
+                                            })),
+                                        ),
+                                    );
+                                    list = list.child(
+                                        div()
+                                            .flex()
+                                            .items_center()
+                                            .justify_between()
+                                            .h(px(44.0))
+                                            .px(px(theme.spacing.md))
+                                            .rounded(px(theme.radii.md))
+                                            .bg(theme.colors.surface_secondary)
+                                            .child(
+                                                div()
+                                                    .flex()
+                                                    .items_center()
+                                                    .gap(px(8.0))
+                                                    .child(
+                                                        div()
+                                                            .text_size(px(theme.type_scale.body))
+                                                            .child(label),
+                                                    )
+                                                    .children(selected.then(|| {
+                                                        badge(
+                                                            &theme,
+                                                            self.t("Selected"),
+                                                            Tone::Success,
+                                                        )
+                                                    })),
+                                            )
+                                            .child(actions),
+                                    );
+                                }
+                                list
+                            }))
                             .child(
                                 div()
                                     .flex()
@@ -163,12 +234,12 @@ impl Shell {
                                             &theme,
                                             "offline-name",
                                             self.name.downgrade(),
-                                            self.t("Your offline name"),
+                                            self.t("New offline name"),
                                         )
                                         .w(px(280.0)),
                                     )
                                     .child(
-                                        Button::new("save-name", self.t("Save"))
+                                        Button::new("save-name", self.t("Add account"))
                                             .variant(ButtonVariant::Primary)
                                             .size(ButtonSize::Lg)
                                             .render(

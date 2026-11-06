@@ -51,9 +51,6 @@
   "host:port": "адрес:порт",
   "Appearance": "Оформление",
   "Language": "Язык",
-  "Nickname": "Никнейм",
-  "Save": "Сохранить",
-  "Your offline name": "Ваше офлайн-имя",
   "3 to 16 letters, digits or _ (any script).": "3–16 букв, цифр или _ (любой алфавит).",
   "Downloading": "Загрузка",
   "Added {name}.": "Добавлен {name}.",
@@ -99,5 +96,11 @@
   "The game did not start": "Игра не запустилась",
   "Screens": "Экраны",
   "Run": "Запуск",
-  "Close": "Закрыть"
+  "Close": "Закрыть",
+  "Offline account": "Офлайн-аккаунт",
+  "Add account": "Добавить аккаунт",
+  "New offline name": "Новое офлайн-имя",
+  "Use": "Использовать",
+  "Selected": "Выбран",
+  "Removed {name}.": "Удалён {name}."
 }
