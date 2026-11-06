@@ -5,7 +5,8 @@ on:
   push:
     branches: [dev, main]
   pull_request:
-    branches: [main]
+    branches: [dev, main]
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
@@ -35,7 +36,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: "launcher -> target"
+      - uses: taiki-e/install-action@nextest
       - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
       - name: Linux system dependencies
         if: runner.os == 'Linux'
         run: |
@@ -43,9 +47,5 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libx11-xcb-dev libfontconfig-dev \
             libvulkan-dev libasound2-dev libudev-dev zstd
-      - name: Format and lints
-        run: cargo xtask check
-      - name: Tests
-        run: cargo xtask test
-      - name: Python tests
-        run: cargo xtask pytest
+      - name: Gate (fmt, clippy, tests, UI build, pytest)
+        run: cargo xtask gate

@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/wshrx/scoria/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/wshrx/scoria?include_prereleases&style=flat-square&color=FF6A3D"></a>
+  <a href="https://github.com/wshrx/scoria/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/wshrx/scoria/actions/workflows/ci.yml/badge.svg?branch=dev"></a>
   <img alt="Rust" src="https://img.shields.io/badge/Rust-2026-111214?style=flat-square&logo=rust">
   <img alt="GPUI" src="https://img.shields.io/badge/GPUI-CE-FF6A3D?style=flat-square">
   <img alt="Platforms" src="https://img.shields.io/badge/Linux%20·%20Windows%20·%20macOS-1f2937?style=flat-square">
@@ -54,8 +55,9 @@ assets are shipped.
 | Windows 10/11 x64 (Vulkan) | `scoria-launcher-windows-x64.zip` |
 
 Open the [latest release](https://github.com/wshrx/scoria/releases/latest), unpack it and run
-`scoria`. The engine bundle lives in the separate `v0.1.2-beta-game` pre-release and is installed by
-the launcher.
+`scoria`. The engine bundle lives in the separate `v0.1.2-beta-game` pre-release as
+`scoria-game-linux-x86_64.tar.zst` / `scoria-game-windows-x64.zip`; the launcher downloads and
+installs it itself.
 
 ## What works
 
