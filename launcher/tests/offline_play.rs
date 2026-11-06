@@ -1,0 +1,91 @@
+//! Scoria plays without a Microsoft account: from the outside, `horizon-launcher play` and the
+//! MCP server's `play` no longer stop at the owner gate. (The fixture has an installed but not
+//! prepared version, so they stop one step later, at preparation.)
+use std::io::Write;
+use std::path::{Path, PathBuf};
+use std::process::{Command, Output, Stdio};
+
+/// Fresh homes with one installed (not prepared) version and an offline name.
+fn home(name: &str) -> PathBuf {
+    let root =
+        std::env::temp_dir().join(format!("basalt-offline-play-{name}-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    let version = root.join("launcher/versions/v2026.10.27.01");
+    std::fs::create_dir_all(&version).unwrap();
+    std::fs::write(version.join(".installed"), "").unwrap();
+    std::fs::write(
+        root.join("launcher/accounts.json"),
+        r#"{"accounts":[],"selected":null,"offline":["Builder_1"],"offline_selected":"Builder_1"}"#,
+    )
+    .unwrap();
+    root
+}
+
+fn launcher(root: &Path, args: &[&str]) -> Command {
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_horizon-launcher"));
+    cmd.args(args)
+        .env("HORIZON_HOME", root.join("game"))
+        .env("HORIZON_LAUNCHER_HOME", root.join("launcher"))
+        .env("XDG_DATA_HOME", root.join("data"))
+        .env("XDG_CONFIG_HOME", root.join("config"))
+        .env("HORIZON_LAUNCHER_NO_SELF_UPDATE", "1")
+        .env("HORIZON_NO_AUDIO", "1")
+        .env("HORIZON_TELEMETRY_URL", "off")
+        // Memory only: the test never reads the player's keychain.
+        .env("HORIZON_NO_KEYCHAIN", "1");
+    cmd
+}
+
+fn text(out: &Output) -> String {
+    String::from_utf8_lossy(&out.stdout).into_owned() + &String::from_utf8_lossy(&out.stderr)
+}
+
+#[test]
+fn the_cli_plays_without_an_owner() {
+    let root = home("cli");
+    let out = launcher(&root, &["play"]).output().unwrap();
+    let said = text(&out);
+    // It may fail, but never because no account owns the game: that check is gone.
+    assert!(
+        !said.contains("owns Minecraft") && !said.contains("Sign in with a Microsoft account"),
+        "{said}"
+    );
+    // The fixture is installed but not prepared, so this is where it stops instead.
+    assert!(said.to_lowercase().contains("prepar"), "{said}");
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+#[test]
+fn the_mcp_server_plays_without_an_owner() {
+    let root = home("mcp");
+    let mut child = launcher(&root, &["mcp"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let requests = [
+        r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}"#,
+        r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"play","arguments":{}}}"#,
+    ];
+    let mut stdin = child.stdin.take().unwrap();
+    for r in requests {
+        writeln!(stdin, "{r}").unwrap();
+    }
+    drop(stdin);
+    let out = child.wait_with_output().unwrap();
+    let reply = String::from_utf8_lossy(&out.stdout)
+        .lines()
+        .map(|l| serde_json::from_str::<serde_json::Value>(l).unwrap())
+        .find(|v| v["id"] == 2)
+        .expect("a reply to play");
+    let said = reply["result"]["content"][0]["text"]
+        .as_str()
+        .unwrap_or_default();
+    assert!(!said.contains("owns Minecraft"), "{reply}");
+    assert!(
+        !said.contains("Sign in with a Microsoft account"),
+        "{reply}"
+    );
+    let _ = std::fs::remove_dir_all(&root);
+}
