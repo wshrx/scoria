@@ -56,7 +56,10 @@ jobs:
   # is skipped and Linux/Windows still gate the change.
   macos:
     name: launcher (macOS, self-hosted)
-    if: vars.MAC_RUNNER != ''
+    if: |
+      vars.MAC_RUNNER != '' &&
+      (github.event_name != 'pull_request' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ${{ vars.MAC_RUNNER }}
     timeout-minutes: 45
     steps:
