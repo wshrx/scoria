@@ -10,8 +10,9 @@ It is a fork of Horizon (MIT): the engine comes from upstream, Scoria adds offli
 gpui-ce launcher, piston-meta downloads, Modrinth, its own releases and branding. No Microsoft
 account, no telemetry, no online-mode servers, no Minecraft assets.
 
-- `origin` = Entire `et/redmoon/scoria` (working remote); `github` = `wshrx/scoria` (public
-  showcase); `upstream` = Horizon (fetch-only).
+- `origin` = Entire `et/redmoon/scoria` (push is blocked by Entire's region error); `github` =
+  `wshrx/scoria` (public snapshot, now also the working branches `dev`, `staging`, `main`);
+  `upstream` = Horizon (fetch-only). The migration off Entire is in progress.
 - Entire branches: **`dev`** and **`main`**, both at the same commit. There are no other remote
   branches and no stale trails. Work happens on `dev`; `main` fast-forwards after a green gate.
 - GitHub branches: `staging` and `main`; both follow the exported snapshot. Public CI runs on
@@ -31,6 +32,9 @@ account, no telemetry, no online-mode servers, no Minecraft assets.
   bundles `scoria-game-linux-x86_64.tar.zst` / `scoria-game-windows-x64.zip` and their signed
   checksums. The launcher finds this release and installs the bundle itself.
 - Tags and releases are immutable per built artifact: `v0.1.2-beta` carries the synced engine.
+- GitHub `dev`, `staging` and `main` were created from the public snapshot at `6932785b3`
+  (source commit `94a59eb0f`); `main` and `staging` are the same snapshot until public CI promotes
+  the next one.
 - The release workflow splits the assets, signs each release with its own tag, and recreates the
   release so an old asset order cannot survive. The README (en/ru) tells players to download only
   `scoria-launcher-*`.
