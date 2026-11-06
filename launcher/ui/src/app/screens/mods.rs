@@ -1,5 +1,6 @@
 //! The mod catalogue: Horizon first, Modrinth second, with loading and error states.
 use super::super::*;
+use scoria_ui_kit::{field, skeleton, skeleton_line};
 
 impl Shell {
     pub(super) fn mods(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -21,20 +22,8 @@ impl Shell {
                         .flex()
                         .flex_col()
                         .gap(px(theme.spacing.sm))
-                        .child(
-                            div()
-                                .h(px(16.0))
-                                .w(px(180.0))
-                                .rounded_full()
-                                .bg(theme.colors.surface_tertiary),
-                        )
-                        .child(
-                            div()
-                                .h(px(10.0))
-                                .w_full()
-                                .rounded_full()
-                                .bg(theme.colors.surface_secondary),
-                        ),
+                        .child(skeleton(&theme, 180.0, 16.0))
+                        .child(skeleton_line(&theme, 10.0)),
                 ));
             }
         }

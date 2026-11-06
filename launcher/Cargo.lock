@@ -6034,6 +6034,7 @@ name = "scoria-ui-kit"
 version = "0.1.0"
 dependencies = [
  "gpui-ce",
+ "gpui_ce_elements",
 ]
 
 [[package]]

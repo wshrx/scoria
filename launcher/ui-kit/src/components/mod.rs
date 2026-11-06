@@ -1,13 +1,21 @@
 pub mod badge;
 pub mod button;
 pub mod card;
+pub mod field;
+pub mod icon;
 pub mod page;
 pub mod progress;
+pub mod segmented;
+pub mod skeleton;
 pub mod toast;
 
 pub use badge::{badge, tone_for_support, Tone};
 pub use button::{primary, Button, ButtonSize, ButtonVariant};
 pub use card::{card, soft_card};
+pub use field::field;
+pub use icon::{icon, IconSize};
 pub use page::{empty_state, error_panel, page_header};
 pub use progress::{clamp_fraction, progress_bar};
+pub use segmented::segment;
+pub use skeleton::{skeleton, skeleton_line};
 pub use toast::toast;

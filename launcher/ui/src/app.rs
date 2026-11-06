@@ -15,7 +15,7 @@ use std::{
 use gpui::{
     actions, div, ease_out_quint, img, linear_color_stop, linear_gradient, prelude::*, px, rgb,
     rgba, Animation, AnimationExt, Context, Image, ImageFormat, ImageSource, IntoElement,
-    MouseButton, ObjectFit, Render, ResizeEdge, SharedString, Window, WindowControlArea,
+    MouseButton, ObjectFit, Render, ResizeEdge, Window, WindowControlArea,
 };
 
 actions!(
@@ -29,14 +29,12 @@ actions!(
         CloseOverlay
     ]
 );
-use gpui_ce_elements::editable_text::{
-    text_input, EditableTextElement, EditableTextState, StringStorage,
-};
+use gpui_ce_elements::editable_text::{EditableTextState, StringStorage};
 use scoria_core::account::{Accounts, Player};
 use scoria_core::backend::{Appearance, Settings};
 use scoria_core::i18n::Language;
 use scoria_ui_kit::{
-    badge, card, clamp_fraction, empty_state, error_panel, page_header, soft_card, toast,
+    badge, card, clamp_fraction, empty_state, error_panel, page_header, segment, soft_card, toast,
     tone_for_support, Button, ButtonSize, ButtonVariant, Theme, Tone,
 };
 use serde_json::json;
@@ -140,41 +138,6 @@ fn menu_item(
 }
 
 /// A segmented-control option: the selected one carries the accent.
-fn segment(
-    theme: Theme,
-    id: &'static str,
-    label: impl Into<SharedString>,
-    selected: bool,
-    on_click: impl Fn(&gpui::ClickEvent, &mut Window, &mut gpui::App) + 'static,
-) -> impl IntoElement {
-    let label = label.into();
-    div()
-        .id(id)
-        .flex()
-        .items_center()
-        .h(px(28.0))
-        .px(px(theme.spacing.md))
-        .rounded(px(theme.radii.md))
-        .bg(if selected {
-            if theme.dark {
-                rgba(0xFFFFFF12)
-            } else {
-                theme.colors.surface
-            }
-        } else {
-            rgba(0x00000000)
-        })
-        .text_color(if selected {
-            theme.colors.foreground
-        } else {
-            theme.colors.muted
-        })
-        .text_size(px(theme.type_scale.body))
-        .cursor_pointer()
-        .on_click(on_click)
-        .child(label)
-}
-
 /// The engine's mode strings as the static keys the translation table uses.
 fn mode_key(mode: &str) -> &'static str {
     match mode {
@@ -189,31 +152,6 @@ fn label(theme: &Theme, text: &str) -> impl IntoElement {
     div()
         .text_size(px(theme.type_scale.subtitle))
         .child(text.to_string())
-}
-
-/// One text field with the launcher's field styling. Callers add layout (`flex_1`, `w`).
-fn field(
-    theme: &Theme,
-    id: &'static str,
-    state: gpui::WeakEntity<EditableTextState>,
-    placeholder: String,
-) -> EditableTextElement {
-    text_input(id)
-        .state(state)
-        .h(px(40.0))
-        .px(px(theme.spacing.md))
-        .py(px(theme.spacing.sm))
-        .placeholder_color(theme.colors.muted)
-        .rounded(px(theme.radii.field))
-        .border_1()
-        .border_color(theme.colors.border)
-        .bg(theme.colors.surface_secondary)
-        .text_color(theme.colors.foreground)
-        .text_size(px(theme.type_scale.body))
-        .whitespace_nowrap()
-        .min_h_auto()
-        .max_h_auto()
-        .placeholder(placeholder)
 }
 
 fn qa_snapshot(prepared: bool, playing: bool, worlds: usize) -> serde_json::Value {
