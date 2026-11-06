@@ -55,8 +55,9 @@ assets are shipped.
 | Windows 10/11 x64 (Vulkan) | `scoria-launcher-windows-x64.zip` |
 
 Open the [latest release](https://github.com/wshrx/scoria/releases/latest), unpack it and run
-`scoria`. The engine bundle lives in the separate `v0.1.2-beta-game` pre-release and is installed by
-the launcher.
+`scoria`. The engine bundle lives in the separate `v0.1.2-beta-game` pre-release as
+`scoria-game-linux-x86_64.tar.zst` / `scoria-game-windows-x64.zip`; the launcher downloads and
+installs it itself.
 
 ## What works
 
