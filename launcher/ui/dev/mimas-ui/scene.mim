@@ -1,0 +1,29 @@
+// The first Mimas layout experiment: absolute positions and sizes are computed here,
+// not in Rust. Floats need a decimal point.
+fn draw() {
+    clear();
+    rect(0.0, 0.0, 1280.0, 720.0, "#0B0B0D", 0.0);
+
+    text(64.0, 58.0, 10.0, "#9C948C", "MIMAS · LAYOUT EXPERIMENT");
+    text(64.0, 82.0, 56.0, "#F4F0EA", "Scoria");
+    text(64.0, 154.0, 15.0, "#9C948C", "Geometry from a script, rendering from GPUI.");
+
+    rect(64.0, 208.0, 592.0, 440.0, "#141416", 20.0);
+    text(96.0, 240.0, 10.0, "#9C948C", "ABSOLUTE");
+    text(96.0, 262.0, 28.0, "#F4F0EA", "Every node has x, y, w, h.");
+    text(96.0, 304.0, 15.0, "#9C948C", "The rust side maps them 1:1 to GPUI elements.");
+    rect(96.0, 356.0, 528.0, 80.0, "#1A1A1D", 12.0);
+    text(116.0, 380.0, 15.0, "#F4F0EA", "No layout engine in the VM yet.");
+    rect(96.0, 456.0, 240.0, 52.0, "#FF6A3D", 12.0);
+    text(116.0, 472.0, 16.0, "#1A0A04", "Draw with Mimas");
+
+    rect(688.0, 58.0, 528.0, 590.0, "#1A1A1D", 20.0);
+    rect(720.0, 90.0, 464.0, 240.0, "#2A1710", 14.0);
+    text(744.0, 116.0, 10.0, "#FF6A3D", "POSITIONING");
+    text(744.0, 140.0, 28.0, "#F4F0EA", "The script places the panel;");
+    text(744.0, 176.0, 28.0, "#F4F0EA", "Rust paints it.");
+    rect(720.0, 360.0, 220.0, 120.0, "#202024", 14.0);
+    rect(964.0, 360.0, 220.0, 120.0, "#202024", 14.0);
+    text(744.0, 384.0, 12.0, "#9C948C", "X = 720");
+    text(988.0, 384.0, 12.0, "#9C948C", "X = 964");
+}
