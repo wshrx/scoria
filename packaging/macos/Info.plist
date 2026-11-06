@@ -8,9 +8,9 @@
 	<key>CFBundleDisplayName</key>
 	<string>Scoria</string>
 	<key>CFBundleExecutable</key>
-	<string>horizon-launcher</string>
+	<string>scoria</string>
 	<key>CFBundleIconFile</key>
-	<string>horizon</string>
+	<string>scoria</string>
 	<key>CFBundleIdentifier</key>
 	<string>dev.scoria.launcher</string>
 	<key>CFBundleInfoDictionaryVersion</key>

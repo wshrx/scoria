@@ -22,4 +22,5 @@ def test_release_runs_the_gate_before_packaging():
     jobs = document["jobs"]
     assert jobs["package"]["needs"] == "verify"
     assert jobs["game"]["needs"] == "verify"
-    assert jobs["publish"]["needs"] == ["package", "game"]
+    assert jobs["publish"]["needs"] == ["package", "game", "package-macos"]
+    assert jobs["package-macos"]["if"] == "vars.MAC_RUNNER != ''"
