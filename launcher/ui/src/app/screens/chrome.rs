@@ -153,7 +153,7 @@ impl Shell {
                             .flex()
                             .items_center()
                             .gap(px(8.0))
-                            .w(px(if compact { 150.0 } else { 230.0 }))
+                            .w(px(if compact { 150.0 } else { 300.0 }))
                             .h_full()
                             .window_control_area(WindowControlArea::Drag)
                             .on_mouse_down(MouseButton::Left, |_, window, _| {
@@ -179,7 +179,9 @@ impl Shell {
                         div()
                             .flex()
                             .items_center()
+                            .justify_end()
                             .gap(px(8.0))
+                            .when(!compact, |right| right.w(px(300.0)))
                             .child(
                                 div()
                                     .flex()

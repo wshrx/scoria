@@ -40,7 +40,7 @@ impl Shell {
             .child(
                 Button::new("appearance-trigger", format!("{appearance_label}   ▾"))
                     .variant(ButtonVariant::Secondary)
-                    .size(ButtonSize::Md)
+                    .size(ButtonSize::Lg)
                     .render(
                         &theme,
                         Some(cx.listener(|this, _, _window, cx| {
@@ -95,7 +95,7 @@ impl Shell {
             .child(
                 Button::new("language-trigger", format!("{language_label}   ▾"))
                     .variant(ButtonVariant::Secondary)
-                    .size(ButtonSize::Md)
+                    .size(ButtonSize::Lg)
                     .render(
                         &theme,
                         Some(cx.listener(|this, _, _window, cx| {
