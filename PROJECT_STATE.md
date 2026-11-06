@@ -10,21 +10,20 @@ It is a fork of Horizon (MIT): the engine comes from upstream, Scoria adds offli
 gpui-ce launcher, piston-meta downloads, Modrinth, its own releases and branding. No Microsoft
 account, no telemetry, no online-mode servers, no Minecraft assets.
 
-- `origin` = Entire `et/redmoon/scoria` (push is blocked by Entire's region error); `github` =
-  `wshrx/scoria` (public snapshot, now also the working branches `dev`, `staging`, `main`);
-  `upstream` = Horizon (fetch-only). The migration off Entire is in progress.
-- Entire branches: **`dev`** and **`main`**, both at the same commit. There are no other remote
-  branches and no stale trails. Work happens on `dev`; `main` fast-forwards after a green gate.
-- GitHub branches: `staging` and `main`; both follow the exported snapshot. Public CI runs on
-  `staging`, then `main` fast-forwards and the release tag is cut.
-- Do not push without the user's word. Entire is the draft; GitHub receives allowlisted snapshots
-  via `tools/export_public.sh` + `tools/publish_public.sh`. Never push `.opencode/`,
-  `PROJECT_STATE.md`, `docs/agents/` or internal fixtures there.
+- `origin` = GitHub `wshrx/scoria` (the working remote); `github` is an alias to the same URL;
+  `entire` is the archived `et/redmoon/scoria` with `no_push`; `upstream` = Horizon (fetch-only).
+  Entire is retired.
+- Local branches: `dev`, `main`, `exp/*`, `feat/*`, `test/*`. Work happens on `dev`; `main`
+  follows it. GitHub carries a filtered snapshot of every branch, built with
+  `tools/export_public.sh` and pushed by `tools/publish_public.sh` (or the same tree on a named
+  branch); histories are snapshot commits, not the internal history.
+- Public CI runs on `staging`; `main` follows it and release tags are cut there. Never push
+  `.opencode/`, `PROJECT_STATE.md`, `docs/agents/` or internal fixtures to the public repo.
 
 ## Current release
 
-- **Target `v0.1.3-beta`**: the D · Signal redesign, E · White light tokens, Stop action and the
-  prepared launcher fixes below. Not tagged yet; push is blocked by Entire's region error.
+- **Target `v0.1.3-beta`**: the D · Signal redesign, E · White light tokens, offline account
+  management, Stop action and the prepared launcher fixes below. Not tagged yet.
 - **GitHub `v0.1.2-beta`** is a normal Release (not pre-release) and the Latest release. It carries
   only the launcher: `scoria-launcher-linux-x86_64.tar.zst`,
   `scoria-launcher-windows-x64.zip`, `SHA256SUMS`, `SHA256SUMS.sig`.

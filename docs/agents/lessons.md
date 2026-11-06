@@ -117,10 +117,11 @@ window moves or activations on the live session.
 added 12 GB. Release binaries live on GitHub; the target folders are disposable.
 Rule: `cargo clean` in each launcher worktree after a build; never back up or commit `target/`.
 
-**P1 — Entire is the source of truth; GitHub is a snapshot.** Development branches never reach
-GitHub, and the public tree is an allowlist.
-Rule: `tools/export_public.sh` plus the public-tree test; no `exp/*`, `spike/*` or internal docs in
-the export.
+**P1 — GitHub carries filtered snapshots, not the internal history.** Development branches and
+`PROJECT_STATE.md`/docs/agents never reach the public repo; every public branch is an allowlisted
+tree.
+Rule: `tools/export_public.sh` plus the public-tree test for every branch; never push the internal
+checkout directly to `origin`.
 
 **P3 — A sync must prove the fixes survive.** Upstream is thousands of commits ahead and adds the
 Microsoft surface this fork removes. A merge can silently drop `typed_text`, the offline server or

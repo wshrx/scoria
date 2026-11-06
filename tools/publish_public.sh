@@ -4,9 +4,9 @@
 #   tools/export_public.sh      # build dist/public
 #   tools/publish_public.sh     # commit that tree on `staging` and push to the `github` remote
 #
-# The private Entire repo stays the source of truth. GitHub only ever receives filtered snapshots:
-# no .opencode, no project memory, no fork notes, no game media, no build output. Public CI runs on
-# staging; a human (or the release workflow) promotes a green staging to main and tags it.
+# The local checkout stays the source of truth; GitHub receives filtered snapshots. Public CI runs
+# on staging; a human (or the release workflow) promotes a green staging to main and tags it. Every
+# local branch can be published the same way: export it, then commit the tree on that branch.
 set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root"
