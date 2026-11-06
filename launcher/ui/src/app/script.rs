@@ -25,6 +25,25 @@ pub enum Action {
 
 static ACTIONS: Mutex<Vec<Action>> = Mutex::new(Vec::new());
 
+#[derive(Clone, Copy, Default)]
+struct State {
+    prepared: bool,
+    playing: bool,
+}
+
+static STATE: Mutex<State> = Mutex::new(State {
+    prepared: false,
+    playing: false,
+});
+
+/// The two snapshot facts a developer script may branch on.
+pub fn set_state(prepared: bool, playing: bool) {
+    if let Ok(mut state) = STATE.lock() {
+        state.prepared = prepared;
+        state.playing = playing;
+    }
+}
+
 fn push(action: Action) {
     if let Ok(mut queue) = ACTIONS.lock() {
         queue.push(action);
@@ -49,6 +68,16 @@ fn play() {
 #[mimas]
 fn download() {
     push(Action::Download);
+}
+
+#[mimas]
+fn prepared() -> bool {
+    STATE.lock().map(|state| state.prepared).unwrap_or(false)
+}
+
+#[mimas]
+fn playing() -> bool {
+    STATE.lock().map(|state| state.playing).unwrap_or(false)
 }
 
 #[mimas]
@@ -156,6 +185,7 @@ mod tests {
             include_str!("../../dev/scripts/download-demo.mim"),
             include_str!("../../dev/scripts/download-real.mim"),
             include_str!("../../dev/scripts/download-flow.mim"),
+            include_str!("../../dev/scripts/logic.mim"),
         ] {
             run_source(example, "on_start").unwrap();
         }
@@ -177,6 +207,24 @@ mod tests {
                 "Downloading Minecraft 26.3 from Mojang".to_string()
             )]
         );
+    }
+
+    #[test]
+    fn a_script_can_branch_on_the_snapshot() {
+        set_state(true, false);
+        let actions = run_source(
+            r#"fn on_start() {
+                if prepared() {
+                    toast("ready");
+                } else {
+                    toast("missing");
+                }
+            }"#,
+            "on_start",
+        )
+        .unwrap();
+        assert_eq!(actions, vec![Action::Toast("ready".to_string())]);
+        set_state(false, false);
     }
 
     #[test]

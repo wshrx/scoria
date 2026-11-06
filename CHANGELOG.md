@@ -41,8 +41,8 @@ tag (`v0.1.0-beta` → `## [0.1.0-beta]`).
 
 - Developer-only Mimas harness (`--features dev-scripts` + `SCORIA_DEV_SCRIPTS`) for driving
   download progress, synthetic states and screen smoke tests; it adds `state`, `progress`,
-  `cancel` and `stop` beside `toast`/`log`/`play`/`download`/`screen`. Never loaded by a player
-  build; see `docs/mimas-scripts.md`.
+  `cancel`, `stop`, `prepared` and `playing` beside `toast`/`log`/`play`/`download`/`screen`, so a
+  script can branch on the snapshot. Never loaded by a player build; see `docs/mimas-scripts.md`.
 - Every launcher screen has a capturable state: `SCORIA_UI_STATE` paints synthetic data and
   `tools/capture_ui_states.py` saves all 19 states as PNGs (docs/qa/launcher-ui-states.md).
 - Home shows the game state honestly (Install, Preparing, Ready, Playing, Error), a selected-world

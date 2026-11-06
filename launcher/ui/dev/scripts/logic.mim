@@ -1,0 +1,13 @@
+// Developer flow: let Mimas choose the next launcher action from the snapshot.
+fn on_start() {
+    if playing() {
+        toast("Dev: the game is already running");
+        screen("home");
+    } else if prepared() {
+        toast("Dev: prepared, starting");
+        play();
+    } else {
+        toast("Dev: not prepared, downloading");
+        download();
+    }
+}

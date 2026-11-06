@@ -32,6 +32,7 @@ A script without a hook is fine. A type or runtime error becomes a toast and goe
 | `toast(message)` | an in-app toast |
 | `log(message)` | one line in the launcher log |
 | `screen("home"\|"mods"\|"servers"\|"settings")` | switch screens |
+| `prepared()` / `playing()` | read the snapshot, so a script can choose the next action |
 | `state("home-preparing")` | apply one synthetic `SCORIA_UI_STATE` fixture |
 | `progress(42.0, "Downloading…")` | draw a synthetic download at 0..100; no network |
 | `download()` | start the real prepare |
@@ -48,6 +49,8 @@ need a decimal point (`42.0`, not `42`).
 - **Download UI**: `download-demo.mim` sets 42%, the Mojang line and a toast, so the preparing
   button, progress line, status row and cancel path can be inspected without downloading 26.3.
 - **States**: `states.mim` jumps to `home-playing`; change the name to any QA state.
+- **Logic**: `logic.mim` uses `playing()`/`prepared()` and `if`/`else` to decide between
+  switching Home, starting a prepared game and downloading.
 - **Screens**: `screens.mim` walks to Mods for a quick visual smoke test.
 
 The repository examples are in [`launcher/ui/dev/scripts/`](../launcher/ui/dev/scripts/). They are

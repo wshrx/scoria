@@ -591,6 +591,13 @@ impl Shell {
             self.script_running = false;
             return;
         };
+        let prepared = self
+            .snapshot
+            .as_ref()
+            .ok()
+            .and_then(|snapshot| snapshot["prepared"].as_bool())
+            .unwrap_or(false);
+        script::set_state(prepared, self.playing_now());
         let result = script::run(hook, &dir);
         match result {
             Ok(actions) => {
