@@ -1,0 +1,51 @@
+name: ci
+# The public snapshot only: staging is the exported tree, main is the released line.
+# Everything runs through `cargo xtask`, so CI and a local run are the same commands.
+on:
+  push:
+    branches: [staging]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  launcher:
+    name: launcher (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            rust: stable
+          - os: windows-latest
+            rust: stable
+          - os: macos-14
+            rust: stable
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "launcher -> target"
+      - uses: astral-sh/setup-uv@v5
+      - name: Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libx11-xcb-dev libfontconfig-dev \
+            libvulkan-dev libasound2-dev libudev-dev zstd
+      - name: Format and lints
+        run: cargo xtask check
+      - name: Tests
+        run: cargo xtask test
+      - name: Python tests
+        run: cargo xtask pytest
