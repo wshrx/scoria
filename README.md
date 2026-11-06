@@ -14,7 +14,7 @@
   <a href="https://github.com/wshrx/scoria/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/wshrx/scoria/actions/workflows/ci.yml/badge.svg?branch=dev"></a>
   <img alt="Rust" src="https://img.shields.io/badge/Rust-2026-111214?style=flat-square&logo=rust">
   <img alt="GPUI" src="https://img.shields.io/badge/GPUI-CE-FF6A3D?style=flat-square">
-  <img alt="Platforms" src="https://img.shields.io/badge/Linux%20·%20Windows%20·%20macOS-1f2937?style=flat-square">
+  <img alt="Platforms" src="https://img.shields.io/badge/Linux%20·%20Windows-1f2937?style=flat-square">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-111214?style=flat-square">
 </p>
 

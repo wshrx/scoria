@@ -23,8 +23,8 @@ jobs:
             rust: stable
           - os: windows-latest
             rust: stable
-          - os: macos-14
-            rust: stable
+          # macOS is deferred until signing/notarization; the public repo has no
+          # reliable macOS runner budget. Add it back when the release line does.
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     steps:
