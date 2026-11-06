@@ -1,9 +1,9 @@
 name: ci
-# The public snapshot only: staging is the exported tree, main is the released line.
+# The public snapshot only: dev is the exported tree, main is the released line.
 # Everything runs through `cargo xtask`, so CI and a local run are the same commands.
 on:
   push:
-    branches: [staging]
+    branches: [dev, main]
   pull_request:
     branches: [main]
 permissions:
