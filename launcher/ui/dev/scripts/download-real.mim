@@ -1,0 +1,8 @@
+// Developer flow: start the real prepare and report the result.
+fn on_start() {
+    download();
+}
+
+fn on_download_done() {
+    toast("Dev: download finished");
+}
