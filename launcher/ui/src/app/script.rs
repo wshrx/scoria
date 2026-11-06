@@ -1,20 +1,26 @@
-//! Optional Mimas scripts in the launcher's data folder. Off unless the `scripts` feature is
-//! built: `cargo build -p scoria-ui --features scripts`.
+//! Developer-only Mimas harness. Off unless the `dev-scripts` feature is built and
+//! `SCORIA_DEV_SCRIPTS` points at a folder; a player build never loads scripts.
 //!
-//! A script is any `*.mim` file in `<data>/scripts`. The window compiles them at each hook and
-//! calls the one named after the event if it exists. Host functions only queue actions for the
-//! window; a script cannot touch the file system or the engine directly.
+//! A script is any `*.mim` file in that folder. The window compiles them at each hook and calls
+//! the one named after the event. Host functions queue actions for the window; a script cannot
+//! touch the file system or the engine directly.
 use std::{path::Path, sync::Mutex};
 
 use mimas::mimas;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Action {
     Toast(String),
     Log(String),
     Play,
     Download,
     Screen(String),
+    /// Apply one of the synthetic `SCORIA_UI_STATE` fixtures.
+    State(String),
+    /// Show a synthetic download at `percent` (0..100) with a log line.
+    Progress(f64, String),
+    Cancel,
+    Stop,
 }
 
 static ACTIONS: Mutex<Vec<Action>> = Mutex::new(Vec::new());
@@ -48,6 +54,30 @@ fn download() {
 #[mimas]
 fn screen(name: &str) {
     push(Action::Screen(name.to_string()));
+}
+
+/// Apply a synthetic QA state, e.g. `state("home-playing")`.
+#[mimas]
+fn state(name: &str) {
+    push(Action::State(name.to_string()));
+}
+
+/// Draw a synthetic download. `percent` is 0..100; this does not touch the network.
+#[mimas]
+fn progress(percent: f64, line: &str) {
+    push(Action::Progress(percent, line.to_string()));
+}
+
+/// Cancel a real or synthetic prepare.
+#[mimas]
+fn cancel() {
+    push(Action::Cancel);
+}
+
+/// Stop a running game.
+#[mimas]
+fn stop() {
+    push(Action::Stop);
 }
 
 /// Compile every `*.mim` in `dir` and call `hook` if a script defines it.
@@ -121,8 +151,32 @@ mod tests {
     }
 
     #[test]
-    fn the_example_compiles() {
-        run_source(include_str!("../../scripts/example.mim"), "on_start").unwrap();
+    fn the_download_examples_compile() {
+        for example in [
+            include_str!("../../dev/scripts/download-demo.mim"),
+            include_str!("../../dev/scripts/download-real.mim"),
+            include_str!("../../dev/scripts/download-flow.mim"),
+        ] {
+            run_source(example, "on_start").unwrap();
+        }
+    }
+
+    #[test]
+    fn a_script_can_drive_a_synthetic_download() {
+        let actions = run_source(
+            r#"fn on_start() {
+                progress(42.0, "Downloading Minecraft 26.3 from Mojang");
+            }"#,
+            "on_start",
+        )
+        .unwrap();
+        assert_eq!(
+            actions,
+            vec![Action::Progress(
+                42.0,
+                "Downloading Minecraft 26.3 from Mojang".to_string()
+            )]
+        );
     }
 
     #[test]

@@ -13,8 +13,8 @@ path = "src/main.rs"
 winresource = "0.1"
 
 [features]
-# Optional scripting layer: `cargo build -p scoria-ui --features scripts`.
-scripts = ["dep:mimas"]
+# Developer harness only: `--features dev-scripts` and SCORIA_DEV_SCRIPTS.
+dev-scripts = ["dep:mimas"]
 
 [dependencies]
 gpui-ce = { workspace = true }

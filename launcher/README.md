@@ -163,9 +163,9 @@ The opening, then Play ([clip](docs/opening.webm)):
   `config/`, `screenshots/`, `options.txt` and the launcher's `servers.json`/`settings.json`.
   A world or pack written by the game or a development build appears in about 350 ms; toasts
   stack up to three.
-- **Scripts (opt-in)**: `cargo build -p scoria-ui --features scripts` adds Mimas hooks
-  (`on_start`, `on_game_start`, `on_game_exit`, `on_download_done`) and host functions
-  `toast`, `log`, `play`, `download`, `screen`; see [docs/mimas-scripts.md](../docs/mimas-scripts.md).
+- **Developer scripts**: `--features dev-scripts` plus `SCORIA_DEV_SCRIPTS` adds a Mimas harness
+  for download/state/screen fixtures; a player build never loads it. See
+  [docs/mimas-scripts.md](../docs/mimas-scripts.md).
 - **Skin and cape**: each offline name's **Skin…** in Settings > Account shows the front of its
   skin and cape, takes a skin PNG (64×64, or the older 64×32) and a cape PNG (64×32), and picks
   classic or slim arms. The launcher keeps copies in its `skins/` folder and gives the game

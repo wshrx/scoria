@@ -1,7 +1,7 @@
 //! The launcher's state and the actions every screen shares: prepare, play, install, settings.
 //! Screens and their drawing live in `screens`, the synthetic QA states in this file.
 mod screens;
-#[cfg(feature = "scripts")]
+#[cfg(feature = "dev-scripts")]
 mod script;
 mod watch;
 
@@ -282,7 +282,7 @@ pub(crate) struct Shell {
     toasts: Vec<Toast>,
     toast_id: u64,
     /// A script action must not start the same hook again.
-    #[cfg(feature = "scripts")]
+    #[cfg(feature = "dev-scripts")]
     script_running: bool,
 }
 
@@ -326,7 +326,7 @@ impl Shell {
             server_ip: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
             toasts: Vec::new(),
             toast_id: 0,
-            #[cfg(feature = "scripts")]
+            #[cfg(feature = "dev-scripts")]
             script_running: false,
         };
         let qa_state = std::env::var("SCORIA_UI_STATE").ok();
@@ -581,13 +581,16 @@ impl Shell {
 
     /// Run one Mimas hook, then apply what the script asked for. The guard stops a script's
     /// `play()` from running `on_game_start` again.
-    #[cfg(feature = "scripts")]
+    #[cfg(feature = "dev-scripts")]
     fn run_scripts(&mut self, hook: &str, cx: &mut Context<Self>) {
         if self.script_running {
             return;
         }
         self.script_running = true;
-        let dir = scoria_core::backend::data_dir().join("scripts");
+        let Some(dir) = std::env::var_os("SCORIA_DEV_SCRIPTS").map(std::path::PathBuf::from) else {
+            self.script_running = false;
+            return;
+        };
         let result = script::run(hook, &dir);
         match result {
             Ok(actions) => {
@@ -608,6 +611,25 @@ impl Shell {
                             };
                             self.go(screen, cx);
                         }
+                        script::Action::State(name) => {
+                            self.apply_qa_state(&name);
+                            cx.notify();
+                        }
+                        script::Action::Progress(percent, line) => {
+                            self.apply_qa_state("home-prepared");
+                            self.preparing = true;
+                            self.prepare_percent = Some((percent / 100.0).clamp(0.0, 1.0) as f32);
+                            self.prepare_status = Some(line);
+                            cx.notify();
+                        }
+                        script::Action::Cancel => {
+                            scoria_core::api::cancel_prepare();
+                            self.preparing = false;
+                            self.prepare_percent = None;
+                            self.prepare_status = None;
+                            cx.notify();
+                        }
+                        script::Action::Stop => self.stop_game(cx),
                     }
                 }
             }
@@ -616,7 +638,7 @@ impl Shell {
         self.script_running = false;
     }
 
-    #[cfg(not(feature = "scripts"))]
+    #[cfg(not(feature = "dev-scripts"))]
     fn run_scripts(&mut self, _hook: &str, _cx: &mut Context<Self>) {}
 
     fn go(&mut self, screen: Screen, cx: &mut Context<Self>) {

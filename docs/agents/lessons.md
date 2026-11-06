@@ -102,8 +102,9 @@ is missing or unused. Reusable layout belongs in `scoria-ui-kit`, one file per s
 **D7 — A young VM is a feature, not a dependency.** Mimas is 0.4 and brings a compiler, a VM and
 a GC; putting it in the default launcher would grow every release for a feature most players never
 use.
-Rule: keep it behind `--features scripts`, with a one-level hook guard and a host API that only
-queues window actions; never let a script touch the file system or the engine directly.
+Rule: keep it behind `--features dev-scripts` and an explicit `SCORIA_DEV_SCRIPTS` folder, with a
+one-level hook guard and a host API that only queues window actions; a player build must never load
+scripts from its data folder.
 
 ## Process
 

@@ -49,7 +49,6 @@ pub fn watched_paths(home: &Path, data: &Path) -> Vec<PathBuf> {
     for file in ["servers.json", "settings.json"] {
         paths.push(data.join(file));
     }
-    paths.push(data.join("scripts"));
     paths
 }
 
@@ -70,6 +69,5 @@ mod tests {
         assert!(paths.contains(&PathBuf::from("/game/shaderpacks")));
         assert!(paths.contains(&PathBuf::from("/game/options.txt")));
         assert!(paths.contains(&PathBuf::from("/data/servers.json")));
-        assert!(paths.contains(&PathBuf::from("/data/scripts")));
     }
 }
