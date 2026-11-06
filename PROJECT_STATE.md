@@ -17,7 +17,7 @@ account, no telemetry, no online-mode servers, no Minecraft assets.
   follows it. GitHub carries a filtered snapshot of every branch, built with
   `tools/export_public.sh` and pushed by `tools/publish_public.sh` (or the same tree on a named
   branch); histories are snapshot commits, not the internal history.
-- Public CI runs on `staging`; `main` follows it and release tags are cut there. Never push
+- Public CI runs on `dev`; `main` follows it and release tags are cut there. Never push
   `.opencode/`, `PROJECT_STATE.md`, `docs/agents/` or internal fixtures to the public repo.
 
 ## Current release
@@ -31,9 +31,8 @@ account, no telemetry, no online-mode servers, no Minecraft assets.
   bundles `scoria-game-linux-x86_64.tar.zst` / `scoria-game-windows-x64.zip` and their signed
   checksums. The launcher finds this release and installs the bundle itself.
 - Tags and releases are immutable per built artifact: `v0.1.2-beta` carries the synced engine.
-- GitHub `dev`, `staging` and `main` were created from the public snapshot at `6932785b3`
-  (source commit `94a59eb0f`); `main` and `staging` are the same snapshot until public CI promotes
-  the next one.
+- GitHub `dev` and `main` carry the public snapshots; `main` follows a green `dev`. `staging` is
+  retired.
 - The release workflow splits the assets, signs each release with its own tag, and recreates the
   release so an old asset order cannot survive. The README (en/ru) tells players to download only
   `scoria-launcher-*`.

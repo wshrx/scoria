@@ -64,13 +64,13 @@ JSON
 
 cat > "$tmp/staging.json" <<'JSON'
 {
-  "name": "protect-staging",
+  "name": "protect-dev",
   "target": "branch",
   "enforcement": "active",
   "bypass_actors": [],
   "conditions": {
     "ref_name": {
-      "include": ["refs/heads/staging"],
+      "include": ["refs/heads/dev"],
       "exclude": []
     }
   },
@@ -117,8 +117,8 @@ apply() {
 }
 
 apply protect-main "$tmp/main.json"
-apply protect-staging "$tmp/staging.json"
+apply protect-dev "$tmp/staging.json"
 apply protect-release-tags "$tmp/tags.json"
 
 echo "Rulesets are active on $repo."
-echo "Required checks appear after the first staging run of public-ci.yml."
+echo "Required checks appear after the first dev run of public-ci.yml."

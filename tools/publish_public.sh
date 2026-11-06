@@ -2,11 +2,11 @@
 # Copies the allowlisted tree to the public GitHub repository's staging branch.
 #
 #   tools/export_public.sh      # build dist/public
-#   tools/publish_public.sh     # commit that tree on `staging` and push to the `github` remote
+#   tools/publish_public.sh     # commit that tree on `dev` and push to the `github` remote
 #
 # The local checkout stays the source of truth; GitHub receives filtered snapshots. Public CI runs
-# on staging; a human (or the release workflow) promotes a green staging to main and tags it. Every
-# local branch can be published the same way: export it, then commit the tree on that branch.
+# on dev; a human (or the release workflow) promotes a green dev to main and tags it. Every local
+# branch can be published the same way: export it, then commit the tree on that branch.
 set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root"
@@ -24,9 +24,9 @@ sshcmd=$(git config --get core.sshCommand || true)
 [ -n "$sshcmd" ] && export GIT_SSH_COMMAND="$sshcmd"
 
 if [ ! -d "$work/.git" ]; then
-  if ! git clone --branch staging "$remote" "$work" 2>/dev/null; then
+  if ! git clone --branch dev "$remote" "$work" 2>/dev/null; then
     git clone "$remote" "$work"
-    (cd "$work" && git checkout --orphan staging && git rm -rf . >/dev/null 2>&1 || true)
+    (cd "$work" && git checkout --orphan dev && git rm -rf . >/dev/null 2>&1 || true)
   fi
 fi
 
@@ -46,5 +46,5 @@ source=$(git -C "$root" rev-parse --short HEAD)
 git -c user.name="${SCORIA_PUBLIC_AUTHOR:-wshrx}" \
     -c user.email="${SCORIA_PUBLIC_EMAIL:-wshrx@users.noreply.github.com}" \
   commit -q -m "snapshot: Scoria $source"
-git push origin staging
-echo "Pushed staging from $source. CI runs there; merge to main only after it is green."
+git push origin dev
+echo "Pushed dev from $source. CI runs there; merge to main only after it is green."

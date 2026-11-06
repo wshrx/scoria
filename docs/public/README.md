@@ -92,7 +92,7 @@ packaging flow.
 ## Status
 
 Scoria is in **beta**. The latest tagged release is `v0.1.2-beta`; the 0.1.3 redesign is in the
-`dev`, `staging` and `main` branches and is the next release. Known gaps:
+`dev` and `main` branches and is the next release. Known gaps:
 
 - Windows runtime and installer smoke tests are not finished.
 - Online-mode servers are refused: Scoria has no Microsoft session by design.

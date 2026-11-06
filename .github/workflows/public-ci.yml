@@ -1,9 +1,9 @@
 name: ci
-# Runs on the public snapshot only: staging is pushed by tools/publish_public.sh, main is the
-# released line. The private Entire repository keeps the full history and the heavy harnesses.
+# Runs on the public snapshot only: dev is pushed by the snapshot exporter, main is the released
+# line. The local checkout keeps the full history and the heavy harnesses.
 on:
   push:
-    branches: [staging]
+    branches: [dev, main]
   pull_request:
     branches: [main]
 permissions:
