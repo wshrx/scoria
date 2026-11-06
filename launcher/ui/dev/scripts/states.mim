@@ -1,4 +1,0 @@
-// Switch the window through synthetic states without a game or network.
-fn on_start() {
-    state("home-playing");
-}
