@@ -23,6 +23,23 @@ enum Direction {
     Column,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Align {
+    Start,
+    Center,
+    End,
+    Stretch,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Justify {
+    Start,
+    Center,
+    End,
+    Between,
+    Around,
+}
+
 #[derive(Clone)]
 enum Node {
     Box {
@@ -33,6 +50,10 @@ enum Node {
         height: Option<f32>,
         color: Rgba,
         radius: f32,
+        align: Option<Align>,
+        justify: Option<Justify>,
+        grow: Option<f32>,
+        wrap: bool,
         children: Vec<Node>,
     },
     Text {
@@ -50,6 +71,10 @@ struct Frame {
     height: Option<f32>,
     color: Rgba,
     radius: f32,
+    align: Option<Align>,
+    justify: Option<Justify>,
+    grow: Option<f32>,
+    wrap: bool,
     children: Vec<Node>,
 }
 
@@ -85,6 +110,10 @@ fn begin(direction: Direction, gap: f64, padding: f64, w: f64, h: f64, fill: &st
         height: (h > 0.0).then_some(h as f32),
         color: color(fill),
         radius: radius as f32,
+        align: None,
+        justify: None,
+        grow: None,
+        wrap: false,
         children: Vec::new(),
     });
 }
@@ -103,6 +132,10 @@ fn end() {
         height: frame.height,
         color: frame.color,
         radius: frame.radius,
+        align: frame.align,
+        justify: frame.justify,
+        grow: frame.grow,
+        wrap: frame.wrap,
         children: frame.children,
     };
     match builder.stack.last_mut() {
@@ -130,6 +163,53 @@ fn column(gap: f64, padding: f64, w: f64, h: f64, fill: &str, radius: f64) {
 #[mimas]
 fn end_box() {
     end();
+}
+
+#[mimas]
+fn align(value: &str) {
+    let mut guard = BUILDER.lock().expect("builder");
+    let builder = guard.get_or_insert_with(Builder::default);
+    if let Some(frame) = builder.stack.last_mut() {
+        frame.align = Some(match value {
+            "center" => Align::Center,
+            "end" => Align::End,
+            "stretch" => Align::Stretch,
+            _ => Align::Start,
+        });
+    }
+}
+
+#[mimas]
+fn justify(value: &str) {
+    let mut guard = BUILDER.lock().expect("builder");
+    let builder = guard.get_or_insert_with(Builder::default);
+    if let Some(frame) = builder.stack.last_mut() {
+        frame.justify = Some(match value {
+            "center" => Justify::Center,
+            "end" => Justify::End,
+            "between" => Justify::Between,
+            "around" => Justify::Around,
+            _ => Justify::Start,
+        });
+    }
+}
+
+#[mimas]
+fn grow(value: f64) {
+    let mut guard = BUILDER.lock().expect("builder");
+    let builder = guard.get_or_insert_with(Builder::default);
+    if let Some(frame) = builder.stack.last_mut() {
+        frame.grow = Some(value as f32);
+    }
+}
+
+#[mimas]
+fn wrap() {
+    let mut guard = BUILDER.lock().expect("builder");
+    let builder = guard.get_or_insert_with(Builder::default);
+    if let Some(frame) = builder.stack.last_mut() {
+        frame.wrap = true;
+    }
 }
 
 #[mimas]
@@ -167,6 +247,10 @@ fn render_node(node: Node, theme: Theme) -> gpui::AnyElement {
             height,
             color,
             radius,
+            align,
+            justify,
+            grow,
+            wrap,
             children,
         } => {
             let mut element = div()
@@ -180,12 +264,35 @@ fn render_node(node: Node, theme: Theme) -> gpui::AnyElement {
                 })
                 .when(matches!(direction, Direction::Column), |element| {
                     element.flex_col()
-                });
+                })
+                .when(align == Some(Align::Center), |element| {
+                    element.items_center()
+                })
+                .when(align == Some(Align::End), |element| element.items_end())
+                .when(align == Some(Align::Stretch), |element| {
+                    element.items_stretch()
+                })
+                .when(justify == Some(Justify::Center), |element| {
+                    element.justify_center()
+                })
+                .when(justify == Some(Justify::End), |element| {
+                    element.justify_end()
+                })
+                .when(justify == Some(Justify::Between), |element| {
+                    element.justify_between()
+                })
+                .when(justify == Some(Justify::Around), |element| {
+                    element.justify_around()
+                })
+                .when(wrap, |element| element.flex_wrap());
             if let Some(width) = width {
                 element = element.w(px(width));
             }
             if let Some(height) = height {
                 element = element.h(px(height));
+            }
+            if let Some(grow) = grow {
+                element = element.flex_grow(grow);
             }
             element
                 .children(children.into_iter().map(|child| render_node(child, theme)))

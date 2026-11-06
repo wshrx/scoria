@@ -3,7 +3,10 @@ fn draw() {
     clear();
     column(0.0, 0.0, 1280.0, 720.0, "#0B0B0D", 0.0);
         row(40.0, 64.0, 1152.0, 0.0, "#00000000", 0.0);
+            align("stretch");
+            justify("between");
             column(24.0, 0.0, 640.0, 0.0, "#00000000", 0.0);
+                grow(1.0);
                 text("MIMAS · FLEX LAYOUT", 10.0, "#9C948C");
                 text("Scoria", 56.0, "#F4F0EA");
                 text("Rows, columns and spacing come from a script.", 15.0, "#9C948C");
@@ -22,6 +25,7 @@ fn draw() {
             end_box();
             column(20.0, 24.0, 472.0, 560.0, "#1A1A1D", 20.0);
                 column(10.0, 20.0, 424.0, 200.0, "#2A1710", 14.0);
+                    justify("center");
                     text("POSITIONING", 10.0, "#FF6A3D");
                     text("The script places the panel;", 28.0, "#F4F0EA");
                     text("Rust paints it.", 28.0, "#F4F0EA");
