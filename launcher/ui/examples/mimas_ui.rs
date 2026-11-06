@@ -1,9 +1,9 @@
-//! Experimental Mimas → GPUI layout preview.
+//! Experimental Mimas → GPUI UI tree.
 //!
-//! The script owns positions and sizes; Rust only maps the queued nodes to absolute GPUI
-//! elements. Run with:
+//! The script builds rows, columns, text and spacing; Rust maps the tree to GPUI flex
+//! elements. The file is watched, so editing the script repaints the window.
+//!
 //!   cargo run -p scoria-ui --features dev-scripts --example mimas-ui
-//! and point SCORIA_MIMAS_UI at another scene.
 use std::{
     sync::{Arc, Mutex},
     time::SystemTime,
@@ -17,29 +17,55 @@ use gpui_ce_platform::application;
 use mimas::mimas;
 use scoria_ui_kit::Theme;
 
+#[derive(Clone, Copy)]
+enum Direction {
+    Row,
+    Column,
+}
+
 #[derive(Clone)]
 enum Node {
-    Rect {
-        x: f32,
-        y: f32,
-        w: f32,
-        h: f32,
+    Box {
+        direction: Direction,
+        gap: f32,
+        padding: f32,
+        width: Option<f32>,
+        height: Option<f32>,
         color: Rgba,
         radius: f32,
+        children: Vec<Node>,
     },
     Text {
-        x: f32,
-        y: f32,
+        content: String,
         size: f32,
         color: Rgba,
-        content: String,
     },
 }
 
-static SCENE: Mutex<Vec<Node>> = Mutex::new(Vec::new());
+struct Frame {
+    direction: Direction,
+    gap: f32,
+    padding: f32,
+    width: Option<f32>,
+    height: Option<f32>,
+    color: Rgba,
+    radius: f32,
+    children: Vec<Node>,
+}
+
+#[derive(Default)]
+struct Builder {
+    stack: Vec<Frame>,
+    root: Vec<Node>,
+}
+
+static BUILDER: Mutex<Option<Builder>> = Mutex::new(None);
 
 fn color(value: &str) -> Rgba {
     let hex = value.trim().trim_start_matches('#');
+    if hex.is_empty() {
+        return rgba(0x00000000);
+    }
     let parsed = u32::from_str_radix(hex, 16).unwrap_or(0xFFFFFF);
     if hex.len() == 8 {
         rgba(parsed)
@@ -48,38 +74,139 @@ fn color(value: &str) -> Rgba {
     }
 }
 
+fn begin(direction: Direction, gap: f64, padding: f64, w: f64, h: f64, fill: &str, radius: f64) {
+    let mut guard = BUILDER.lock().expect("builder");
+    let builder = guard.get_or_insert_with(Builder::default);
+    builder.stack.push(Frame {
+        direction,
+        gap: gap as f32,
+        padding: padding as f32,
+        width: (w > 0.0).then_some(w as f32),
+        height: (h > 0.0).then_some(h as f32),
+        color: color(fill),
+        radius: radius as f32,
+        children: Vec::new(),
+    });
+}
+
+fn end() {
+    let mut guard = BUILDER.lock().expect("builder");
+    let builder = guard.get_or_insert_with(Builder::default);
+    let Some(frame) = builder.stack.pop() else {
+        return;
+    };
+    let node = Node::Box {
+        direction: frame.direction,
+        gap: frame.gap,
+        padding: frame.padding,
+        width: frame.width,
+        height: frame.height,
+        color: frame.color,
+        radius: frame.radius,
+        children: frame.children,
+    };
+    match builder.stack.last_mut() {
+        Some(parent) => parent.children.push(node),
+        None => builder.root.push(node),
+    }
+}
+
 #[mimas]
 fn clear() {
-    if let Ok(mut scene) = SCENE.lock() {
-        scene.clear();
-    }
+    let mut guard = BUILDER.lock().expect("builder");
+    *guard = Some(Builder::default());
 }
 
 #[mimas]
-fn rect(x: f64, y: f64, w: f64, h: f64, fill: &str, radius: f64) {
-    if let Ok(mut scene) = SCENE.lock() {
-        scene.push(Node::Rect {
-            x: x as f32,
-            y: y as f32,
-            w: w as f32,
-            h: h as f32,
-            color: color(fill),
-            radius: radius as f32,
-        });
-    }
+fn row(gap: f64, padding: f64, w: f64, h: f64, fill: &str, radius: f64) {
+    begin(Direction::Row, gap, padding, w, h, fill, radius);
 }
 
 #[mimas]
-fn text(x: f64, y: f64, size: f64, fill: &str, content: &str) {
-    if let Ok(mut scene) = SCENE.lock() {
-        scene.push(Node::Text {
-            x: x as f32,
-            y: y as f32,
-            size: size as f32,
-            color: color(fill),
-            content: content.to_string(),
-        });
+fn column(gap: f64, padding: f64, w: f64, h: f64, fill: &str, radius: f64) {
+    begin(Direction::Column, gap, padding, w, h, fill, radius);
+}
+
+#[mimas]
+fn end_box() {
+    end();
+}
+
+#[mimas]
+fn text(content: &str, size: f64, fill: &str) {
+    let mut guard = BUILDER.lock().expect("builder");
+    let builder = guard.get_or_insert_with(Builder::default);
+    let node = Node::Text {
+        content: content.to_string(),
+        size: size as f32,
+        color: color(fill),
+    };
+    match builder.stack.last_mut() {
+        Some(parent) => parent.children.push(node),
+        None => builder.root.push(node),
     }
+}
+
+fn render_node(node: Node, theme: Theme) -> gpui::AnyElement {
+    match node {
+        Node::Text {
+            content,
+            size,
+            color,
+        } => div()
+            .text_size(px(size))
+            .font_family(theme.type_scale.sans)
+            .text_color(color)
+            .child(content)
+            .into_any_element(),
+        Node::Box {
+            direction,
+            gap,
+            padding,
+            width,
+            height,
+            color,
+            radius,
+            children,
+        } => {
+            let mut element = div()
+                .flex()
+                .gap(px(gap))
+                .p(px(padding))
+                .rounded(px(radius))
+                .bg(color)
+                .when(matches!(direction, Direction::Row), |element| {
+                    element.flex_row()
+                })
+                .when(matches!(direction, Direction::Column), |element| {
+                    element.flex_col()
+                });
+            if let Some(width) = width {
+                element = element.w(px(width));
+            }
+            if let Some(height) = height {
+                element = element.h(px(height));
+            }
+            element
+                .children(children.into_iter().map(|child| render_node(child, theme)))
+                .into_any_element()
+        }
+    }
+}
+
+fn load_scene(source: &str) -> Result<Vec<Node>, String> {
+    {
+        let mut guard = BUILDER.lock().map_err(|e| e.to_string())?;
+        *guard = Some(Builder::default());
+    }
+    let mut vm = mimas::compile_source(source).map_err(|error| format!("{error:?}"))?;
+    vm.run().map_err(|error| format!("{error:?}"))?;
+    vm.call::<()>("draw", ())
+        .map_err(|error| format!("draw: {error:?}"))?;
+    let mut guard = BUILDER.lock().map_err(|e| e.to_string())?;
+    Ok(std::mem::take(
+        &mut guard.get_or_insert_with(Builder::default).root,
+    ))
 }
 
 struct Preview {
@@ -88,14 +215,6 @@ struct Preview {
     script: std::path::PathBuf,
     modified: Option<SystemTime>,
     error: Option<String>,
-}
-
-fn load_scene(source: &str) -> Result<Vec<Node>, String> {
-    let mut vm = mimas::compile_source(source).map_err(|error| format!("{error:?}"))?;
-    vm.run().map_err(|error| format!("{error:?}"))?;
-    vm.call::<()>("draw", ())
-        .map_err(|error| format!("draw: {error:?}"))?;
-    Ok(SCENE.lock().map_err(|e| e.to_string())?.clone())
 }
 
 impl Preview {
@@ -154,41 +273,7 @@ impl Render for Preview {
             .size_full()
             .overflow_hidden()
             .bg(self.theme.colors.background)
-            .children(nodes.into_iter().map(|node| {
-                match node {
-                    Node::Rect {
-                        x,
-                        y,
-                        w,
-                        h,
-                        color,
-                        radius,
-                    } => div()
-                        .absolute()
-                        .left(px(x))
-                        .top(px(y))
-                        .w(px(w))
-                        .h(px(h))
-                        .rounded(px(radius))
-                        .bg(color)
-                        .into_any_element(),
-                    Node::Text {
-                        x,
-                        y,
-                        size,
-                        color,
-                        content,
-                    } => div()
-                        .absolute()
-                        .left(px(x))
-                        .top(px(y))
-                        .text_size(px(size))
-                        .font_family(self.theme.type_scale.sans)
-                        .text_color(color)
-                        .child(content)
-                        .into_any_element(),
-                }
-            }))
+            .children(nodes.into_iter().map(|node| render_node(node, self.theme)))
             .children(self.error.as_ref().map(|error| {
                 div()
                     .absolute()
@@ -207,6 +292,7 @@ impl Render for Preview {
 }
 
 fn main() {
+    load_scene(include_str!("../dev/mimas-ui/scene.mim")).expect("the default scene");
     let script = std::env::var_os("SCORIA_MIMAS_UI")
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|| {
