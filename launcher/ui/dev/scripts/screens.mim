@@ -1,5 +1,0 @@
-// Walk the screens for a quick visual smoke test.
-fn on_start() {
-    screen("mods");
-    toast("Dev: Mods");
-}
