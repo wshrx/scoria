@@ -43,10 +43,8 @@ cp "$root/docs/public/README.ru.md" "$out/README.ru.md"
 cp "$root/docs/public/logo.svg" "$out/logo.svg"
 cp "$root/docs/public/BUILDING.md" "$out/BUILDING.md"
 mkdir -p "$out/screenshots"
-for shot in home mods settings; do
-  if [ -f "$root/docs/public/screenshots/$shot.webp" ]; then
-    cp "$root/docs/public/screenshots/$shot.webp" "$out/screenshots/"
-  fi
+for shot in "$root"/docs/public/screenshots/*.webp; do
+  [ -f "$shot" ] && cp "$shot" "$out/screenshots/"
 done
 
 mkdir -p "$out/.github/workflows"
