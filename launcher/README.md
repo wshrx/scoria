@@ -149,12 +149,26 @@ The opening, then Play ([clip](docs/opening.webm)):
   white on the Play button at 4.5:1 and the accent at 3:1 on every background (a test holds every
   accent in both looks to it). The picture is copied into the data folder.
   `horizon-launcher settings accent NAME`, `settings background PATH|default`.
+- **Offline accounts**: Settings → Offline account adds names (3–16 letters, digits or `_`, any
+  script), switches the selected name and removes one. `accounts.json` keeps the list; there is no
+  sign-in and no account service.
 - **Language**: English, French and Russian (the languages Horizon's own game menus have).
   The window follows the system's language unless the player picks one in Settings > Launcher
   (each named in itself); a string a table lacks shows in English. The tables are
-  `launcher/lang/<code>.json`, English text to its translation, Horizon's own; a test fails when
-  the code asks `tr("…")` for a string a table lacks, or a table keeps one the code dropped.
-  `horizon-launcher settings language system|en|fr|ru`.
+  `launcher/lang/<code>.json`, English text to its translation, Horizon's own; the window reads
+  the same tables through `scoria_core::i18n::tr_in`, so a label is translated once for both. A
+  test fails when the code asks `tr("…")` or `self.t("…")` for a string a table lacks, or a table
+  keeps one the code dropped.
+  `horizon-launcher settings language system|en|fr|ru`. The window uses the same tables.
+- **Keyboard**: `Ctrl+1`–`Ctrl+4` switch Home, Mods, Servers and Settings; `Ctrl+Enter` runs the
+  one game action (download, retry, play or stop); `Esc` closes the appearance and language menus.
+- **Live folders**: the window watches the selected instance's `saves/`, `mods/`, `shaderpacks/`,
+  `config/`, `screenshots/`, `options.txt` and the launcher's `servers.json`/`settings.json`.
+  A world or pack written by the game or a development build appears in about 350 ms; toasts
+  stack up to three.
+- **Developer scripts**: `--features dev-scripts` plus `SCORIA_DEV_SCRIPTS` adds a Mimas harness
+  for download/state/screen fixtures; a player build never loads it. See
+  [docs/mimas-scripts.md](../docs/mimas-scripts.md).
 - **Skin and cape**: each offline name's **Skin…** in Settings > Account shows the front of its
   skin and cape, takes a skin PNG (64×64, or the older 64×32) and a cape PNG (64×32), and picks
   classic or slim arms. The launcher keeps copies in its `skins/` folder and gives the game
