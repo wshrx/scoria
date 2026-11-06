@@ -83,15 +83,16 @@ impl Render for Shell {
                                 theme.spacing.page
                             }))
                             .pt(px(if compact {
-                                theme.spacing.lg
+                                theme.spacing.md
                             } else {
-                                theme.spacing.xl
+                                theme.spacing.lg
                             }))
-                            .pb(px(theme.spacing.xl))
+                            .pb(px(theme.spacing.lg))
                             .gap(px(theme.spacing.lg))
                             .overflow_y_scroll()
                             .child(body),
-                    ),
+                    )
+                    .children((!compact).then(|| self.footer())),
             );
         let edge = |id: &'static str, edge: ResizeEdge| {
             div()

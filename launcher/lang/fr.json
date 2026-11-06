@@ -77,7 +77,6 @@
   "Ctrl+1–4 screens · Ctrl+Enter start · Esc close": "Ctrl+1–4 — écrans · Ctrl+Entrée — lancer · Échap — fermer",
   "Offline": "Hors ligne",
   "In game": "En jeu",
-  "Search worlds and mods": "Rechercher mondes et mods",
   "Last played": "Dernière partie",
   "Preparing": "Préparation",
   "In game now": "En jeu",
@@ -97,5 +96,8 @@
   "One download, then the game starts offline.": "Un seul téléchargement, puis le jeu démarre hors ligne.",
   "Worlds, mods and settings stay in this instance.": "Les mondes, mods et réglages restent dans ce profil.",
   "Error": "Erreur",
-  "The game did not start": "Le jeu n'a pas démarré"
+  "The game did not start": "Le jeu n'a pas démarré",
+  "Screens": "Écrans",
+  "Run": "Lancer",
+  "Close": "Fermer"
 }

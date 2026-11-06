@@ -77,7 +77,6 @@
   "Ctrl+1–4 screens · Ctrl+Enter start · Esc close": "Ctrl+1–4 — экраны · Ctrl+Enter — запуск · Esc — закрыть",
   "Offline": "Офлайн",
   "In game": "В игре",
-  "Search worlds and mods": "Поиск миров и модов",
   "Last played": "Последний запуск",
   "Preparing": "Подготовка",
   "In game now": "Сейчас в игре",
@@ -97,5 +96,8 @@
   "One download, then the game starts offline.": "Одна загрузка, дальше игра запускается офлайн.",
   "Worlds, mods and settings stay in this instance.": "Миры, моды и настройки остаются в этом профиле.",
   "Error": "Ошибка",
-  "The game did not start": "Игра не запустилась"
+  "The game did not start": "Игра не запустилась",
+  "Screens": "Экраны",
+  "Run": "Запуск",
+  "Close": "Закрыть"
 }

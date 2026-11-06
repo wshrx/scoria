@@ -157,9 +157,8 @@ The opening, then Play ([clip](docs/opening.webm)):
   test fails when the code asks `tr("…")` or `self.t("…")` for a string a table lacks, or a table
   keeps one the code dropped.
   `horizon-launcher settings language system|en|fr|ru`. The window uses the same tables.
-- **Keyboard**: `Ctrl+1`–`Ctrl+4` switch Home, Mods, Servers and Settings; `Ctrl+K` opens the
-  mod search; `Ctrl+Enter` runs the one game action (download, retry, play or stop); `Esc` closes
-  the appearance and language menus.
+- **Keyboard**: `Ctrl+1`–`Ctrl+4` switch Home, Mods, Servers and Settings; `Ctrl+Enter` runs the
+  one game action (download, retry, play or stop); `Esc` closes the appearance and language menus.
 - **Live folders**: the window watches the selected instance's `saves/`, `mods/`, `shaderpacks/`,
   `config/`, `screenshots/`, `options.txt` and the launcher's `servers.json`/`settings.json`.
   A world or pack written by the game or a development build appears in about 350 ms; toasts

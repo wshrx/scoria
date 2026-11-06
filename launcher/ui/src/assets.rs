@@ -27,3 +27,4 @@ pub(crate) const ICON_STOP: &[u8] = include_bytes!("../assets/icons/stop.svg");
 pub(crate) const ICON_REFRESH: &[u8] = include_bytes!("../assets/icons/refresh.svg");
 pub(crate) const ICON_CHEVRON: &[u8] = include_bytes!("../assets/icons/chevron.svg");
 pub(crate) const ICON_MAP_PIN: &[u8] = include_bytes!("../assets/icons/map-pin.svg");
+pub(crate) const ICON_TERMINAL: &[u8] = include_bytes!("../assets/icons/terminal.svg");

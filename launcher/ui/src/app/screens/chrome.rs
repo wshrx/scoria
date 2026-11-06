@@ -42,7 +42,7 @@ impl Shell {
                     .items_center()
                     .justify_center()
                     .w(px(34.0))
-                    .h(px(28.0))
+                    .h(px(32.0))
                     .rounded(px(theme.radii.md))
                     .cursor_pointer()
                     .hover(move |style| style.bg(hover))
@@ -50,7 +50,7 @@ impl Shell {
                     .child(
                         gpui::svg()
                             .data(icon)
-                            .size(px(12.0))
+                            .size(px(14.0))
                             .text_color(theme.colors.muted),
                     )
             };
@@ -94,63 +94,15 @@ impl Shell {
                         div()
                             .absolute()
                             .bottom(px(0.0))
-                            .left(px(14.0))
-                            .right(px(14.0))
+                            .left(px(22.0))
+                            .right(px(22.0))
+                            .bottom(px(1.0))
                             .h(px(2.0))
                             .rounded_full()
                             .bg(theme.colors.accent)
                     })),
             );
         }
-
-        let search = (!compact).then(|| {
-            div()
-                .flex()
-                .items_center()
-                .gap(px(8.0))
-                .w(px(220.0))
-                .h(px(32.0))
-                .px(px(10.0))
-                .rounded(px(theme.radii.md))
-                .border_1()
-                .border_color(theme.colors.border)
-                .bg(theme.colors.surface_secondary)
-                .text_color(theme.colors.muted)
-                .text_size(px(11.0))
-                .child(
-                    gpui::svg()
-                        .data(ICON_SEARCH)
-                        .size(px(14.0))
-                        .text_color(theme.colors.muted),
-                )
-                .child(
-                    text_input("topbar-query")
-                        .state(self.mods_query.downgrade())
-                        .flex_1()
-                        .min_w(px(0.0))
-                        .px(px(0.0))
-                        .py(px(0.0))
-                        .placeholder_color(theme.colors.muted)
-                        .text_color(theme.colors.foreground)
-                        .text_size(px(11.0))
-                        .whitespace_nowrap()
-                        .min_h_auto()
-                        .max_h_auto()
-                        .placeholder(self.t("Search worlds and mods"))
-                        .on_key_down(cx.listener(|this, event: &gpui::KeyDownEvent, _, cx| {
-                            if event.keystroke.key == "enter" {
-                                this.go(Screen::Mods, cx);
-                                this.search_mods(cx);
-                            }
-                        })),
-                )
-                .child(
-                    div()
-                        .font_family(theme.type_scale.mono)
-                        .text_size(px(10.0))
-                        .child("Ctrl K"),
-                )
-        });
 
         let settings = {
             let selected = self.screen == Screen::Settings;
@@ -229,7 +181,6 @@ impl Shell {
                             .flex()
                             .items_center()
                             .gap(px(8.0))
-                            .children(search)
                             .child(
                                 div()
                                     .flex()
@@ -251,7 +202,7 @@ impl Shell {
                                 div()
                                     .flex()
                                     .items_center()
-                                    .gap(px(2.0))
+                                    .gap(px(4.0))
                                     .child(control(
                                         "tb-min",
                                         ICON_WIN_MIN,
@@ -274,5 +225,60 @@ impl Shell {
                     ),
             )
             .child(div().h(px(1.0)).w_full().bg(theme.colors.separator))
+    }
+    /// The bottom strip from the design: keyboard hints on the left, build on the right.
+    pub(super) fn footer(&self) -> impl IntoElement {
+        let theme = self.theme;
+        div()
+            .flex()
+            .flex_col()
+            .child(div().h(px(1.0)).w_full().bg(theme.colors.separator))
+            .child(
+                div()
+                    .flex()
+                    .items_center()
+                    .gap(px(18.0))
+                    .h(px(40.0))
+                    .px(px(theme.spacing.page))
+                    .text_size(px(theme.type_scale.caption))
+                    .text_color(theme.colors.muted)
+                    .child(
+                        div()
+                            .flex()
+                            .items_center()
+                            .gap(px(7.0))
+                            .child(
+                                gpui::svg()
+                                    .data(ICON_TERMINAL)
+                                    .size(px(13.0))
+                                    .text_color(theme.colors.muted),
+                            )
+                            .child("Ctrl+1–4")
+                            .child(self.t("Screens")),
+                    )
+                    .child(
+                        div()
+                            .flex()
+                            .items_center()
+                            .gap(px(7.0))
+                            .child("Ctrl+Enter")
+                            .child(self.t("Run")),
+                    )
+                    .child(
+                        div()
+                            .flex()
+                            .items_center()
+                            .gap(px(7.0))
+                            .child("Esc")
+                            .child(self.t("Close")),
+                    )
+                    .child(div().flex_1())
+                    .child(
+                        div()
+                            .font_family(theme.type_scale.mono)
+                            .text_size(px(10.0))
+                            .child(format!("Scoria {}", env!("SCORIA_VERSION"))),
+                    ),
+            )
     }
 }

@@ -543,7 +543,7 @@ impl Shell {
         let hero = div()
             .flex()
             .flex_col()
-            .gap(px(if compact { 16.0 } else { 24.0 }))
+            .gap(px(if compact { 16.0 } else { 20.0 }))
             .w(px(if wide { 640.0 } else { 0.0 }))
             .when(!wide, |hero| hero.w_full())
             .child(
