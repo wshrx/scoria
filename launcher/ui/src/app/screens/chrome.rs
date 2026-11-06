@@ -73,15 +73,25 @@ impl Shell {
                     .items_center()
                     .justify_center()
                     .gap(px(8.0))
-                    .h(px(56.0))
+                    .h(px(36.0))
                     .px(px(if compact { 10.0 } else { 14.0 }))
+                    .rounded(px(theme.radii.md))
+                    .bg(if selected {
+                        theme.colors.surface_secondary
+                    } else {
+                        rgba(0x00000000)
+                    })
                     .cursor_pointer()
                     .text_color(if selected {
                         theme.colors.foreground
                     } else {
                         theme.colors.muted
                     })
-                    .hover(move |style| style.text_color(theme.colors.foreground))
+                    .hover(move |style| {
+                        style
+                            .bg(theme.colors.surface_secondary)
+                            .text_color(theme.colors.foreground)
+                    })
                     .on_click(on_click)
                     .child(
                         gpui::svg()
@@ -89,18 +99,7 @@ impl Shell {
                             .size(px(14.0))
                             .text_color(tint),
                     )
-                    .children((!compact).then(|| self.t(screen.label())))
-                    .children(selected.then(|| {
-                        div()
-                            .absolute()
-                            .bottom(px(0.0))
-                            .left(px(22.0))
-                            .right(px(22.0))
-                            .bottom(px(1.0))
-                            .h(px(2.0))
-                            .rounded_full()
-                            .bg(theme.colors.accent)
-                    })),
+                    .children((!compact).then(|| self.t(screen.label()))),
             );
         }
 

@@ -18,8 +18,9 @@ tag (`v0.1.0-beta` → `## [0.1.0-beta]`).
 - Redesign to **D · Signal**: a 56 px topbar with the three screens and status; no rail; a 40 px
   footer with the keyboard hints and build;
   a 640 px hero with one action, a status line and 64 px world rows; a 472×560 selected-world
-  poster. The topbar search was removed because Mods owns the real search; the system controls are
-  14 px masks in 34×32 slots. The light theme uses the **E · White** tokens (white shell,
+  poster. The topbar search was removed because Mods owns the real search; the selected tab is a
+  soft pill and the system controls are consistent 14 px masks in 34×32 slots. The light theme
+  uses the **E · White** tokens (white shell,
   `#F1F1F1` canvas, black accent, no coloured accent).
 - The window is split into `app.rs`, `app/screens/` and `assets.rs`; `scoria-ui-kit` owns page
   headers, empty/error states and the progress bar.
