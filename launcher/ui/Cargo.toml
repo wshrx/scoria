@@ -1,0 +1,21 @@
+[package]
+name = "scoria-ui"
+version = "0.1.2"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "scoria"
+path = "src/main.rs"
+
+[target.'cfg(windows)'.build-dependencies]
+# The icon and version resource in scoria-ui.exe (build.rs).
+winresource = "0.1"
+
+[dependencies]
+gpui-ce = { workspace = true }
+gpui_ce_platform = { workspace = true }
+gpui_ce_elements = "0.3.0"
+scoria-ui-kit = { path = "../ui-kit" }
+scoria-core = { path = "..", package = "horizon-launcher" }
+serde_json = "1"

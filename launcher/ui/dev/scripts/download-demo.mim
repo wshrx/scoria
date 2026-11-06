@@ -1,0 +1,11 @@
+// Developer harness: build with `--features dev-scripts` and point
+// SCORIA_DEV_SCRIPTS at this folder. Not part of a player build.
+
+fn on_start() {
+    progress(42.0, "Downloading Minecraft 26.3 from Mojang");
+    toast("Dev: download UI at 42%");
+}
+
+fn on_download_done() {
+    state("home-prepared");
+}
