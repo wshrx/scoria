@@ -1,5 +1,6 @@
 //! Appearance, language and the offline nickname.
 use super::super::*;
+use scoria_ui_kit::field;
 
 impl Shell {
     pub(super) fn settings(&self, cx: &mut Context<Self>) -> impl IntoElement {

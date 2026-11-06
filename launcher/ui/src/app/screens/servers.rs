@@ -1,5 +1,6 @@
 //! Saved servers: add, join and remove, with their empty and error states.
 use super::super::*;
+use scoria_ui_kit::field;
 
 impl Shell {
     pub(super) fn servers_screen(&self, cx: &mut Context<Self>) -> impl IntoElement {

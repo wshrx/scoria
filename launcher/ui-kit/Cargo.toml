@@ -6,3 +6,4 @@ publish = false
 
 [dependencies]
 gpui-ce = { workspace = true }
+gpui_ce_elements = "0.3.0"
