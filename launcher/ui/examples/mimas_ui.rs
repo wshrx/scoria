@@ -50,6 +50,16 @@ enum Mode {
 
 static UI: Mutex<Mode> = Mutex::new(Mode::Ready);
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Screen {
+    Home,
+    Mods,
+    Servers,
+    Settings,
+}
+
+static SCREEN: Mutex<Screen> = Mutex::new(Screen::Home);
+
 #[derive(Clone)]
 enum Node {
     Box {
@@ -76,6 +86,13 @@ enum Node {
         action: String,
         fill: Rgba,
         color: Rgba,
+        small: bool,
+    },
+    Link {
+        label: String,
+        action: String,
+        color: Rgba,
+        size: f32,
     },
 }
 
@@ -250,7 +267,42 @@ fn button(label: &str, action: &str, fill: &str) {
         action: action.to_string(),
         fill,
         color: if light { rgb(0x1A0A04) } else { rgb(0xF4F0EA) },
+        small: false,
     });
+}
+
+#[mimas]
+fn small_button(label: &str, action: &str, fill: &str) {
+    let fill = color(fill);
+    let light = fill.color.red > 0.6 && fill.color.green < 0.6;
+    push(Node::Button {
+        label: label.to_string(),
+        action: action.to_string(),
+        fill,
+        color: if light { rgb(0x1A0A04) } else { rgb(0xF4F0EA) },
+        small: true,
+    });
+}
+
+#[mimas]
+fn link(label: &str, action: &str, fill: &str, size: f64) {
+    push(Node::Link {
+        label: label.to_string(),
+        action: action.to_string(),
+        color: color(fill),
+        size: size as f32,
+    });
+}
+
+#[mimas]
+fn current_screen() -> String {
+    match *SCREEN.lock().expect("screen") {
+        Screen::Home => "home",
+        Screen::Mods => "mods",
+        Screen::Servers => "servers",
+        Screen::Settings => "settings",
+    }
+    .to_string()
 }
 
 #[mimas]
@@ -280,20 +332,38 @@ fn render_node(node: Node, theme: Theme, cx: &mut Context<Preview>) -> gpui::Any
             action,
             fill,
             color,
+            small,
         } => div()
-            .id(format!("mimas-{action}"))
+            .id(format!("mimas-{action}-{label}"))
             .flex()
             .items_center()
             .justify_center()
-            .w(px(192.0))
-            .h(px(52.0))
-            .px(px(20.0))
+            .w(px(if small { 112.0 } else { 192.0 }))
+            .h(px(if small { 36.0 } else { 52.0 }))
+            .px(px(if small { 12.0 } else { 20.0 }))
             .rounded(px(12.0))
             .bg(fill)
             .text_color(color)
-            .text_size(px(16.0))
+            .text_size(px(if small { 13.0 } else { 16.0 }))
             .cursor_pointer()
             .hover(move |style| style.opacity(0.9))
+            .on_click(cx.listener(move |this, _, _, cx| {
+                this.dispatch(action.clone());
+                cx.notify();
+            }))
+            .child(label)
+            .into_any_element(),
+        Node::Link {
+            label,
+            action,
+            color,
+            size,
+        } => div()
+            .id(format!("mimas-link-{action}-{label}"))
+            .text_size(px(size))
+            .text_color(color)
+            .cursor_pointer()
+            .hover(move |style| style.opacity(0.8))
             .on_click(cx.listener(move |this, _, _, cx| {
                 this.dispatch(action.clone());
                 cx.notify();
@@ -435,6 +505,16 @@ impl Preview {
     }
 
     fn dispatch(&mut self, action: String) {
+        if let Some(screen) = action.strip_prefix("screen:") {
+            *SCREEN.lock().expect("screen") = match screen {
+                "mods" => Screen::Mods,
+                "servers" => Screen::Servers,
+                "settings" => Screen::Settings,
+                _ => Screen::Home,
+            };
+            self.redraw();
+            return;
+        }
         let mode = match action.as_str() {
             "prepare" => Mode::Preparing,
             "play" => Mode::Playing,
@@ -504,6 +584,21 @@ impl Render for Preview {
 }
 
 fn main() {
+    if let Ok(screen) = std::env::var("SCORIA_MIMAS_SCREEN") {
+        *SCREEN.lock().expect("screen") = match screen.as_str() {
+            "mods" => Screen::Mods,
+            "servers" => Screen::Servers,
+            "settings" => Screen::Settings,
+            _ => Screen::Home,
+        };
+    }
+    if let Ok(mode) = std::env::var("SCORIA_MIMAS_MODE") {
+        *UI.lock().expect("mode") = match mode.as_str() {
+            "preparing" => Mode::Preparing,
+            "playing" => Mode::Playing,
+            _ => Mode::Ready,
+        };
+    }
     let script = std::env::var_os("SCORIA_MIMAS_UI")
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|| {

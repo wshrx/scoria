@@ -1,63 +1,182 @@
-// A Mimas preview of the launcher's D · Signal Home. Buttons change the preview mode;
-// `preparing()` and `playing()` are host state, and the whole tree is redrawn.
+// A Mimas prototype of the Scoria launcher: topbar, Home, Mods, Servers and Settings.
+// Buttons/links change the preview screen or the Home mode; every action redraws the tree.
 fn draw() {
     clear();
     column(0.0, 0.0, 1280.0, 720.0, "#0B0B0D", 0.0);
+
+        // Topbar
         row(24.0, 32.0, 1216.0, 56.0, "#0B0B0D", 0.0);
             align("center");
             text("Scoria", 14.0, "#F4F0EA");
             text("0.1.3", 10.0, "#9C948C");
+            column(0.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+                grow(1.0);
+            end_box();
             row(20.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
                 align("center");
-                text("Играть", 15.0, "#FF6A3D");
-                text("Моды", 15.0, "#9C948C");
-                text("Серверы", 15.0, "#9C948C");
+                link("Играть", "screen:home", "#FF6A3D", 15.0);
+                link("Моды", "screen:mods", "#9C948C", 15.0);
+                link("Серверы", "screen:servers", "#9C948C", 15.0);
+                link("Настройки", "screen:settings", "#9C948C", 15.0);
             end_box();
-            grow(1.0);
+            column(0.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+                grow(1.0);
+            end_box();
             text("Офлайн", 12.0, "#6FBF8B");
         end_box();
 
-        row(40.0, 64.0, 1152.0, 0.0, "#00000000", 0.0);
-            align("stretch");
-            justify("between");
-            column(24.0, 0.0, 640.0, 0.0, "#00000000", 0.0);
-                grow(1.0);
-                text("ПОСЛЕДНИЙ ЗАПУСК · 2 Ч НАЗАД", 10.0, "#9C948C");
-                text("Minecraft 26.3", 72.0, "#F4F0EA");
-                text("Ваши миры, моды и серверы.", 15.0, "#9C948C");
-                text("Без аккаунта Microsoft и телеметрии.", 15.0, "#9C948C");
-                if preparing() {
-                    button("Подготовка 42%", "ready", "#2A1710");
-                } else if playing() {
-                    button("Остановить", "ready", "#1A1A1D");
-                } else {
-                    button("Играть", "play", "#FF6A3D");
-                }
-                text("Готово к запуску · 26.3", 13.0, "#6FBF8B");
-                column(8.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
-                    text("Ваши миры", 20.0, "#F4F0EA");
-                    row(16.0, 12.0, 640.0, 64.0, "#1A1A1D", 8.0);
-                        text("New World", 16.0, "#F4F0EA");
-                        grow(1.0);
+        // Home
+        if current_screen() == "home" {
+            row(40.0, 64.0, 1152.0, 0.0, "#00000000", 0.0);
+                align("stretch");
+                justify("between");
+                column(24.0, 0.0, 640.0, 0.0, "#00000000", 0.0);
+                    grow(1.0);
+                    text("ПОСЛЕДНИЙ ЗАПУСК · 2 Ч НАЗАД", 10.0, "#9C948C");
+                    text("Minecraft 26.3", 72.0, "#F4F0EA");
+                    text("Ваши миры, моды и серверы.", 15.0, "#9C948C");
+                    text("Без аккаунта Microsoft и телеметрии.", 15.0, "#9C948C");
+                    if preparing() {
+                        button("Подготовка 42%", "ready", "#2A1710");
+                    } else if playing() {
+                        button("Остановить", "ready", "#1A1A1D");
+                    } else {
+                        button("Играть", "play", "#FF6A3D");
+                    }
+                    text("Готово к запуску · 26.3", 13.0, "#6FBF8B");
+                    column(8.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+                        text("Ваши миры", 20.0, "#F4F0EA");
+                        row(16.0, 12.0, 640.0, 64.0, "#1A1A1D", 8.0);
+                            text("New World", 16.0, "#F4F0EA");
+                            grow(1.0);
+                            text("Выживание · 2 ч назад", 12.0, "#9C948C");
+                        end_box();
+                        row(16.0, 12.0, 640.0, 64.0, "#00000000", 8.0);
+                            text("Build", 16.0, "#F4F0EA");
+                            grow(1.0);
+                            text("Творческий · 3 дня назад", 12.0, "#9C948C");
+                        end_box();
+                    end_box();
+                end_box();
+                column(20.0, 24.0, 472.0, 560.0, "#1A1A1D", 20.0);
+                    text("ВЫБРАННЫЙ МИР", 10.0, "#9C948C");
+                    column(10.0, 20.0, 424.0, 200.0, "#2A1710", 14.0);
+                        justify("center");
+                        text("New World", 28.0, "#F4F0EA");
                         text("Выживание · 2 ч назад", 12.0, "#9C948C");
                     end_box();
-                    row(16.0, 12.0, 640.0, 64.0, "#00000000", 8.0);
-                        text("Build", 16.0, "#F4F0EA");
-                        grow(1.0);
-                        text("Творческий · 3 дня назад", 12.0, "#9C948C");
-                    end_box();
+                    text("Открыть мир", 14.0, "#FF6A3D");
                 end_box();
             end_box();
+        }
 
-            column(20.0, 24.0, 472.0, 560.0, "#1A1A1D", 20.0);
-                text("ВЫБРАННЫЙ МИР", 10.0, "#9C948C");
-                column(10.0, 20.0, 424.0, 200.0, "#2A1710", 14.0);
-                    justify("center");
-                    text("New World", 28.0, "#F4F0EA");
-                    text("Выживание · 2 ч назад", 12.0, "#9C948C");
+        // Mods
+        if current_screen() == "mods" {
+            column(20.0, 64.0, 1152.0, 0.0, "#141416", 20.0);
+                grow(1.0);
+                text("Моды", 40.0, "#F4F0EA");
+                text("Сначала реестр Horizon, затем Modrinth. У каждого результата видно, как он работает в Scoria.", 14.0, "#9C948C");
+                row(8.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+                    small_button("Horizon", "noop", "#1A1A1D");
+                    small_button("Modrinth", "noop", "#00000000");
                 end_box();
-                text("Открыть мир", 14.0, "#FF6A3D");
+                row(12.0, 0.0, 1024.0, 0.0, "#00000000", 0.0);
+                    text("Поиск модов", 13.0, "#9C948C");
+                    column(0.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+                        grow(1.0);
+                    end_box();
+                    small_button("Поиск", "noop", "#FF6A3D");
+                end_box();
+                row(12.0, 0.0, 1024.0, 72.0, "#1A1A1D", 8.0);
+                    column(4.0, 12.0, 0.0, 0.0, "#00000000", 0.0);
+                        text("Zoom", 16.0, "#F4F0EA");
+                        text("Hold a key to zoom in; the mouse wheel zooms further.", 12.0, "#9C948C");
+                    end_box();
+                    column(0.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+                        grow(1.0);
+                    end_box();
+                    small_button("Установить", "noop", "#1A1A1D");
+                end_box();
+                row(12.0, 0.0, 1024.0, 72.0, "#1A1A1D", 8.0);
+                    column(4.0, 12.0, 0.0, 0.0, "#00000000", 0.0);
+                        text("WorldEdit", 16.0, "#F4F0EA");
+                        text("Edit thousands of blocks at once with brushes and schematics.", 12.0, "#9C948C");
+                    end_box();
+                    column(0.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+                        grow(1.0);
+                    end_box();
+                    small_button("Установить", "noop", "#1A1A1D");
+                end_box();
             end_box();
+        }
+
+        // Servers
+        if current_screen() == "servers" {
+            column(20.0, 64.0, 1152.0, 0.0, "#141416", 20.0);
+                grow(1.0);
+                text("Серверы", 40.0, "#F4F0EA");
+                text("Сохранённые серверы этого профиля. LAN-миры видны в игре.", 14.0, "#9C948C");
+                row(16.0, 0.0, 1024.0, 44.0, "#00000000", 0.0);
+                    text("Имя", 13.0, "#9C948C");
+                    column(0.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+                        grow(1.0);
+                    end_box();
+                    text("адрес:порт", 13.0, "#9C948C");
+                    column(0.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+                        grow(1.0);
+                    end_box();
+                    small_button("Добавить", "noop", "#FF6A3D");
+                end_box();
+                row(16.0, 12.0, 1024.0, 64.0, "#1A1A1D", 8.0);
+                    column(2.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+                        text("SMP", 16.0, "#F4F0EA");
+                        text("play.example.net", 12.0, "#9C948C");
+                    end_box();
+                    column(0.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+                        grow(1.0);
+                    end_box();
+                    small_button("Войти", "noop", "#1A1A1D");
+                    small_button("Удалить", "noop", "#00000000");
+                end_box();
+                row(16.0, 12.0, 1024.0, 64.0, "#1A1A1D", 8.0);
+                    column(2.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+                        text("Creative", 16.0, "#F4F0EA");
+                        text("127.0.0.1:25565", 12.0, "#9C948C");
+                    end_box();
+                    column(0.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+                        grow(1.0);
+                    end_box();
+                    small_button("Войти", "noop", "#1A1A1D");
+                    small_button("Удалить", "noop", "#00000000");
+                end_box();
+            end_box();
+        }
+
+        // Settings
+        if current_screen() == "settings" {
+            column(20.0, 64.0, 880.0, 0.0, "#141416", 20.0);
+                grow(1.0);
+                text("Настройки", 40.0, "#F4F0EA");
+                text("Оформление и язык сохраняются в настройках лаунчера.", 14.0, "#9C948C");
+                text("Оформление", 16.0, "#F4F0EA");
+                row(8.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+                    small_button("Тёмная", "noop", "#1A1A1D");
+                    small_button("Светлая", "noop", "#00000000");
+                    small_button("Система", "noop", "#00000000");
+                end_box();
+                text("Офлайн-аккаунт", 16.0, "#F4F0EA");
+                text("Без аккаунта Microsoft: это имя видят серверы.", 12.0, "#9C948C");
+                row(8.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+                    small_button("Player", "noop", "#1A1A1D");
+                    small_button("Builder", "noop", "#00000000");
+                    small_button("Добавить", "noop", "#FF6A3D");
+                end_box();
+            end_box();
+        }
+
+        // Footer
+        row(0.0, 64.0, 1280.0, 40.0, "#00000000", 0.0);
+            text("Ctrl+1–4 · Экраны    Ctrl+Enter · Запуск    Esc · Закрыть", 11.0, "#6E7175");
         end_box();
     end_box();
 }
