@@ -1,5 +1,9 @@
 # Developer scripts (Mimas)
 
+> The `exp/mimas` branch goes further: its standalone example draws the whole four-screen
+> launcher shell from one `.mim` file and calls the real engine for actions. Syntax, host
+> functions and limits: [mimas-ui.md](mimas-ui.md).
+
 A developer-only harness for driving the launcher UI without a game, network or a full download.
 It is **not a player feature**: release builds do not enable it, and the binary never looks for
 scripts in a player's data folder.
