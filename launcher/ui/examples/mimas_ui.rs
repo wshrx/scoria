@@ -19,9 +19,13 @@ use std::{
 };
 
 use gpui::{
-    div, img, point, prelude::*, px, rgb, rgba, size, svg, Bounds, Context, FocusHandle, Image,
-    ImageFormat, ImageSource, IntoElement, KeyDownEvent, ObjectFit, Render, Rgba, Window,
-    WindowBounds, WindowDecorations, WindowOptions,
+    div, img, point, prelude::*, px, rgb, rgba, size, svg, Bounds, Context, Entity, FocusHandle,
+    Focusable, Image, ImageFormat, ImageSource, IntoElement, KeyDownEvent, MouseButton, ObjectFit,
+    Render, Rgba, Window, WindowBounds, WindowControlArea, WindowDecorations, WindowOptions,
+};
+use gpui_ce_elements::editable_text::{
+    actions::{default_bindings, DEFAULT_INPUT_CONTEXT},
+    text_input, EditableTextState, StringStorage, TextChanged,
 };
 use gpui_ce_platform::application;
 use mimas::mimas;
@@ -67,7 +71,7 @@ enum Mode {
 
 static UI: Mutex<Mode> = Mutex::new(Mode::Ready);
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Screen {
     Home,
     Mods,
@@ -80,12 +84,16 @@ static SCREEN: Mutex<Screen> = Mutex::new(Screen::Home);
 #[derive(Clone)]
 enum Node {
     Box {
+        id: String,
         direction: Direction,
         gap: f32,
         pad_x: f32,
         pad_y: f32,
         width: Option<f32>,
+        width_pct: Option<f32>,
         height: Option<f32>,
+        w_full: bool,
+        h_full: bool,
         color: Rgba,
         radius: f32,
         align: Option<Align>,
@@ -93,6 +101,8 @@ enum Node {
         grow: Option<f32>,
         wrap: bool,
         scroll: bool,
+        drag: bool,
+        border_bottom: Option<(f32, Rgba)>,
         children: Vec<Node>,
     },
     Text {
@@ -100,6 +110,7 @@ enum Node {
         size: f32,
         color: Rgba,
         width: Option<f32>,
+        fill: bool,
     },
     Button {
         label: String,
@@ -129,20 +140,27 @@ enum Node {
     Input {
         id: String,
         placeholder: String,
-        value: String,
-        focused: bool,
         width: f32,
+    },
+    WindowControl {
+        kind: String,
+        size: f32,
+        color: Rgba,
     },
     Spacer,
 }
 
 struct Frame {
+    id: String,
     direction: Direction,
     gap: f32,
     pad_x: f32,
     pad_y: f32,
     width: Option<f32>,
+    width_pct: Option<f32>,
     height: Option<f32>,
+    w_full: bool,
+    h_full: bool,
     color: Rgba,
     radius: f32,
     align: Option<Align>,
@@ -150,6 +168,8 @@ struct Frame {
     grow: Option<f32>,
     wrap: bool,
     scroll: bool,
+    drag: bool,
+    border_bottom: Option<(f32, Rgba)>,
     children: Vec<Node>,
 }
 
@@ -157,10 +177,11 @@ struct Frame {
 struct Builder {
     stack: Vec<Frame>,
     root: Vec<Node>,
+    next_id: usize,
 }
 
 static BUILDER: Mutex<Option<Builder>> = Mutex::new(None);
-static SCROLL_ID: AtomicU64 = AtomicU64::new(0);
+static THEME: Mutex<Option<Theme>> = Mutex::new(None);
 
 /* -------------------------------------------------------------------------------------------
 The launcher state the script reads
@@ -179,8 +200,6 @@ struct Backend {
 }
 
 static BACKEND: Mutex<Option<Backend>> = Mutex::new(None);
-static INPUTS: Mutex<Option<HashMap<String, String>>> = Mutex::new(None);
-static FOCUSED: Mutex<Option<String>> = Mutex::new(None);
 static REVISION: AtomicU64 = AtomicU64::new(0);
 
 fn demo() -> bool {
@@ -327,27 +346,72 @@ fn backend_results(results: Value) {
     bump_revision();
 }
 
-fn input_get(id: &str) -> String {
-    INPUTS
-        .lock()
-        .ok()
-        .and_then(|guard| guard.as_ref().and_then(|map| map.get(id).cloned()))
-        .unwrap_or_default()
+fn theme_from_settings() -> Theme {
+    match Settings::load().appearance {
+        Appearance::Light => Theme::light(),
+        _ => Theme::dark(),
+    }
 }
 
-fn input_take(id: &str) -> String {
-    INPUTS
-        .lock()
-        .ok()
-        .and_then(|mut guard| guard.as_mut().and_then(|map| map.remove(id)))
-        .unwrap_or_default()
+fn set_theme(theme: Theme) {
+    if let Ok(mut guard) = THEME.lock() {
+        *guard = Some(theme);
+    }
 }
 
-fn focused_input() -> Option<String> {
-    FOCUSED
+fn current_theme() -> Theme {
+    THEME
         .lock()
         .ok()
-        .and_then(|guard| guard.as_ref().cloned())
+        .and_then(|guard| *guard)
+        .unwrap_or_else(Theme::dark)
+}
+
+fn hex(color: Rgba) -> String {
+    let channel = |value: f32| (value.clamp(0.0, 1.0) * 255.0).round() as u8;
+    let rgb = color.color;
+    if color.alpha >= 0.999 {
+        format!(
+            "#{:02X}{:02X}{:02X}",
+            channel(rgb.red),
+            channel(rgb.green),
+            channel(rgb.blue)
+        )
+    } else {
+        format!(
+            "#{:02X}{:02X}{:02X}{:02X}",
+            channel(rgb.red),
+            channel(rgb.green),
+            channel(rgb.blue),
+            channel(color.alpha)
+        )
+    }
+}
+
+/// A semantic colour from the active launcher theme. The script never hardcodes a palette.
+#[mimas]
+fn theme_color(role: &str) -> String {
+    let colors = current_theme().colors;
+    let color = match role {
+        "bg" | "background" => colors.background,
+        "surface" => colors.surface,
+        "surface2" | "surface_secondary" => colors.surface_secondary,
+        "surface3" | "surface_tertiary" => colors.surface_tertiary,
+        "overlay" => colors.overlay,
+        "text" | "foreground" => colors.foreground,
+        "muted" => colors.muted,
+        "border" => colors.border,
+        "separator" => colors.separator,
+        "accent" => colors.accent,
+        "accent_fg" | "accent_foreground" => colors.accent_foreground,
+        "accent_soft" => colors.accent_soft,
+        "success" => colors.success,
+        "warning" => colors.warning,
+        "danger" => colors.danger,
+        "transparent" => return "#00000000".to_string(),
+        _ => colors.foreground,
+    };
+    hex(color)
 }
 
 /* -------------------------------------------------------------------------------------------
@@ -370,13 +434,19 @@ fn color(value: &str) -> Rgba {
 fn begin(direction: Direction, gap: f64, padding: f64, w: f64, h: f64, fill: &str, radius: f64) {
     let mut guard = BUILDER.lock().expect("builder");
     let builder = guard.get_or_insert_with(Builder::default);
+    let id = format!("mimas-{}", builder.next_id);
+    builder.next_id += 1;
     builder.stack.push(Frame {
+        id,
         direction,
         gap: gap as f32,
         pad_x: padding as f32,
         pad_y: padding as f32,
         width: (w > 0.0).then_some(w as f32),
+        width_pct: None,
         height: (h > 0.0).then_some(h as f32),
+        w_full: false,
+        h_full: false,
         color: color(fill),
         radius: radius as f32,
         align: Some(Align::Start),
@@ -384,6 +454,8 @@ fn begin(direction: Direction, gap: f64, padding: f64, w: f64, h: f64, fill: &st
         grow: None,
         wrap: false,
         scroll: false,
+        drag: false,
+        border_bottom: None,
         children: Vec::new(),
     });
 }
@@ -395,12 +467,16 @@ fn end() {
         return;
     };
     let node = Node::Box {
+        id: frame.id,
         direction: frame.direction,
         gap: frame.gap,
         pad_x: frame.pad_x,
         pad_y: frame.pad_y,
         width: frame.width,
+        width_pct: frame.width_pct,
         height: frame.height,
+        w_full: frame.w_full,
+        h_full: frame.h_full,
         color: frame.color,
         radius: frame.radius,
         align: frame.align,
@@ -408,6 +484,8 @@ fn end() {
         grow: frame.grow,
         wrap: frame.wrap,
         scroll: frame.scroll,
+        drag: frame.drag,
+        border_bottom: frame.border_bottom,
         children: frame.children,
     };
     match builder.stack.last_mut() {
@@ -438,6 +516,62 @@ fn row(gap: f64, padding: f64, w: f64, h: f64, fill: &str, radius: f64) {
 #[mimas]
 fn column(gap: f64, padding: f64, w: f64, h: f64, fill: &str, radius: f64) {
     begin(Direction::Column, gap, padding, w, h, fill, radius);
+}
+
+/// The window root: a column that fills the whole window.
+#[mimas]
+fn screen(fill: &str) {
+    begin(Direction::Column, 0.0, 0.0, 0.0, 0.0, fill, 0.0);
+    let mut guard = BUILDER.lock().expect("builder");
+    if let Some(frame) = guard.get_or_insert_with(Builder::default).stack.last_mut() {
+        frame.w_full = true;
+        frame.h_full = true;
+    }
+}
+
+/// Set the current box's width as a fraction of its parent (0.0–1.0).
+#[mimas]
+fn w_pct(value: f64) {
+    let mut guard = BUILDER.lock().expect("builder");
+    if let Some(frame) = guard.get_or_insert_with(Builder::default).stack.last_mut() {
+        frame.width_pct = Some(value as f32);
+    }
+}
+
+/// Make the current box fill its parent's width.
+#[mimas]
+fn fill_w() {
+    let mut guard = BUILDER.lock().expect("builder");
+    if let Some(frame) = guard.get_or_insert_with(Builder::default).stack.last_mut() {
+        frame.w_full = true;
+    }
+}
+
+/// Make the current box fill its parent's height.
+#[mimas]
+fn fill_h() {
+    let mut guard = BUILDER.lock().expect("builder");
+    if let Some(frame) = guard.get_or_insert_with(Builder::default).stack.last_mut() {
+        frame.h_full = true;
+    }
+}
+
+/// A bottom border on the current box.
+#[mimas]
+fn border_bottom(width: f64, fill: &str) {
+    let mut guard = BUILDER.lock().expect("builder");
+    if let Some(frame) = guard.get_or_insert_with(Builder::default).stack.last_mut() {
+        frame.border_bottom = Some((width as f32, color(fill)));
+    }
+}
+
+/// Let the current box drag the window.
+#[mimas]
+fn drag_window() {
+    let mut guard = BUILDER.lock().expect("builder");
+    if let Some(frame) = guard.get_or_insert_with(Builder::default).stack.last_mut() {
+        frame.drag = true;
+    }
 }
 
 /// A vertically scrollable column with a fixed height.
@@ -515,6 +649,7 @@ fn text(content: &str, size: f64, fill: &str) {
         size: size as f32,
         color: color(fill),
         width: None,
+        fill: false,
     });
 }
 
@@ -526,6 +661,19 @@ fn text_w(content: &str, size: f64, fill: &str, width: f64) {
         size: size as f32,
         color: color(fill),
         width: Some(width as f32),
+        fill: false,
+    });
+}
+
+/// Wrapping text that fills the parent's width.
+#[mimas]
+fn text_fill(content: &str, size: f64, fill: &str) {
+    push(Node::Text {
+        content: content.to_string(),
+        size: size as f32,
+        color: color(fill),
+        width: None,
+        fill: true,
     });
 }
 
@@ -539,14 +687,28 @@ fn button_w(label: &str, action: &str, fill: &str, width: f64) {
     button_with_width(label, action, fill, width);
 }
 
+fn readable_on(fill: Rgba) -> Rgba {
+    let channels = fill.color;
+    let luminance = 0.299 * channels.red + 0.587 * channels.green + 0.114 * channels.blue;
+    if luminance > 0.5 {
+        rgb(0x111214)
+    } else {
+        rgb(0xF4F0EA)
+    }
+}
+
 fn button_with_width(label: &str, action: &str, fill: &str, width: f64) {
     let fill = color(fill);
-    let light = fill.color.red > 0.6 && fill.color.green < 0.6;
+    let text_color = if fill.alpha < 0.01 {
+        current_theme().colors.foreground
+    } else {
+        readable_on(fill)
+    };
     push(Node::Button {
         label: label.to_string(),
         action: action.to_string(),
         fill,
-        color: if light { rgb(0x1A0A04) } else { rgb(0xF4F0EA) },
+        color: text_color,
         small: false,
         width: Some(width as f32),
     });
@@ -564,12 +726,16 @@ fn small_button_w(label: &str, action: &str, fill: &str, width: f64) {
 
 fn small_with_width(label: &str, action: &str, fill: &str, width: f64) {
     let fill = color(fill);
-    let light = fill.color.red > 0.6 && fill.color.green < 0.6;
+    let text_color = if fill.alpha < 0.01 {
+        current_theme().colors.foreground
+    } else {
+        readable_on(fill)
+    };
     push(Node::Button {
         label: label.to_string(),
         action: action.to_string(),
         fill,
-        color: if light { rgb(0x1A0A04) } else { rgb(0xF4F0EA) },
+        color: text_color,
         small: true,
         width: Some(width as f32),
     });
@@ -609,17 +775,34 @@ fn image(name: &str, w: f64, h: f64, radius: f64) {
     });
 }
 
-/// A real, editable text field. Click it, type; `Enter` submits the field's action.
+/// An image that fills its parent's width.
+#[mimas]
+fn image_fill(name: &str, h: f64, radius: f64) {
+    push(Node::Image {
+        name: name.to_string(),
+        width: 0.0,
+        height: h as f32,
+        radius: radius as f32,
+    });
+}
+
+/// A real, editable text field backed by `EditableTextState`.
 #[mimas]
 fn input(id: &str, placeholder: &str, width: f64) {
-    let value = input_get(id);
-    let focused = focused_input().as_deref() == Some(id);
     push(Node::Input {
         id: id.to_string(),
         placeholder: placeholder.to_string(),
-        value,
-        focused,
         width: width as f32,
+    });
+}
+
+/// A real window button: minimize, maximize or close.
+#[mimas]
+fn window_control(kind: &str, size: f64, fill: &str) {
+    push(Node::WindowControl {
+        kind: kind.to_string(),
+        size: size as f32,
+        color: color(fill),
     });
 }
 
@@ -722,10 +905,14 @@ fn last_error() -> String {
 #[mimas]
 fn appearance() -> String {
     let appearance = snapshot_text("appearance");
-    if appearance.is_empty() {
-        return "dark".to_string();
+    if !appearance.is_empty() {
+        return appearance;
     }
-    appearance
+    match Settings::load().appearance {
+        Appearance::Light => "light".to_string(),
+        Appearance::System => "system".to_string(),
+        Appearance::Dark => "dark".to_string(),
+    }
 }
 
 #[mimas]
@@ -1134,13 +1321,52 @@ fn image_bytes(name: &str) -> Option<(&'static [u8], ImageFormat)> {
     })
 }
 
-fn render_node(node: Node, theme: Theme, cx: &mut Context<Preview>) -> gpui::AnyElement {
+#[derive(Clone)]
+enum FocusItem {
+    Input(String),
+    Action { key: String, action: String },
+}
+
+impl FocusItem {
+    fn key(&self) -> String {
+        match self {
+            FocusItem::Input(id) => format!("input:{id}"),
+            FocusItem::Action { key, .. } => key.clone(),
+        }
+    }
+}
+
+fn collect_focus(nodes: &[Node], out: &mut Vec<FocusItem>) {
+    for node in nodes {
+        match node {
+            Node::Input { id, .. } => out.push(FocusItem::Input(id.clone())),
+            Node::Button { label, action, .. } | Node::Link { label, action, .. } => {
+                out.push(FocusItem::Action {
+                    key: format!("action:{action}:{label}"),
+                    action: action.clone(),
+                });
+                let _ = label;
+            }
+            Node::Box { children, .. } => collect_focus(children, out),
+            _ => {}
+        }
+    }
+}
+
+fn render_node(
+    node: Node,
+    theme: Theme,
+    inputs: &HashMap<String, Entity<EditableTextState>>,
+    focused: Option<&str>,
+    cx: &mut Context<Preview>,
+) -> gpui::AnyElement {
     match node {
         Node::Text {
             content,
             size,
             color,
             width,
+            fill,
         } => {
             let mut element = div()
                 .text_size(px(size))
@@ -1149,6 +1375,9 @@ fn render_node(node: Node, theme: Theme, cx: &mut Context<Preview>) -> gpui::Any
                 .child(content);
             if let Some(width) = width {
                 element = element.max_w(px(width));
+            }
+            if fill {
+                element = element.w_full().min_w(px(0.0)).whitespace_normal();
             }
             element.into_any_element()
         }
@@ -1161,6 +1390,8 @@ fn render_node(node: Node, theme: Theme, cx: &mut Context<Preview>) -> gpui::Any
             width,
         } => {
             let width = width.unwrap_or(if small { 112.0 } else { 192.0 });
+            let key = format!("action:{action}:{label}");
+            let ring = focused == Some(key.as_str());
             div()
                 .id(format!("mimas-{action}-{label}"))
                 .flex()
@@ -1171,14 +1402,20 @@ fn render_node(node: Node, theme: Theme, cx: &mut Context<Preview>) -> gpui::Any
                 .h(px(if small { 36.0 } else { 52.0 }))
                 .px(px(if small { 12.0 } else { 20.0 }))
                 .rounded(px(if small { 10.0 } else { 14.0 }))
+                .border_2()
+                .border_color(if ring {
+                    theme.colors.foreground
+                } else {
+                    rgba(0x00000000)
+                })
                 .bg(fill)
                 .text_color(color)
                 .text_size(px(if small { 13.0 } else { 16.0 }))
                 .cursor_pointer()
                 .hover(move |style| style.opacity(0.9))
                 .on_click(cx.listener(move |this, _, _, cx| {
-                    this.dispatch(action.clone());
-                    cx.notify();
+                    this.focused_key = Some(key.clone());
+                    this.dispatch(action.clone(), cx);
                 }))
                 .child(label)
                 .into_any_element()
@@ -1188,18 +1425,30 @@ fn render_node(node: Node, theme: Theme, cx: &mut Context<Preview>) -> gpui::Any
             action,
             color,
             size,
-        } => div()
-            .id(format!("mimas-link-{action}-{label}"))
-            .text_size(px(size))
-            .text_color(color)
-            .cursor_pointer()
-            .hover(move |style| style.opacity(0.8))
-            .on_click(cx.listener(move |this, _, _, cx| {
-                this.dispatch(action.clone());
-                cx.notify();
-            }))
-            .child(label)
-            .into_any_element(),
+        } => {
+            let key = format!("action:{action}:{label}");
+            let ring = focused == Some(key.as_str());
+            div()
+                .id(format!("mimas-link-{action}-{label}"))
+                .px(px(4.0))
+                .rounded(px(4.0))
+                .border_1()
+                .border_color(if ring {
+                    theme.colors.accent
+                } else {
+                    rgba(0x00000000)
+                })
+                .text_size(px(size))
+                .text_color(color)
+                .cursor_pointer()
+                .hover(move |style| style.opacity(0.8))
+                .on_click(cx.listener(move |this, _, _, cx| {
+                    this.focused_key = Some(key.clone());
+                    this.dispatch(action.clone(), cx);
+                }))
+                .child(label)
+                .into_any_element()
+        }
         Node::Icon { name, size, color } => icon_bytes(&name)
             .map(|bytes| {
                 svg()
@@ -1216,83 +1465,102 @@ fn render_node(node: Node, theme: Theme, cx: &mut Context<Preview>) -> gpui::Any
             radius,
         } => image_bytes(&name)
             .map(|(bytes, format)| {
-                img(ImageSource::Image(Arc::new(Image::from_bytes(
+                let image = img(ImageSource::Image(Arc::new(Image::from_bytes(
                     format,
                     bytes.to_vec(),
                 ))))
                 .flex_shrink_0()
-                .w(px(width))
+                .when(width > 0.0, |image| image.w(px(width)))
+                .when(width <= 0.0, |image| image.w_full())
                 .h(px(height))
                 .rounded(px(radius))
-                .object_fit(ObjectFit::Cover)
-                .into_any_element()
+                .object_fit(ObjectFit::Cover);
+                image.into_any_element()
             })
             .unwrap_or_else(|| div().into_any_element()),
         Node::Input {
             id,
             placeholder,
-            value,
-            focused,
             width,
         } => {
-            let empty = value.is_empty();
-            let shown = if empty {
-                placeholder.as_str()
-            } else {
-                value.as_str()
+            let key = format!("input:{id}");
+            let ring = focused == Some(key.as_str());
+            let Some(state) = inputs.get(&id).cloned() else {
+                return div().into_any_element();
             };
-            let id_for_click = id.clone();
-            div()
-                .id(format!("mimas-input-{id}"))
+            let click_id = id.clone();
+            let click_key = key.clone();
+            text_input(id)
+                .state(state.downgrade())
                 .h(px(40.0))
                 .w(px(width))
                 .px(px(12.0))
-                .flex()
-                .items_center()
-                .gap(px(6.0))
+                .py(px(10.0))
+                .whitespace_nowrap()
                 .rounded(px(12.0))
                 .border_1()
-                .border_color(if focused {
+                .border_color(if ring {
                     theme.colors.accent
                 } else {
                     theme.colors.border
                 })
                 .bg(theme.colors.surface_secondary)
                 .text_size(px(13.0))
-                .text_color(if empty {
-                    theme.colors.muted
-                } else {
-                    theme.colors.foreground
-                })
-                .cursor_pointer()
+                .text_color(theme.colors.foreground)
+                .placeholder(placeholder)
+                .placeholder_color(theme.colors.muted)
+                .caret_color(gpui::rgb_to_hsla(theme.colors.accent))
+                .selection_color(gpui::rgb_to_hsla(theme.colors.accent_soft))
                 .on_click(cx.listener(move |this, _, window, cx| {
-                    *FOCUSED.lock().expect("focus") = Some(id_for_click.clone());
-                    window.focus(&this.focus_handle, cx);
+                    this.focused_key = Some(click_key.clone());
+                    if let Some(entity) = this.inputs.get(&click_id).cloned() {
+                        window.focus(&entity.read(cx).focus_handle(cx), cx);
+                    }
                     this.redraw();
                     cx.notify();
                 }))
-                .children(if focused {
-                    Some(
-                        div()
-                            .w(px(1.5))
-                            .h(px(18.0))
-                            .bg(theme.colors.accent)
-                            .into_any_element(),
-                    )
-                } else {
-                    None
-                })
-                .child(shown.to_string())
+                .into_any_element()
+        }
+        Node::WindowControl { kind, size, color } => {
+            let control = kind.clone();
+            div()
+                .id(format!("mimas-window-{kind}"))
+                .flex()
+                .items_center()
+                .justify_center()
+                .w(px(size + 12.0))
+                .h(px(size + 12.0))
+                .rounded(px(6.0))
+                .cursor_pointer()
+                .hover(move |style| style.bg(rgba(0xFFFFFF10)))
+                .on_click(
+                    cx.listener(move |_this, _, window, _cx| match control.as_str() {
+                        "min" => window.minimize_window(),
+                        "max" => window.zoom_window(),
+                        _ => window.remove_window(),
+                    }),
+                )
+                .children(icon_bytes(&kind).map(|bytes| {
+                    svg()
+                        .data(bytes)
+                        .size(px(size))
+                        .text_color(color)
+                        .into_any_element()
+                }))
                 .into_any_element()
         }
         Node::Spacer => div().flex_grow(1.0).into_any_element(),
         Node::Box {
+            id,
             direction,
             gap,
             pad_x,
             pad_y,
             width,
+            width_pct,
             height,
+            w_full,
+            h_full,
             color,
             radius,
             align,
@@ -1300,13 +1568,12 @@ fn render_node(node: Node, theme: Theme, cx: &mut Context<Preview>) -> gpui::Any
             grow,
             wrap,
             scroll,
+            drag,
+            border_bottom,
             children,
         } => {
             let mut element = div()
-                .id(format!(
-                    "mimas-box-{}",
-                    SCROLL_ID.fetch_add(1, Ordering::Relaxed)
-                ))
+                .id(id)
                 .flex()
                 .gap(px(gap))
                 .px(px(pad_x))
@@ -1343,8 +1610,22 @@ fn render_node(node: Node, theme: Theme, cx: &mut Context<Preview>) -> gpui::Any
                     element.justify_around()
                 })
                 .when(wrap, |element| element.flex_wrap())
-                .when(scroll, |element| element.overflow_y_scroll());
-            if let Some(width) = width {
+                .when(scroll, |element| element.overflow_y_scroll())
+                .when(w_full, |element| element.w_full())
+                .when(h_full, |element| element.h_full())
+                .when(drag, |element| {
+                    element
+                        .window_control_area(WindowControlArea::Drag)
+                        .on_mouse_down(MouseButton::Left, |_, window, _| window.start_window_move())
+                });
+            if let Some((border_width, border_color)) = border_bottom {
+                element = element
+                    .border_b(px(border_width))
+                    .border_color(border_color);
+            }
+            if let Some(pct) = width_pct {
+                element = element.w(gpui::relative(pct));
+            } else if let Some(width) = width {
                 element = element.w(px(width));
             }
             if let Some(height) = height {
@@ -1357,7 +1638,7 @@ fn render_node(node: Node, theme: Theme, cx: &mut Context<Preview>) -> gpui::Any
                 .children(
                     children
                         .into_iter()
-                        .map(|child| render_node(child, theme, cx)),
+                        .map(|child| render_node(child, theme, inputs, focused, cx)),
                 )
                 .into_any_element()
         }
@@ -1393,9 +1674,86 @@ struct Preview {
     error: Option<String>,
     focus_handle: FocusHandle,
     revision: u64,
+    inputs: HashMap<String, Entity<EditableTextState>>,
+    _subscriptions: Vec<gpui::Subscription>,
+    focused_key: Option<String>,
+    focus_order: Vec<FocusItem>,
+    initial_focus: bool,
 }
 
 impl Preview {
+    fn new(
+        cx: &mut Context<Self>,
+        script: std::path::PathBuf,
+        nodes: Arc<Mutex<Vec<Node>>>,
+    ) -> Self {
+        let theme = theme_from_settings();
+        set_theme(theme);
+        let mut inputs = HashMap::new();
+        for id in ["mods-search", "server-name", "server-ip", "account-name"] {
+            inputs.insert(
+                id.to_string(),
+                cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
+            );
+        }
+        if let Ok(seeded) = std::env::var("SCORIA_MIMAS_INPUTS") {
+            for pair in seeded.split(';') {
+                if let Some((id, value)) = pair.split_once('=') {
+                    if let Some(entity) = inputs.get(id.trim()).cloned() {
+                        entity.update(cx, |state, cx| state.emplace(value, cx));
+                        if std::env::var_os("SCORIA_MIMAS_DEBUG_KEYS").is_some() {
+                            eprintln!("seeded {}={:?}", id.trim(), entity.read(cx).as_str());
+                        }
+                    }
+                }
+            }
+        }
+        let mut subscriptions = Vec::new();
+        for (id, entity) in inputs.clone() {
+            subscriptions.push(cx.subscribe(
+                &entity,
+                move |this, _entity, _event: &TextChanged, cx| {
+                    this.focused_key = Some(format!("input:{id}"));
+                    cx.notify();
+                },
+            ));
+        }
+        let focused_key = std::env::var("SCORIA_MIMAS_FOCUS")
+            .ok()
+            .map(|id| format!("input:{id}"));
+        let mut preview = Self {
+            theme,
+            nodes,
+            vm: None,
+            script,
+            modified: None,
+            error: None,
+            focus_handle: cx.focus_handle(),
+            revision: 0,
+            inputs,
+            _subscriptions: subscriptions,
+            focused_key,
+            focus_order: Vec::new(),
+            initial_focus: false,
+        };
+        preview.reload();
+        preview
+    }
+
+    fn set_nodes(&mut self, nodes: Vec<Node>) {
+        if let Ok(mut scene) = self.nodes.lock() {
+            *scene = nodes.clone();
+        }
+        let mut order = Vec::new();
+        collect_focus(&nodes, &mut order);
+        self.focus_order = order;
+        if let Some(key) = self.focused_key.clone() {
+            if !self.focus_order.iter().any(|item| item.key() == key) {
+                self.focused_key = None;
+            }
+        }
+    }
+
     fn redraw(&mut self) {
         let Some(vm) = self.vm.as_mut() else {
             return;
@@ -1410,9 +1768,7 @@ impl Preview {
                         .get_or_insert_with(Builder::default)
                         .root,
                 );
-                if let Ok(mut scene) = self.nodes.lock() {
-                    *scene = nodes;
-                }
+                self.set_nodes(nodes);
                 self.error = None;
             }
             Err(error) => {
@@ -1428,9 +1784,7 @@ impl Preview {
             Ok(source) => match start_scene(&source, &self.script.display().to_string()) {
                 Ok((vm, nodes)) => {
                     self.vm = Some(vm);
-                    if let Ok(mut scene) = self.nodes.lock() {
-                        *scene = nodes;
-                    }
+                    self.set_nodes(nodes);
                     self.error = None;
                 }
                 Err(error) => {
@@ -1458,20 +1812,93 @@ impl Preview {
         std::thread::spawn(move || backend_finish(action()));
     }
 
-    fn submit(&mut self, id: &str) {
-        match id {
-            "mods-search" => self.dispatch("search".into()),
-            "server-name" => {
-                *FOCUSED.lock().expect("focus") = Some("server-ip".into());
+    fn input_text(&self, id: &str, cx: &Context<Self>) -> String {
+        self.inputs
+            .get(id)
+            .map(|entity| entity.read(cx).as_str().to_string())
+            .unwrap_or_default()
+    }
+
+    fn take_input(&mut self, id: &str, cx: &mut Context<Self>) -> String {
+        let value = self.input_text(id, cx);
+        if let Some(entity) = self.inputs.get(id).cloned() {
+            entity.update(cx, |state, cx| state.emplace("", cx));
+        }
+        value
+    }
+
+    fn focus_input(&mut self, id: &str, window: &mut Window, cx: &mut Context<Self>) {
+        if let Some(entity) = self.inputs.get(id).cloned() {
+            let handle = entity.read(cx).focus_handle(cx);
+            window.focus(&handle, cx);
+            self.focused_key = Some(format!("input:{id}"));
+            self.redraw();
+        }
+    }
+
+    fn focused_item(&mut self, window: &Window, cx: &Context<Self>) -> Option<FocusItem> {
+        for (id, entity) in &self.inputs {
+            if entity.read(cx).focus_handle(cx).is_focused(window) {
+                return Some(FocusItem::Input(id.clone()));
+            }
+        }
+        let key = self.focused_key.clone()?;
+        self.focus_order
+            .iter()
+            .find(|item| item.key() == key)
+            .cloned()
+    }
+
+    fn move_focus(&mut self, backwards: bool, window: &mut Window, cx: &mut Context<Self>) {
+        if self.focus_order.is_empty() {
+            return;
+        }
+        let current = self
+            .focused_item(window, cx)
+            .map(|item| item.key())
+            .and_then(|key| self.focus_order.iter().position(|item| item.key() == key));
+        let count = self.focus_order.len();
+        let index = match (current, backwards) {
+            (Some(index), false) => (index + 1) % count,
+            (Some(index), true) => (index + count - 1) % count,
+            (None, false) => 0,
+            (None, true) => count - 1,
+        };
+        let item = self.focus_order[index].clone();
+        if std::env::var_os("SCORIA_MIMAS_DEBUG_KEYS").is_some() {
+            eprintln!(
+                "tab: current={:?} index={} next={:?}",
+                current,
+                index,
+                item.key()
+            );
+        }
+        self.focused_key = Some(item.key());
+        match item {
+            FocusItem::Input(id) => self.focus_input(&id, window, cx),
+            FocusItem::Action { .. } => {
+                window.focus(&self.focus_handle, cx);
                 self.redraw();
             }
-            "server-ip" => self.dispatch("server-add".into()),
-            "account-name" => self.dispatch("account-add".into()),
+        }
+    }
+
+    fn submit(&mut self, id: &str, window: &mut Window, cx: &mut Context<Self>) {
+        match id {
+            "mods-search" => self.dispatch("search".into(), cx),
+            "server-name" => self.focus_input("server-ip", window, cx),
+            "server-ip" => self.dispatch("server-add".into(), cx),
+            "account-name" => self.dispatch("account-add".into(), cx),
             _ => {}
         }
     }
 
-    fn key(&mut self, event: &KeyDownEvent) -> bool {
+    fn handle_key(
+        &mut self,
+        event: &KeyDownEvent,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> bool {
         if std::env::var_os("SCORIA_MIMAS_DEBUG_KEYS").is_some() {
             eprintln!(
                 "key={:?} char={:?} ctrl={} alt={} platform={}",
@@ -1482,63 +1909,58 @@ impl Preview {
                 event.keystroke.modifiers.platform
             );
         }
-        let Some(id) = focused_input() else {
-            let key = event.keystroke.key.as_str();
-            let control = event.keystroke.modifiers.control || event.keystroke.modifiers.platform;
-            if control && matches!(key, "1" | "2" | "3" | "4") {
-                let screen = match key {
-                    "1" => "home",
-                    "2" => "mods",
-                    "3" => "servers",
-                    _ => "settings",
-                };
-                self.dispatch(format!("screen:{screen}"));
-                return true;
-            }
-            if control && key == "enter" {
-                self.dispatch("play".into());
-                return true;
-            }
-            if key == "escape" {
-                self.dispatch("quit".into());
-                return true;
-            }
-            return false;
-        };
         let key = event.keystroke.key.as_str();
-        if key == "escape" {
-            *FOCUSED.lock().expect("focus") = None;
-            self.redraw();
+        let control = event.keystroke.modifiers.control || event.keystroke.modifiers.platform;
+        if control && matches!(key, "1" | "2" | "3" | "4") {
+            let screen = match key {
+                "1" => "home",
+                "2" => "mods",
+                "3" => "servers",
+                _ => "settings",
+            };
+            self.dispatch(format!("screen:{screen}"), cx);
+            return true;
+        }
+        if control && key == "enter" {
+            self.dispatch("play".into(), cx);
+            return true;
+        }
+        if key == "tab" {
+            self.move_focus(event.keystroke.modifiers.shift, window, cx);
             return true;
         }
         if key == "enter" {
-            self.submit(&id);
+            let item = self.focused_item(window, cx);
+            if std::env::var_os("SCORIA_MIMAS_DEBUG_KEYS").is_some() {
+                eprintln!("enter: item={:?}", item.as_ref().map(FocusItem::key));
+            }
+            match item {
+                Some(FocusItem::Input(id)) => self.submit(&id, window, cx),
+                Some(FocusItem::Action { action, .. }) => self.dispatch(action, cx),
+                None => {}
+            }
             return true;
         }
-        let mut guard = INPUTS.lock().expect("inputs");
-        let inputs = guard.get_or_insert_with(HashMap::new);
-        let value = inputs.entry(id.clone()).or_default();
-        if key == "backspace" || key == "delete" {
-            value.pop();
-        } else if key == "space" {
-            value.push(' ');
-        } else if let Some(chars) = event.keystroke.key_char.as_ref() {
-            if event.keystroke.modifiers.control
-                || event.keystroke.modifiers.alt
-                || event.keystroke.modifiers.platform
+        if key == "escape" {
+            if self
+                .focused_item(window, cx)
+                .is_some_and(|item| matches!(item, FocusItem::Input(_)))
             {
-                return false;
+                window.focus(&self.focus_handle, cx);
+                self.focused_key = None;
+                self.redraw();
+            } else {
+                self.dispatch("quit".into(), cx);
             }
-            value.push_str(chars);
-        } else {
-            return false;
+            return true;
         }
-        drop(guard);
-        self.redraw();
-        true
+        false
     }
 
-    fn dispatch(&mut self, action: String) {
+    fn dispatch(&mut self, action: String, cx: &mut Context<Self>) {
+        if std::env::var_os("SCORIA_MIMAS_DEBUG_KEYS").is_some() {
+            eprintln!("dispatch {:?} focused={:?}", action, self.focused_key);
+        }
         if let Some(screen) = action.strip_prefix("screen:") {
             *SCREEN.lock().expect("screen") = match screen {
                 "mods" => Screen::Mods,
@@ -1546,6 +1968,17 @@ impl Preview {
                 "settings" => Screen::Settings,
                 _ => Screen::Home,
             };
+            self.redraw();
+            return;
+        }
+        if action == "dismiss-error" {
+            if let Ok(mut guard) = BACKEND.lock() {
+                if let Some(backend) = guard.as_mut() {
+                    backend.error = None;
+                }
+            }
+            self.error = None;
+            bump_revision();
             self.redraw();
             return;
         }
@@ -1638,11 +2071,21 @@ impl Preview {
                 "system" => Appearance::System,
                 _ => Appearance::Dark,
             };
+            self.theme = match appearance {
+                Appearance::Light => Theme::light(),
+                _ => Theme::dark(),
+            };
+            set_theme(self.theme);
+            let label = match value {
+                "light" => "светлая",
+                "system" => "системная",
+                _ => "тёмная",
+            };
             let result = (|| {
                 let mut settings = Settings::load();
                 settings.appearance = appearance;
                 settings.save();
-                Ok(format!("Оформление: {value}"))
+                Ok(format!("Оформление: {label}"))
             })();
             backend_sync(result);
             self.redraw();
@@ -1701,7 +2144,7 @@ impl Preview {
                 });
             }
             "search" => {
-                let query = input_get("mods-search");
+                let query = self.input_text("mods-search", cx);
                 if query.trim().is_empty() {
                     backend_sync(Err("Введите запрос".into()));
                     self.redraw();
@@ -1715,8 +2158,8 @@ impl Preview {
                 });
             }
             "server-add" => {
-                let name = input_take("server-name");
-                let ip = input_take("server-ip");
+                let name = self.take_input("server-name", cx);
+                let ip = self.take_input("server-ip", cx);
                 if name.trim().is_empty() || ip.trim().is_empty() {
                     backend_sync(Err("Нужны имя и адрес".into()));
                     self.redraw();
@@ -1729,7 +2172,7 @@ impl Preview {
             }
             "quit" => std::process::exit(0),
             "account-add" => {
-                let name = input_take("account-name");
+                let name = self.take_input("account-name", cx);
                 let result = (|| {
                     let mut accounts = Accounts::load();
                     accounts.play_as(Player::Offline(name.clone()))?;
@@ -1774,41 +2217,107 @@ impl Preview {
 }
 
 impl Render for Preview {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        if !self.initial_focus {
+            self.initial_focus = true;
+            if let Some(id) = self
+                .focused_key
+                .clone()
+                .and_then(|key| key.strip_prefix("input:").map(str::to_string))
+            {
+                if let Some(entity) = self.inputs.get(&id).cloned() {
+                    let handle = entity.read(cx).focus_handle(cx);
+                    window.focus(&handle, cx);
+                }
+            }
+        }
         let nodes = self
             .nodes
             .lock()
             .map(|nodes| nodes.clone())
             .unwrap_or_default();
+        let inputs = self.inputs.clone();
+        let focused = self.focused_key.clone();
+        let theme = self.theme;
+        let error = self
+            .error
+            .clone()
+            .or_else(|| with_backend(None, |backend| backend.error.clone()));
         div()
             .relative()
             .size_full()
             .overflow_hidden()
             .track_focus(&self.focus_handle)
-            .on_key_down(cx.listener(|this, event: &KeyDownEvent, _window, cx| {
-                if this.key(event) {
+            .on_key_down(cx.listener(|this, event: &KeyDownEvent, window, cx| {
+                if this.handle_key(event, window, cx) {
+                    cx.stop_propagation();
                     cx.notify();
                 }
             }))
-            .bg(self.theme.colors.background)
+            .bg(theme.colors.background)
             .children(
                 nodes
                     .into_iter()
-                    .map(|node| render_node(node, self.theme, cx)),
+                    .map(|node| render_node(node, theme, &inputs, focused.as_deref(), cx)),
             )
-            .children(self.error.as_ref().map(|error| {
+            .children(error.map(|error| {
+                let text_color = theme.colors.foreground;
                 div()
                     .absolute()
-                    .left(px(24.0))
-                    .bottom(px(24.0))
-                    .max_w(px(900.0))
-                    .rounded(px(10.0))
-                    .bg(rgba(0x2B1A1AEE))
-                    .px(px(14.0))
-                    .py(px(10.0))
-                    .text_size(px(12.0))
-                    .text_color(rgb(0xE5484D))
-                    .child(error.clone())
+                    .right(px(24.0))
+                    .bottom(px(56.0))
+                    .max_w(px(520.0))
+                    .flex()
+                    .items_start()
+                    .gap(px(12.0))
+                    .rounded(px(12.0))
+                    .border_1()
+                    .border_color(theme.colors.danger)
+                    .bg(theme.colors.surface)
+                    .px(px(16.0))
+                    .py(px(14.0))
+                    .child(
+                        div()
+                            .w(px(3.0))
+                            .h(px(28.0))
+                            .rounded_full()
+                            .bg(theme.colors.danger),
+                    )
+                    .child(
+                        div()
+                            .flex_1()
+                            .flex()
+                            .flex_col()
+                            .gap(px(2.0))
+                            .child(
+                                div()
+                                    .text_size(px(12.0))
+                                    .text_color(theme.colors.muted)
+                                    .child("Ошибка"),
+                            )
+                            .child(
+                                div()
+                                    .text_size(px(13.0))
+                                    .text_color(text_color)
+                                    .child(error),
+                            ),
+                    )
+                    .child(
+                        div()
+                            .id("mimas-toast-close")
+                            .w(px(22.0))
+                            .h(px(22.0))
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .rounded(px(6.0))
+                            .cursor_pointer()
+                            .hover(|style| style.bg(theme.colors.surface_secondary))
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.dispatch("dismiss-error".into(), cx);
+                            }))
+                            .child("×"),
+                    )
             }))
     }
 }
@@ -1830,19 +2339,14 @@ fn main() {
         };
     }
     *BACKEND.lock().expect("backend") = Some(Backend::load());
-    if let Ok(inputs) = std::env::var("SCORIA_MIMAS_INPUTS") {
-        let mut map = HashMap::new();
-        for pair in inputs.split(';') {
-            if let Some((id, value)) = pair.split_once('=') {
-                map.insert(id.trim().to_string(), value.to_string());
-            }
-        }
-        *INPUTS.lock().expect("inputs") = Some(map);
-    }
-    if let Ok(id) = std::env::var("SCORIA_MIMAS_FOCUS") {
-        *FOCUSED.lock().expect("focus") = Some(id);
-    }
     let startup_action = std::env::var("SCORIA_MIMAS_ACTION").ok();
+    if std::env::var_os("SCORIA_MIMAS_DEBUG_KEYS").is_some() {
+        eprintln!(
+            "screen={:?} action={:?}",
+            *SCREEN.lock().expect("screen"),
+            startup_action
+        );
+    }
     let script = std::env::var_os("SCORIA_MIMAS_UI")
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|| {
@@ -1851,6 +2355,7 @@ fn main() {
     let nodes = Arc::new(Mutex::new(Vec::new()));
 
     application().run(move |cx| {
+        cx.bind_keys(default_bindings().as_keybindings(Some(DEFAULT_INPUT_CONTEXT)));
         let bounds = Bounds::new(point(px(0.0), px(0.0)), size(px(1280.0), px(800.0)));
         cx.open_window(
             WindowOptions::new()
@@ -1863,19 +2368,9 @@ fn main() {
                 let startup_action = startup_action.clone();
                 move |_, cx| {
                     cx.new(|cx| {
-                        let mut preview = Preview {
-                            theme: Theme::dark(),
-                            nodes,
-                            vm: None,
-                            script,
-                            modified: None,
-                            error: None,
-                            focus_handle: cx.focus_handle(),
-                            revision: 0,
-                        };
-                        preview.reload();
+                        let mut preview = Preview::new(cx, script, nodes);
                         if let Some(action) = startup_action.clone() {
-                            preview.dispatch(action);
+                            preview.dispatch(action, cx);
                         }
                         preview.watch(cx);
                         preview

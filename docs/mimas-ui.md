@@ -34,17 +34,24 @@ diff and no retained widget state. The host keeps the state (screen, data, input
 
 | Function | Meaning |
 | --- | --- |
+| `screen(fill)` | the window root: a column that fills the window |
 | `row(gap, padding, w, h, fill, radius)` | open a horizontal flex box |
 | `column(gap, padding, w, h, fill, radius)` | open a vertical flex box |
 | `scroll(gap, padding, w, h, fill, radius)` | vertical column with `overflow-y: scroll` |
 | `end_box()` | close the last open box |
 | `pad(x, y)` | override horizontal and vertical padding inside the current box |
+| `fill_w()` / `fill_h()` | make the current box fill its parent |
+| `w_pct(0.56)` | width as a fraction of the parent (responsive columns) |
+| `border_bottom(width, fill)` | bottom border on the current box |
+| `drag_window()` | let the current box drag the window |
 | `align("start\|center\|end\|stretch")` | cross-axis alignment |
 | `justify("start\|center\|end\|between\|around")` | main-axis distribution |
 | `grow(1.0)` | flex-grow for the current box |
 | `wrap()` | allow row wrapping |
 | `spacer()` | flexible empty space (`flex-grow: 1`) |
+| `theme_color(role)` | semantic colour from the active theme |
 | `text(s, size, fill)` | one line of text |
+| `text_fill(s, size, fill)` | wrapping text that fills the parent's width |
 | `text_w(s, size, fill, max_width)` | text with a maximum width, so lines wrap |
 | `button(label, action, fill)` | 192×52 button |
 | `small_button(label, action, fill)` | 112×36 button |
@@ -53,10 +60,16 @@ diff and no retained widget state. The host keeps the state (screen, data, input
 | `link(label, action, fill, size)` | text that behaves like a button |
 | `icon(name, size, fill)` | bundled SVG icon, tinted by `fill` |
 | `image(name, w, h, radius)` | bundled image (`mark`, `backdrop`, `backdrop-light`) |
+| `image_fill(name, h, radius)` | an image that fills its parent's width |
 | `input(id, placeholder, width)` | editable single-line field |
+| `window_control("min\|max\|close", size, fill)` | real window buttons |
 
 Sizes are page units (1 unit = 1 px at 100% zoom). `w = 0` or `h = 0` means auto. Colours are
 `#RRGGBB` or `#RRGGBBAA`; `#00000000` is transparent.
+
+`theme_color` roles: `bg`, `surface`, `surface2`, `surface3`, `overlay`, `text`, `muted`,
+`border`, `separator`, `accent`, `accent_fg`, `accent_soft`, `success`, `warning`, `danger`,
+`transparent`. The scene never hardcodes a palette, so switching Dark/Light repaints at once.
 
 ## A complete screen
 
@@ -64,31 +77,36 @@ This is the shape of `home()` in `scene.mim`, shortened:
 
 ```mimas
 fn home() {
-    row(32.0, 48.0, 1152.0, 0.0, "#00000000", 0.0);
-        align("stretch");
-        justify("between");
-        column(12.0, 0.0, 648.0, 0.0, "#00000000", 0.0);
-            grow(1.0);
-            text("ПОСЛЕДНИЙ ЗАПУСК", 10.0, "#9C948C");
-            text(version(), 56.0, "#F4F0EA");
-            text_w("Ваши миры, моды и серверы.", 15.0, "#9C948C", 560.0);
-            action_button();
-            status_line();
-            text("Ваши миры", 20.0, "#F4F0EA");
-            let i = 0.0;
-            while i < world_count() {
-                row(14.0, 14.0, 648.0, 56.0, "#1A1A1D", 12.0);
-                    align("center");
-                    icon("map-pin", 16.0, "#FF6A3D");
-                    column(2.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
-                        text(world_name(i), 16.0, "#F4F0EA");
-                        text(f"{world_mode(i)} · {world_last(i)}", 12.0, "#9C948C");
+    scroll(0.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+        fill_w();
+        row(32.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+            fill_w();
+            align("stretch");
+            pad(0.0, 32.0);
+            column(12.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+                w_pct(0.56);
+                text("ПОСЛЕДНИЙ ЗАПУСК", 10.0, theme_color("muted"));
+                text(version(), 56.0, theme_color("text"));
+                text_fill("Ваши миры, моды и серверы.", 15.0, theme_color("muted"));
+                action_button();
+                status_line();
+                text("Ваши миры", 20.0, theme_color("text"));
+                let i = 0.0;
+                while i < world_count() {
+                    row(14.0, 14.0, 0.0, 56.0, theme_color("surface2"), 12.0);
+                        fill_w();
+                        align("center");
+                        icon("map-pin", 16.0, theme_color("accent"));
+                        column(2.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+                            text(world_name(i), 16.0, theme_color("text"));
+                            text(f"{world_mode(i)} · {world_last(i)}", 12.0, theme_color("muted"));
+                        end_box();
+                        spacer();
+                        small_button("Играть", f"play-world:{world_folder(i)}", theme_color("transparent"));
                     end_box();
-                    spacer();
-                    small_button("Играть", f"play-world:{world_folder(i)}", "#00000000");
-                end_box();
-                i = i + 1.0;
-            }
+                    i = i + 1.0;
+                }
+            end_box();
         end_box();
     end_box();
 }
@@ -137,18 +155,27 @@ Buttons, links and inputs pass an action string. Rust handles it:
 | `account-remove:<name>` | forget an offline name |
 | `appearance:dark\|light\|system` | save the launcher appearance |
 | `instance-select:<id>` | select an instance |
+| `dismiss-error` | close the error toast |
 | `quit` | close the preview |
 
-Inputs keep their text in host state, so a redraw does not lose it. `Enter` submits the field:
-search for `mods-search`, next field for `server-name`, add for `server-ip` and `account-name`.
+Inputs are real `EditableTextState` fields: caret, selection, clipboard, undo and IME work. Their
+text survives a redraw. `Enter` submits the field: search for `mods-search`, next field for
+`server-name`, add for `server-ip` and `account-name`.
+
+`Tab` and `Shift+Tab` walk inputs, links and buttons in tree order and draw a focus ring.
+`Enter` activates the focused control.
 
 ## Keyboard
 
 | Keys | Action |
 | --- | --- |
+| `Tab` / `Shift+Tab` | next / previous input, link or button |
+| `Enter` | submit the focused field or activate the focused button |
 | `Ctrl+1` … `Ctrl+4` | Home, Mods, Servers, Settings |
 | `Ctrl+Enter` | play |
-| `Esc` | close the preview (or leave a focused input first) |
+| `Esc` | leave a focused input; otherwise close the preview |
+
+The topbar brand area drags the window, and the minimize, maximize and close buttons are real.
 
 ## Development helpers
 
@@ -189,12 +216,13 @@ Real, through `scoria-core`:
 Still limited:
 
 - every action rebuilds the whole tree; there is no incremental diff;
-- text inputs are single-line and have no selection, clipboard, IME or undo yet;
-- no accessibility tree, screen-reader labels or focus rings beyond the input border;
-- the script hardcodes the dark palette, so `appearance:light` is saved but the preview stays
-  dark until the palette is scripted too;
-- no window dragging or native system menu on the topbar icons;
-- no grid, constraints or measured text; the layout is flex only.
+- no accessibility tree or screen-reader labels yet (the editable fields do have roles);
+- `System` follows the production behaviour and currently resolves to the dark palette;
+- no native system menu; only the three window buttons and dragging;
+- no grid, constraints or measured text; the layout is flex-only. Widths adapt with
+  `fill_w`, `w_pct` and `grow`, and pages scroll vertically;
+- a few launcher features are still missing: remove-mod, language switch, while-playing,
+  create/backup world, LAN list, modpack import.
 
 The production UI remains Rust/GPUI + `scoria-ui-kit`. This branch is a proof that the whole
 launcher shell can be scripted, not a decision to ship it.

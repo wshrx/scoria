@@ -27,6 +27,10 @@
 | --- | --- |
 | ![](screenshots/settings.webp) | ![](screenshots/mods-search.webp) |
 
+| Light theme | Home at 1024×720 |
+| --- | --- |
+| ![](screenshots/home-light.webp) | ![](screenshots/home-1024.webp) |
+
 All four screens are Mimas trees. Navigation, Play/Stop, download progress, catalogue search,
 installs, saved servers and offline accounts call the same `scoria-core` functions as the
 production launcher.
@@ -47,25 +51,31 @@ drop-in replacement for the production UI.**
 
 ```mimas
 fn home() {
-    row(32.0, 48.0, 1152.0, 0.0, "#00000000", 0.0);
-        align("stretch");
-        justify("between");
-        column(12.0, 0.0, 648.0, 0.0, "#00000000", 0.0);
-            text("ПОСЛЕДНИЙ ЗАПУСК", 10.0, "#9C948C");
-            text(version(), 56.0, "#F4F0EA");
-            text_w("Ваши миры, моды и серверы.", 15.0, "#9C948C", 560.0);
-            action_button();
-            let i = 0.0;
-            while i < world_count() {
-                row(14.0, 14.0, 648.0, 56.0, "#1A1A1D", 12.0);
-                    align("center");
-                    icon("map-pin", 16.0, "#FF6A3D");
-                    text(world_name(i), 16.0, "#F4F0EA");
-                    spacer();
-                    small_button("Играть", f"play-world:{world_folder(i)}", "#00000000");
-                end_box();
-                i = i + 1.0;
-            }
+    scroll(0.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+        fill_w();
+        row(32.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+            fill_w();
+            align("stretch");
+            column(12.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+                w_pct(0.56);
+                text("ПОСЛЕДНИЙ ЗАПУСК", 10.0, theme_color("muted"));
+                text(version(), 56.0, theme_color("text"));
+                text_fill("Ваши миры, моды и серверы.", 15.0, theme_color("muted"));
+                action_button();
+                text("Ваши миры", 20.0, theme_color("text"));
+                let i = 0.0;
+                while i < world_count() {
+                    row(14.0, 14.0, 0.0, 56.0, theme_color("surface2"), 12.0);
+                        fill_w();
+                        align("center");
+                        icon("map-pin", 16.0, theme_color("accent"));
+                        text(world_name(i), 16.0, theme_color("text"));
+                        spacer();
+                        small_button("Играть", f"play-world:{world_folder(i)}", theme_color("transparent"));
+                    end_box();
+                    i = i + 1.0;
+                }
+            end_box();
         end_box();
     end_box();
 }
@@ -109,17 +119,25 @@ HORIZON_HOME=$(mktemp -d) HORIZON_LAUNCHER_HOME=$(mktemp -d) \
 - **Servers** — the player's `servers.dat`: add, remove, join.
 - **Offline accounts** — add, select and remove names in `accounts.json`.
 - **Settings** — appearance and instance selection are saved where the production UI reads them.
-- **Inputs** — editable fields with focus, typing, `Enter` submission and redraw-safe values.
+- **Inputs** — real `EditableTextState` fields: caret, selection, clipboard, undo and IME, plus
+  `Tab`/`Shift+Tab` and `Enter`.
+- **Theme** — colours come from `theme_color(...)`; Dark/Light applies immediately and the light
+  backdrop is used.
+- **Responsive** — the root fills the window; columns use `w_pct`, `fill_w` and `grow`, pages
+  scroll, and the layout works from 1024×720 to wide windows.
+- **Window** — the brand area drags the window; minimize, maximize and close are real buttons.
+- **Errors** — a toast with a close button, not a corner overlay.
 - **Hot reload** — saving `scene.mim` rebuilds the window in ~300 ms.
 
 ## What is still experimental
 
 - Every action rebuilds the whole tree; there is no incremental diff.
-- Inputs are single-line with no selection, clipboard, IME or undo yet.
-- No accessibility tree or screen-reader labels; the only focus ring is the input border.
-- The script hardcodes the dark palette, so `appearance:light` is saved but the preview stays dark.
-- Topbar window icons are visual only; no dragging or native system menu.
+- No accessibility tree or screen-reader labels yet (editable fields do expose roles).
+- `System` follows the production behaviour and currently resolves to the dark palette.
+- No native system menu; only the three window buttons and dragging.
 - Flex only: no grid, constraints or measured text.
+- A few launcher features are still missing: remove-mod, language switch, while-playing,
+  create/backup world, LAN list, modpack import.
 - The VM, hot reload and demo helpers are behind the developer-only `dev-scripts` feature. A
   player build does not include them.
 
@@ -130,12 +148,12 @@ rows use the production launcher binary; the last row is the standalone example.
 
 | Build | Binary | RSS after 3 s | Window appears |
 |---|---:|---:|---:|
-| launcher, no Mimas feature | 50 MB | 145.8 MB | 250–269 ms |
-| same launcher, `dev-scripts`, no script | 53 MB | 144.6 MB | 250–269 ms |
-| same launcher + one `draw()` scene | 53 MB | 148.8 MB | 250–269 ms |
-| Mimas launcher example (this branch) | 49 MB | 132.5 MB | 246–265 ms |
+| launcher, no Mimas feature | 50 MB | 140.2 MB | 232–254 ms |
+| same launcher, `dev-scripts`, no script | 53 MB | 140.9 MB | 231–244 ms |
+| same launcher + one `draw()` scene | 53 MB | 145.1 MB | 231–244 ms |
+| Mimas launcher example (this branch) | 50 MB | 134.0 MB | 229–247 ms |
 
-In the same app the VM plus one compiled scene costs **~3–4 MB RSS (~2–3%)**, **~3 MB of binary**
+In the same app the VM plus one compiled scene costs **~4.2 MB RSS (~3%)**, **~3 MB of binary**
 and no measurable startup change. The example links the real `scoria-core` for data and actions,
 so it no longer fits in the old 35 MB shell; it is still lighter than the production launcher
 because it skips engine code and some assets — it is not a “UI replaced by Mimas” cost comparison.

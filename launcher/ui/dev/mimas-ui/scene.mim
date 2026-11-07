@@ -4,15 +4,21 @@
 // (worlds, servers, mods, accounts, version) and performs the actions (prepare, play, stop,
 // search, install, add server, switch account). The whole tree is rebuilt after each action.
 //
+// Colours come from the active theme, so "Светлая" in Settings repaints the window immediately.
+// Sizes use fill_w()/grow() so the layout adapts from 1024 px to wide windows.
+//
 // Host primitives:
-//   row(gap, padding, w, h, fill, radius)   column(...)   end_box()
+//   screen(fill)                            root column filling the window
+//   row(gap, padding, w, h, fill, radius)   column(...)   scroll(...)   end_box()
+//   fill_w() fill_h() pad(x, y) border_bottom(w, fill) drag_window()
 //   align("start|center|end|stretch")       justify("start|center|end|between|around")
-//   grow(1.0)   wrap()   spacer()   clear()
-//   text(s, size, fill)   text_w(s, size, fill, max_width)
+//   grow(1.0)   wrap()   spacer()   clear()   theme_color(role)
+//   text(s, size, fill)   text_fill(s, size, fill)   text_w(s, size, fill, max_width)
 //   button(label, action, fill)           small_button(...)
 //   button_w(label, action, fill, width) small_button_w(...)
-//   link(label, action, fill, size)       icon(name, size, fill)   image(name, w, h, radius)
-//   input(id, placeholder, width)
+//   link(label, action, fill, size)       icon(name, size, fill)
+//   image(name, w, h, radius)             image_fill(name, h, radius)
+//   input(id, placeholder, width)         window_control("min|max|close", size, fill)
 //
 // Data: version, branch, prepared, playing, preparing, progress, status_text, last_error,
 //       offline_name, world_*, server_*, mod_*, account_*, result_*, instance_*, appearance.
@@ -20,24 +26,32 @@
 //       "refresh", "install-latest", "search", "install:<project>", "server-add",
 //       "server-join:<ip>", "server-remove:<index>", "account-add", "account-select:<name>",
 //       "account-remove:<name>", "appearance:dark|light|system", "instance-select:<id>",
-//       "play-world:<folder>", "quit".
+//       "play-world:<folder>", "dismiss-error", "quit".
 
 fn nav(label, screen, active) {
     if active {
-        link(label, screen, "#FF6A3D", 15.0);
+        link(label, screen, theme_color("accent"), 15.0);
     } else {
-        link(label, screen, "#9C948C", 15.0);
+        link(label, screen, theme_color("muted"), 15.0);
     }
 }
 
 fn topbar() {
-    row(16.0, 32.0, 1216.0, 64.0, "#0B0B0D", 0.0);
+    row(16.0, 0.0, 0.0, 64.0, theme_color("bg"), 0.0);
+        fill_w();
+        pad(32.0, 0.0);
         align("center");
-        image("mark", 24.0, 24.0, 6.0);
-        text("Scoria", 14.0, "#F4F0EA");
-        text("0.1.3", 10.0, "#6E7175");
+        border_bottom(1.0, theme_color("separator"));
+        row(10.0, 0.0, 230.0, 0.0, theme_color("transparent"), 0.0);
+            fill_h();
+            align("center");
+            drag_window();
+            image("mark", 24.0, 24.0, 6.0);
+            text("Scoria", 14.0, theme_color("text"));
+            text("0.1.3", 10.0, theme_color("muted"));
+        end_box();
         spacer();
-        row(24.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+        row(24.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
             align("center");
             nav("Играть", "screen:home", current_screen() == "home");
             nav("Моды", "screen:mods", current_screen() == "mods");
@@ -45,236 +59,255 @@ fn topbar() {
             nav("Настройки", "screen:settings", current_screen() == "settings");
         end_box();
         spacer();
-        icon("check", 12.0, "#6FBF8B");
-        text(f"{offline_name()} · офлайн", 12.0, "#6FBF8B");
-        icon("min", 14.0, "#9C948C");
-        icon("max", 14.0, "#9C948C");
-        icon("close", 14.0, "#9C948C");
-    end_box();
-    row(0.0, 0.0, 1280.0, 1.0, "#2A2A2E", 0.0);
+        icon("check", 12.0, theme_color("success"));
+        text(f"{offline_name()} · офлайн", 12.0, theme_color("success"));
+        window_control("min", 14.0, theme_color("muted"));
+        window_control("max", 14.0, theme_color("muted"));
+        window_control("close", 14.0, theme_color("muted"));
     end_box();
 }
 
 fn status_line() {
-    row(10.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
+    row(10.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
         align("center");
         if playing() {
-            icon("play", 12.0, "#FF6A3D");
-            text(status_text(), 13.0, "#FF6A3D");
+            icon("play", 12.0, theme_color("accent"));
+            text(status_text(), 13.0, theme_color("accent"));
         } else if preparing() {
-            icon("download", 12.0, "#E0B45C");
-            text(f"{status_text()} · {progress()}%", 13.0, "#E0B45C");
+            icon("download", 12.0, theme_color("warning"));
+            text(f"{status_text()} · {progress()}%", 13.0, theme_color("warning"));
         } else if prepared() {
-            icon("check", 12.0, "#6FBF8B");
-            text(f"{status_text()} · {version()}", 13.0, "#6FBF8B");
+            icon("check", 12.0, theme_color("success"));
+            text(f"{status_text()} · {version()}", 13.0, theme_color("success"));
         } else {
-            icon("download", 12.0, "#9C948C");
-            text("Игра ещё не подготовлена", 13.0, "#9C948C");
+            icon("download", 12.0, theme_color("muted"));
+            text("Игра ещё не подготовлена", 13.0, theme_color("muted"));
         }
     end_box();
 }
 
 fn action_button() {
     if playing() {
-        button("Остановить", "stop", "#1A1A1D");
+        button("Остановить", "stop", theme_color("surface2"));
     } else if preparing() {
-        button("Отмена", "cancel", "#2A1710");
+        button("Отмена", "cancel", theme_color("accent_soft"));
     } else if prepared() {
-        button("Играть", "play", "#FF6A3D");
+        button("Играть", "play", theme_color("accent"));
     } else {
-        button("Скачать и играть", "prepare", "#FF6A3D");
+        button("Скачать и играть", "prepare", theme_color("accent"));
     }
 }
 
 fn home() {
-    row(32.0, 48.0, 1152.0, 0.0, "#00000000", 0.0);
-        align("stretch");
-        justify("between");
+    scroll(0.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+        fill_w();
+        row(32.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+            fill_w();
+            align("stretch");
+            pad(0.0, 32.0);
 
-        column(12.0, 0.0, 648.0, 0.0, "#00000000", 0.0);
-            grow(1.0);
-            text("ПОСЛЕДНИЙ ЗАПУСК", 10.0, "#9C948C");
-            row(14.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
-                align("end");
-                text(version(), 56.0, "#F4F0EA");
-                text(branch(), 12.0, "#6E7175");
-            end_box();
-            text_w("Ваши миры, моды и серверы. Без аккаунта Microsoft и телеметрии.", 15.0, "#9C948C", 560.0);
-            action_button();
-            status_line();
-            row(10.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
-                small_button("Обновить", "refresh", "#1A1A1D");
-                small_button("Установить сборку", "install-latest", "#1A1A1D");
-                small_button("Заново скачать", "prepare", "#00000000");
-            end_box();
-            text("Ваши миры", 20.0, "#F4F0EA");
-            if world_count() == 0 {
-                row(12.0, 16.0, 648.0, 56.0, "#1A1A1D", 12.0);
-                    align("center");
-                    icon("map-pin", 16.0, "#6E7175");
-                    text("Миров пока нет: создайте первый в игре.", 13.0, "#9C948C");
+            column(12.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+                w_pct(0.56);
+                text("ПОСЛЕДНИЙ ЗАПУСК", 10.0, theme_color("muted"));
+                row(14.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+                    align("end");
+                    text(version(), 56.0, theme_color("text"));
+                    text(branch(), 12.0, theme_color("muted"));
                 end_box();
-            } else {
-                let i = 0.0;
-                while i < world_count() {
-                    row(14.0, 14.0, 648.0, 56.0, "#1A1A1D", 12.0);
+                text_fill("Ваши миры, моды и серверы. Без аккаунта Microsoft и телеметрии.", 15.0, theme_color("muted"));
+                action_button();
+                status_line();
+                row(10.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+                    small_button("Обновить", "refresh", theme_color("surface2"));
+                    small_button("Установить сборку", "install-latest", theme_color("surface2"));
+                    small_button("Заново скачать", "prepare", theme_color("transparent"));
+                end_box();
+                text("Ваши миры", 20.0, theme_color("text"));
+                if world_count() == 0 {
+                    row(12.0, 16.0, 0.0, 56.0, theme_color("surface2"), 12.0);
+                        fill_w();
                         align("center");
-                        icon("map-pin", 16.0, "#FF6A3D");
-                        column(2.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
-                            text(world_name(i), 16.0, "#F4F0EA");
-                            text(f"{world_mode(i)} · {world_last(i)}", 12.0, "#9C948C");
-                        end_box();
-                        spacer();
-                        small_button("Играть", f"play-world:{world_folder(i)}", "#00000000");
+                        icon("map-pin", 16.0, theme_color("muted"));
+                        text("Миров пока нет: создайте первый в игре.", 13.0, theme_color("muted"));
                     end_box();
-                    i = i + 1.0;
+                } else {
+                    let i = 0.0;
+                    while i < world_count() {
+                        row(14.0, 14.0, 0.0, 56.0, theme_color("surface2"), 12.0);
+                            fill_w();
+                            align("center");
+                            icon("map-pin", 16.0, theme_color("accent"));
+                            column(2.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+                                text(world_name(i), 16.0, theme_color("text"));
+                                text(f"{world_mode(i)} · {world_last(i)}", 12.0, theme_color("muted"));
+                            end_box();
+                            spacer();
+                            small_button("Играть", f"play-world:{world_folder(i)}", theme_color("transparent"));
+                        end_box();
+                        i = i + 1.0;
+                    }
                 }
-            }
-        end_box();
-
-        column(12.0, 20.0, 464.0, 0.0, "#1A1A1D", 20.0);
-            text("ВЫБРАННЫЙ МИР", 10.0, "#9C948C");
-            if world_count() == 0 {
-                row(12.0, 20.0, 424.0, 160.0, "#141416", 16.0);
-                    align("center");
-                    justify("center");
-                    text("Нет миров", 20.0, "#6E7175");
-                end_box();
-            } else {
-                image("backdrop", 424.0, 160.0, 16.0);
-                text(world_name(0.0), 26.0, "#F4F0EA");
-                text(f"{world_mode(0.0)} · {world_last(0.0)} · {world_size(0.0)}", 12.0, "#9C948C");
-                small_button_w("Открыть мир", f"play-world:{world_folder(0.0)}", "#FF6A3D", 160.0);
-            }
-            row(0.0, 0.0, 424.0, 1.0, "#2A2A2E", 0.0);
             end_box();
-            text("ОБ ИГРЕ", 10.0, "#9C948C");
-            text_w("Scoria запускает Minecraft 26.3 на собственном Rust-движке. Миры, моды и серверы лежат в вашем профиле.", 12.0, "#9C948C", 400.0);
-            text(f"Версия: {version()}", 12.0, "#F4F0EA");
-            if appearance() == "light" {
-                text("Оформление: светлая", 12.0, "#9C948C");
-            } else if appearance() == "system" {
-                text("Оформление: системная", 12.0, "#9C948C");
-            } else {
-                text("Оформление: тёмная", 12.0, "#9C948C");
-            }
-            if last_error() != "" {
-                text_w(last_error(), 11.0, "#E5484D", 400.0);
-            }
+
+            column(12.0, 24.0, 0.0, 0.0, theme_color("surface2"), 20.0);
+                w_pct(0.38);
+                text("ВЫБРАННЫЙ МИР", 10.0, theme_color("muted"));
+                if world_count() == 0 {
+                    row(12.0, 20.0, 0.0, 160.0, theme_color("surface"), 16.0);
+                        fill_w();
+                        align("center");
+                        justify("center");
+                        text("Нет миров", 20.0, theme_color("muted"));
+                    end_box();
+                } else {
+                    if appearance() == "light" {
+                        image_fill("backdrop-light", 160.0, 16.0);
+                    } else {
+                        image_fill("backdrop", 160.0, 16.0);
+                    }
+                    text(world_name(0.0), 26.0, theme_color("text"));
+                    text(f"{world_mode(0.0)} · {world_last(0.0)} · {world_size(0.0)}", 12.0, theme_color("muted"));
+                    small_button_w("Открыть мир", f"play-world:{world_folder(0.0)}", theme_color("accent"), 160.0);
+                }
+                row(0.0, 0.0, 0.0, 1.0, theme_color("separator"), 0.0);
+                    fill_w();
+                end_box();
+                text("ОБ ИГРЕ", 10.0, theme_color("muted"));
+                text_fill("Scoria запускает Minecraft 26.3 на собственном Rust-движке. Миры, моды и серверы лежат в вашем профиле.", 12.0, theme_color("muted"));
+                text(f"Версия: {version()}", 12.0, theme_color("text"));
+                if appearance() == "light" {
+                    text("Оформление: светлая", 12.0, theme_color("muted"));
+                } else if appearance() == "system" {
+                    text("Оформление: системная", 12.0, theme_color("muted"));
+                } else {
+                    text("Оформление: тёмная", 12.0, theme_color("muted"));
+                }
+                if last_error() != "" {
+                    text_fill(last_error(), 11.0, theme_color("danger"));
+                }
+            end_box();
         end_box();
     end_box();
 }
 
 fn mods() {
-    column(10.0, 48.0, 1056.0, 0.0, "#00000000", 0.0);
-        grow(1.0);
-        text("Моды", 40.0, "#F4F0EA");
-        text_w("Сначала реестр Horizon, затем Modrinth. У каждого результата видно, как он работает в Scoria.", 14.0, "#9C948C", 760.0);
-        row(10.0, 0.0, 1056.0, 0.0, "#00000000", 0.0);
+    scroll(10.0, 48.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+        fill_w();
+        text("Моды", 40.0, theme_color("text"));
+        text_fill("Сначала реестр Horizon, затем Modrinth. У каждого результата видно, как он работает в Scoria.", 14.0, theme_color("muted"));
+        row(10.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+            fill_w();
             align("center");
-            small_button("Horizon", "search", "#1A1A1D");
-            small_button("Modrinth", "search", "#00000000");
+            small_button("Horizon", "search", theme_color("surface2"));
+            small_button("Modrinth", "search", theme_color("transparent"));
             spacer();
-            input("mods-search", "Поиск модов", 320.0);
-            small_button("Поиск", "search", "#FF6A3D");
+            input("mods-search", "Поиск модов", 300.0);
+            small_button("Поиск", "search", theme_color("accent"));
         end_box();
-        row(0.0, 0.0, 1056.0, 1.0, "#2A2A2E", 0.0);
+        row(0.0, 0.0, 0.0, 1.0, theme_color("separator"), 0.0);
+            fill_w();
         end_box();
-        text(f"УСТАНОВЛЕННЫЕ · {mod_count()}", 10.0, "#9C948C");
+        text(f"УСТАНОВЛЕННЫЕ · {mod_count()}", 10.0, theme_color("muted"));
         if mod_count() == 0 {
-            text("Пока ничего не установлено.", 13.0, "#6E7175");
+            text("Пока ничего не установлено.", 13.0, theme_color("muted"));
         } else {
             let i = 0.0;
             while i < mod_count() {
-                row(12.0, 14.0, 1056.0, 48.0, "#1A1A1D", 10.0);
+                row(12.0, 14.0, 0.0, 48.0, theme_color("surface2"), 10.0);
+                    fill_w();
                     align("center");
-                    icon("check", 14.0, "#6FBF8B");
-                    column(2.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
-                        text(mod_title(i), 15.0, "#F4F0EA");
-                        text(f"{mod_source(i)} · {mod_version(i)}", 11.0, "#9C948C");
+                    icon("check", 14.0, theme_color("success"));
+                    column(2.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+                        text(mod_title(i), 15.0, theme_color("text"));
+                        text(f"{mod_source(i)} · {mod_version(i)}", 11.0, theme_color("muted"));
                     end_box();
                     spacer();
                     if mod_verdict(i) != "" {
-                        text(mod_verdict(i), 11.0, "#6FBF8B");
+                        text(mod_verdict(i), 11.0, theme_color("success"));
                     }
                 end_box();
                 i = i + 1.0;
             }
         }
-        text(f"КАТАЛОГ · {result_count()}", 10.0, "#9C948C");
+        text(f"КАТАЛОГ · {result_count()}", 10.0, theme_color("muted"));
         if result_count() == 0 {
-            row(12.0, 16.0, 1056.0, 72.0, "#141416", 12.0);
+            row(12.0, 16.0, 0.0, 72.0, theme_color("surface"), 12.0);
+                fill_w();
                 align("center");
-                icon("search", 16.0, "#6E7175");
-                text("Введите запрос и нажмите «Поиск». Реестр Horizon идёт первым.", 13.0, "#9C948C");
+                icon("search", 16.0, theme_color("muted"));
+                text("Введите запрос и нажмите «Поиск». Реестр Horizon идёт первым.", 13.0, theme_color("muted"));
             end_box();
         } else {
-            scroll(10.0, 0.0, 1056.0, 300.0, "#00000000", 0.0);
-                let i = 0.0;
-                while i < result_count() {
-                    row(16.0, 14.0, 1056.0, 72.0, "#1A1A1D", 12.0);
-                        align("center");
-                        column(4.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
-                            grow(1.0);
-                            text(result_title(i), 16.0, "#F4F0EA");
-                            text_w(result_summary(i), 12.0, "#9C948C", 640.0);
-                            text(f"{result_source(i)} · {result_support(i)}", 11.0, "#6E7175");
-                        end_box();
-                        if result_installable(i) {
-                            small_button("Установить", f"install:{result_id(i)}", "#00000000");
-                        } else {
-                            text("Недоступно", 11.0, "#6E7175");
-                        }
+            let i = 0.0;
+            while i < result_count() {
+                row(16.0, 14.0, 0.0, 72.0, theme_color("surface2"), 12.0);
+                    fill_w();
+                    align("center");
+                    column(4.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+                        grow(1.0);
+                        text(result_title(i), 16.0, theme_color("text"));
+                        text_fill(result_summary(i), 12.0, theme_color("muted"));
+                        text(f"{result_source(i)} · {result_support(i)}", 11.0, theme_color("muted"));
                     end_box();
-                    i = i + 1.0;
-                }
-            end_box();
+                    if result_installable(i) {
+                        small_button("Установить", f"install:{result_id(i)}", theme_color("transparent"));
+                    } else {
+                        text("Недоступно", 11.0, theme_color("muted"));
+                    }
+                end_box();
+                i = i + 1.0;
+            }
         }
     end_box();
 }
 
 fn servers() {
-    column(14.0, 48.0, 1056.0, 0.0, "#00000000", 0.0);
-        grow(1.0);
-        text("Серверы", 40.0, "#F4F0EA");
-        text_w("Сохранённые серверы этого профиля. LAN-миры видны в игре.", 14.0, "#9C948C", 760.0);
-        row(10.0, 0.0, 1056.0, 0.0, "#00000000", 0.0);
+    scroll(14.0, 48.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+        fill_w();
+        text("Серверы", 40.0, theme_color("text"));
+        text_fill("Сохранённые серверы этого профиля. LAN-миры видны в игре.", 14.0, theme_color("muted"));
+        row(10.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+            fill_w();
             align("center");
-            input("server-name", "Имя", 220.0);
-            input("server-ip", "адрес:порт", 320.0);
-            small_button("Добавить", "server-add", "#FF6A3D");
+            input("server-name", "Имя", 200.0);
+            input("server-ip", "адрес:порт", 300.0);
+            small_button("Добавить", "server-add", theme_color("accent"));
             spacer();
-            small_button("Обновить", "refresh", "#1A1A1D");
+            small_button("Обновить", "refresh", theme_color("surface2"));
         end_box();
-        row(0.0, 0.0, 1056.0, 1.0, "#2A2A2E", 0.0);
+        row(0.0, 0.0, 0.0, 1.0, theme_color("separator"), 0.0);
+            fill_w();
         end_box();
-        row(16.0, 12.0, 1056.0, 36.0, "#00000000", 0.0);
+        row(16.0, 12.0, 0.0, 36.0, theme_color("transparent"), 0.0);
+            fill_w();
             align("center");
-            text("ИМЯ", 10.0, "#9C948C");
+            text("ИМЯ", 10.0, theme_color("muted"));
             spacer();
-            text("АДРЕС", 10.0, "#9C948C");
-            row(0.0, 0.0, 240.0, 0.0, "#00000000", 0.0);
+            text("АДРЕС", 10.0, theme_color("muted"));
+            row(0.0, 0.0, 240.0, 0.0, theme_color("transparent"), 0.0);
             end_box();
         end_box();
         if server_count() == 0 {
-            row(12.0, 16.0, 1056.0, 72.0, "#141416", 12.0);
+            row(12.0, 16.0, 0.0, 72.0, theme_color("surface"), 12.0);
+                fill_w();
                 align("center");
-                icon("servers", 16.0, "#6E7175");
-                text("Серверов пока нет. Добавьте адрес выше или откройте мир по LAN.", 13.0, "#9C948C");
+                icon("servers", 16.0, theme_color("muted"));
+                text("Серверов пока нет. Добавьте адрес выше или откройте мир по LAN.", 13.0, theme_color("muted"));
             end_box();
         } else {
             let i = 0.0;
             while i < server_count() {
-                row(16.0, 16.0, 1056.0, 64.0, "#1A1A1D", 10.0);
+                row(16.0, 16.0, 0.0, 64.0, theme_color("surface2"), 10.0);
+                    fill_w();
                     align("center");
-                    icon("map-pin", 14.0, "#FF6A3D");
-                    column(2.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
-                        text(server_name(i), 16.0, "#F4F0EA");
-                        text(server_ip(i), 12.0, "#9C948C");
+                    icon("map-pin", 14.0, theme_color("accent"));
+                    column(2.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+                        text(server_name(i), 16.0, theme_color("text"));
+                        text(server_ip(i), 12.0, theme_color("muted"));
                     end_box();
                     spacer();
-                    small_button("Войти", f"server-join:{server_ip(i)}", "#1A1A1D");
-                    small_button("Удалить", f"server-remove:{index_text(i)}", "#00000000");
+                    small_button("Войти", f"server-join:{server_ip(i)}", theme_color("surface2"));
+                    small_button("Удалить", f"server-remove:{index_text(i)}", theme_color("transparent"));
                 end_box();
                 i = i + 1.0;
             }
@@ -284,118 +317,129 @@ fn servers() {
 
 fn appearance_button(label, value) {
     if appearance() == value {
-        small_button(label, f"appearance:{value}", "#2A1710");
+        small_button(label, f"appearance:{value}", theme_color("accent"));
     } else {
-        small_button(label, f"appearance:{value}", "#1A1A1D");
+        small_button(label, f"appearance:{value}", theme_color("surface2"));
     }
 }
 
 fn settings() {
-    row(32.0, 48.0, 1056.0, 0.0, "#00000000", 0.0);
-        align("stretch");
-        justify("between");
-        column(18.0, 0.0, 620.0, 0.0, "#00000000", 0.0);
-            grow(1.0);
-            text("Настройки", 40.0, "#F4F0EA");
-            text_w("Оформление и офлайн-аккаунты сохраняются в настройках лаунчера.", 14.0, "#9C948C", 560.0);
-            text("ОФОРМЛЕНИЕ", 10.0, "#9C948C");
-            row(8.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
-                appearance_button("Тёмная", "dark");
-                appearance_button("Светлая", "light");
-                appearance_button("Система", "system");
-            end_box();
-            row(0.0, 0.0, 620.0, 1.0, "#2A2A2E", 0.0);
-            end_box();
-            text("ОФЛАЙН-АККАУНТ", 10.0, "#9C948C");
-            text_w("Без аккаунта Microsoft: это имя видят серверы.", 12.0, "#9C948C", 560.0);
-            row(8.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
-                align("center");
-                input("account-name", "Новое имя", 240.0);
-                small_button("Добавить", "account-add", "#FF6A3D");
-            end_box();
-            if account_count() == 0 {
-                text("Аккаунтов пока нет.", 13.0, "#6E7175");
-            } else {
-                let i = 0.0;
-                while i < account_count() {
-                    row(10.0, 12.0, 620.0, 52.0, "#1A1A1D", 10.0);
-                        align("center");
-                        if account_selected(i) {
-                            icon("check", 12.0, "#6FBF8B");
-                        } else {
-                            icon("check", 12.0, "#2A2A2E");
-                        }
-                        text(account_name(i), 15.0, "#F4F0EA");
-                        spacer();
-                        small_button("Играть как", f"account-select:{account_name(i)}", "#00000000");
-                        small_button("Удалить", f"account-remove:{account_name(i)}", "#00000000");
-                    end_box();
-                    i = i + 1.0;
-                }
-            }
-        end_box();
-        column(18.0, 24.0, 400.0, 0.0, "#141416", 20.0);
-            text("СБОРКА", 10.0, "#9C948C");
-            text(version(), 26.0, "#F4F0EA");
-            text(f"Ветка: {branch()}", 12.0, "#9C948C");
-            status_line();
-            row(0.0, 0.0, 352.0, 1.0, "#2A2A2E", 0.0);
-            end_box();
-            text("ИНСТАНСЫ", 10.0, "#9C948C");
-            if instance_count() == 0 {
-                text("Один инстанс по умолчанию.", 12.0, "#6E7175");
-            } else {
-                let i = 0.0;
-                while i < instance_count() {
-                    row(8.0, 10.0, 352.0, 48.0, "#1A1A1D", 10.0);
-                        align("center");
-                        if instance_selected(i) {
-                            icon("check", 12.0, "#6FBF8B");
-                        } else {
-                            icon("check", 12.0, "#2A2A2E");
-                        }
-                        column(2.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
-                            text(instance_name(i), 14.0, "#F4F0EA");
-                            text(f"Minecraft {instance_minecraft(i)}", 11.0, "#9C948C");
+    scroll(18.0, 48.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+        fill_w();
+        row(32.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+            fill_w();
+            align("stretch");
+            column(18.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+                grow(1.4);
+                text("Настройки", 40.0, theme_color("text"));
+                text_fill("Оформление и офлайн-аккаунты сохраняются в настройках лаунчера.", 14.0, theme_color("muted"));
+                text("ОФОРМЛЕНИЕ", 10.0, theme_color("muted"));
+                row(8.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+                    appearance_button("Тёмная", "dark");
+                    appearance_button("Светлая", "light");
+                    appearance_button("Система", "system");
+                end_box();
+                row(0.0, 0.0, 0.0, 1.0, theme_color("separator"), 0.0);
+                    fill_w();
+                end_box();
+                text("ОФЛАЙН-АККАУНТ", 10.0, theme_color("muted"));
+                text_fill("Без аккаунта Microsoft: это имя видят серверы.", 12.0, theme_color("muted"));
+                row(8.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+                    align("center");
+                    input("account-name", "Новое имя", 220.0);
+                    small_button("Добавить", "account-add", theme_color("accent"));
+                end_box();
+                if account_count() == 0 {
+                    text("Аккаунтов пока нет.", 13.0, theme_color("muted"));
+                } else {
+                    let i = 0.0;
+                    while i < account_count() {
+                        row(10.0, 12.0, 0.0, 52.0, theme_color("surface2"), 10.0);
+                            fill_w();
+                            align("center");
+                            if account_selected(i) {
+                                icon("check", 12.0, theme_color("success"));
+                            } else {
+                                icon("check", 12.0, theme_color("separator"));
+                            }
+                            text(account_name(i), 15.0, theme_color("text"));
+                            spacer();
+                            small_button("Играть как", f"account-select:{account_name(i)}", theme_color("transparent"));
+                            small_button("Удалить", f"account-remove:{account_name(i)}", theme_color("transparent"));
                         end_box();
-                        spacer();
-                        small_button("Выбрать", f"instance-select:{instance_id(i)}", "#00000000");
-                    end_box();
-                    i = i + 1.0;
+                        i = i + 1.0;
+                    }
                 }
-            }
-            row(0.0, 0.0, 352.0, 1.0, "#2A2A2E", 0.0);
             end_box();
-            text("СЛУЖЕБНОЕ", 10.0, "#9C948C");
-            row(8.0, 0.0, 0.0, 0.0, "#00000000", 0.0);
-                small_button("Обновить", "refresh", "#1A1A1D");
-                small_button("Скачать", "prepare", "#1A1A1D");
+            column(18.0, 24.0, 400.0, 0.0, theme_color("surface"), 20.0);
+                text("СБОРКА", 10.0, theme_color("muted"));
+                text(version(), 26.0, theme_color("text"));
+                text(f"Ветка: {branch()}", 12.0, theme_color("muted"));
+                status_line();
+                row(0.0, 0.0, 0.0, 1.0, theme_color("separator"), 0.0);
+                    fill_w();
+                end_box();
+                text("ИНСТАНСЫ", 10.0, theme_color("muted"));
+                if instance_count() == 0 {
+                    text("Один инстанс по умолчанию.", 12.0, theme_color("muted"));
+                } else {
+                    let i = 0.0;
+                    while i < instance_count() {
+                        row(8.0, 10.0, 0.0, 48.0, theme_color("surface2"), 10.0);
+                            fill_w();
+                            align("center");
+                            if instance_selected(i) {
+                                icon("check", 12.0, theme_color("success"));
+                            } else {
+                                icon("check", 12.0, theme_color("separator"));
+                            }
+                            column(2.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+                                text(instance_name(i), 14.0, theme_color("text"));
+                                text(f"Minecraft {instance_minecraft(i)}", 11.0, theme_color("muted"));
+                            end_box();
+                            spacer();
+                            small_button("Выбрать", f"instance-select:{instance_id(i)}", theme_color("transparent"));
+                        end_box();
+                        i = i + 1.0;
+                    }
+                }
+                row(0.0, 0.0, 0.0, 1.0, theme_color("separator"), 0.0);
+                    fill_w();
+                end_box();
+                text("СЛУЖЕБНОЕ", 10.0, theme_color("muted"));
+                row(8.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+                    small_button("Обновить", "refresh", theme_color("surface2"));
+                    small_button("Скачать", "prepare", theme_color("surface2"));
+                end_box();
+                if last_error() != "" {
+                    text_fill(last_error(), 11.0, theme_color("danger"));
+                }
             end_box();
-            if last_error() != "" {
-                text_w(last_error(), 11.0, "#E5484D", 340.0);
-            }
         end_box();
     end_box();
 }
 
 fn footer() {
-    row(16.0, 48.0, 1216.0, 40.0, "#00000000", 0.0);
+    row(16.0, 0.0, 0.0, 40.0, theme_color("transparent"), 0.0);
+        fill_w();
+        pad(48.0, 0.0);
         align("center");
-        icon("terminal", 11.0, "#6E7175");
-        text("Mimas → GPUI · экспериментальный UI", 11.0, "#6E7175");
+        icon("terminal", 11.0, theme_color("muted"));
+        text("Mimas → GPUI · экспериментальный UI", 11.0, theme_color("muted"));
         spacer();
-        text("Ctrl+1–4 · экраны    Ctrl+Enter · запуск    Esc · выход", 11.0, "#6E7175");
+        text("Ctrl+1–4 · экраны    Ctrl+Enter · запуск    Esc · выход", 11.0, theme_color("muted"));
     end_box();
 }
 
 fn draw() {
     clear();
-    column(0.0, 0.0, 1280.0, 800.0, "#0B0B0D", 0.0);
+    screen(theme_color("bg"));
         topbar();
-        row(0.0, 0.0, 1280.0, 0.0, "#00000000", 0.0);
-            pad(64.0, 0.0);
+        row(0.0, 0.0, 0.0, 0.0, theme_color("transparent"), 0.0);
+            fill_w();
             grow(1.0);
-            align("start");
+            pad(64.0, 0.0);
+            align("stretch");
             if current_screen() == "home" {
                 home();
             } else if current_screen() == "mods" {
