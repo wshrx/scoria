@@ -1,7 +1,8 @@
-//! Experimental Mimas → GPUI UI tree.
+//! Experimental Mimas → GPUI launcher preview.
 //!
-//! The script builds rows, columns, text and spacing; Rust maps the tree to GPUI flex
-//! elements. The file is watched, so editing the script repaints the window.
+//! The script builds rows, columns, text and buttons; Rust maps the tree to GPUI flex
+//! elements. Button actions update a tiny preview state and call `draw()` again, and the
+//! file is watched for hot reload.
 //!
 //!   cargo run -p scoria-ui --features dev-scripts --example mimas-ui
 use std::{
@@ -40,6 +41,15 @@ enum Justify {
     Around,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Mode {
+    Ready,
+    Preparing,
+    Playing,
+}
+
+static UI: Mutex<Mode> = Mutex::new(Mode::Ready);
+
 #[derive(Clone)]
 enum Node {
     Box {
@@ -59,6 +69,12 @@ enum Node {
     Text {
         content: String,
         size: f32,
+        color: Rgba,
+    },
+    Button {
+        label: String,
+        action: String,
+        fill: Rgba,
         color: Rgba,
     },
 }
@@ -144,10 +160,18 @@ fn end() {
     }
 }
 
+fn push(node: Node) {
+    let mut guard = BUILDER.lock().expect("builder");
+    let builder = guard.get_or_insert_with(Builder::default);
+    match builder.stack.last_mut() {
+        Some(parent) => parent.children.push(node),
+        None => builder.root.push(node),
+    }
+}
+
 #[mimas]
 fn clear() {
-    let mut guard = BUILDER.lock().expect("builder");
-    *guard = Some(Builder::default());
+    *BUILDER.lock().expect("builder") = Some(Builder::default());
 }
 
 #[mimas]
@@ -168,8 +192,7 @@ fn end_box() {
 #[mimas]
 fn align(value: &str) {
     let mut guard = BUILDER.lock().expect("builder");
-    let builder = guard.get_or_insert_with(Builder::default);
-    if let Some(frame) = builder.stack.last_mut() {
+    if let Some(frame) = guard.get_or_insert_with(Builder::default).stack.last_mut() {
         frame.align = Some(match value {
             "center" => Align::Center,
             "end" => Align::End,
@@ -182,8 +205,7 @@ fn align(value: &str) {
 #[mimas]
 fn justify(value: &str) {
     let mut guard = BUILDER.lock().expect("builder");
-    let builder = guard.get_or_insert_with(Builder::default);
-    if let Some(frame) = builder.stack.last_mut() {
+    if let Some(frame) = guard.get_or_insert_with(Builder::default).stack.last_mut() {
         frame.justify = Some(match value {
             "center" => Justify::Center,
             "end" => Justify::End,
@@ -197,8 +219,7 @@ fn justify(value: &str) {
 #[mimas]
 fn grow(value: f64) {
     let mut guard = BUILDER.lock().expect("builder");
-    let builder = guard.get_or_insert_with(Builder::default);
-    if let Some(frame) = builder.stack.last_mut() {
+    if let Some(frame) = guard.get_or_insert_with(Builder::default).stack.last_mut() {
         frame.grow = Some(value as f32);
     }
 }
@@ -206,28 +227,43 @@ fn grow(value: f64) {
 #[mimas]
 fn wrap() {
     let mut guard = BUILDER.lock().expect("builder");
-    let builder = guard.get_or_insert_with(Builder::default);
-    if let Some(frame) = builder.stack.last_mut() {
+    if let Some(frame) = guard.get_or_insert_with(Builder::default).stack.last_mut() {
         frame.wrap = true;
     }
 }
 
 #[mimas]
 fn text(content: &str, size: f64, fill: &str) {
-    let mut guard = BUILDER.lock().expect("builder");
-    let builder = guard.get_or_insert_with(Builder::default);
-    let node = Node::Text {
+    push(Node::Text {
         content: content.to_string(),
         size: size as f32,
         color: color(fill),
-    };
-    match builder.stack.last_mut() {
-        Some(parent) => parent.children.push(node),
-        None => builder.root.push(node),
-    }
+    });
 }
 
-fn render_node(node: Node, theme: Theme) -> gpui::AnyElement {
+#[mimas]
+fn button(label: &str, action: &str, fill: &str) {
+    let fill = color(fill);
+    let light = fill.color.red > 0.6 && fill.color.green < 0.6;
+    push(Node::Button {
+        label: label.to_string(),
+        action: action.to_string(),
+        fill,
+        color: if light { rgb(0x1A0A04) } else { rgb(0xF4F0EA) },
+    });
+}
+
+#[mimas]
+fn preparing() -> bool {
+    *UI.lock().expect("mode") == Mode::Preparing
+}
+
+#[mimas]
+fn playing() -> bool {
+    *UI.lock().expect("mode") == Mode::Playing
+}
+
+fn render_node(node: Node, theme: Theme, cx: &mut Context<Preview>) -> gpui::AnyElement {
     match node {
         Node::Text {
             content,
@@ -238,6 +274,31 @@ fn render_node(node: Node, theme: Theme) -> gpui::AnyElement {
             .font_family(theme.type_scale.sans)
             .text_color(color)
             .child(content)
+            .into_any_element(),
+        Node::Button {
+            label,
+            action,
+            fill,
+            color,
+        } => div()
+            .id(format!("mimas-{action}"))
+            .flex()
+            .items_center()
+            .justify_center()
+            .w(px(192.0))
+            .h(px(52.0))
+            .px(px(20.0))
+            .rounded(px(12.0))
+            .bg(fill)
+            .text_color(color)
+            .text_size(px(16.0))
+            .cursor_pointer()
+            .hover(move |style| style.opacity(0.9))
+            .on_click(cx.listener(move |this, _, _, cx| {
+                this.dispatch(action.clone());
+                cx.notify();
+            }))
+            .child(label)
             .into_any_element(),
         Node::Box {
             direction,
@@ -295,40 +356,70 @@ fn render_node(node: Node, theme: Theme) -> gpui::AnyElement {
                 element = element.flex_grow(grow);
             }
             element
-                .children(children.into_iter().map(|child| render_node(child, theme)))
+                .children(
+                    children
+                        .into_iter()
+                        .map(|child| render_node(child, theme, cx)),
+                )
                 .into_any_element()
         }
     }
 }
 
-fn load_scene(source: &str) -> Result<Vec<Node>, String> {
-    {
-        let mut guard = BUILDER.lock().map_err(|e| e.to_string())?;
-        *guard = Some(Builder::default());
-    }
-    let mut vm = mimas::compile_source(source).map_err(|error| format!("{error:?}"))?;
-    vm.run().map_err(|error| format!("{error:?}"))?;
+fn start_scene(source: &str, name: &str) -> Result<(mimas::Vm, Vec<Node>), String> {
+    let mut vm = mimas::compile_source(source).map_err(|error| format!("{name}: {error:?}"))?;
+    vm.run().map_err(|error| format!("{name}: {error:?}"))?;
+    *BUILDER.lock().map_err(|e| e.to_string())? = Some(Builder::default());
     vm.call::<()>("draw", ())
-        .map_err(|error| format!("draw: {error:?}"))?;
-    let mut guard = BUILDER.lock().map_err(|e| e.to_string())?;
-    Ok(std::mem::take(
-        &mut guard.get_or_insert_with(Builder::default).root,
-    ))
+        .map_err(|error| format!("{name}: draw: {error:?}"))?;
+    let nodes = std::mem::take(
+        &mut BUILDER
+            .lock()
+            .map_err(|e| e.to_string())?
+            .get_or_insert_with(Builder::default)
+            .root,
+    );
+    Ok((vm, nodes))
 }
 
 struct Preview {
     theme: Theme,
     nodes: Arc<Mutex<Vec<Node>>>,
+    vm: Option<mimas::Vm>,
     script: std::path::PathBuf,
     modified: Option<SystemTime>,
     error: Option<String>,
 }
 
 impl Preview {
+    fn redraw(&mut self) {
+        let Some(vm) = self.vm.as_mut() else {
+            return;
+        };
+        *BUILDER.lock().expect("builder") = Some(Builder::default());
+        match vm.call::<()>("draw", ()) {
+            Ok(()) => {
+                let nodes = std::mem::take(
+                    &mut BUILDER
+                        .lock()
+                        .expect("builder")
+                        .get_or_insert_with(Builder::default)
+                        .root,
+                );
+                if let Ok(mut scene) = self.nodes.lock() {
+                    *scene = nodes;
+                }
+                self.error = None;
+            }
+            Err(error) => self.error = Some(format!("draw: {error:?}")),
+        }
+    }
+
     fn reload(&mut self) {
         match std::fs::read_to_string(&self.script) {
-            Ok(source) => match load_scene(&source) {
-                Ok(nodes) => {
+            Ok(source) => match start_scene(&source, &self.script.display().to_string()) {
+                Ok((vm, nodes)) => {
+                    self.vm = Some(vm);
                     if let Ok(mut scene) = self.nodes.lock() {
                         *scene = nodes;
                     }
@@ -341,6 +432,16 @@ impl Preview {
         self.modified = std::fs::metadata(&self.script)
             .and_then(|meta| meta.modified())
             .ok();
+    }
+
+    fn dispatch(&mut self, action: String) {
+        let mode = match action.as_str() {
+            "prepare" => Mode::Preparing,
+            "play" => Mode::Playing,
+            _ => Mode::Ready,
+        };
+        *UI.lock().expect("mode") = mode;
+        self.redraw();
     }
 
     fn watch(&self, cx: &mut Context<Self>) {
@@ -369,7 +470,7 @@ impl Preview {
 }
 
 impl Render for Preview {
-    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let nodes = self
             .nodes
             .lock()
@@ -380,7 +481,11 @@ impl Render for Preview {
             .size_full()
             .overflow_hidden()
             .bg(self.theme.colors.background)
-            .children(nodes.into_iter().map(|node| render_node(node, self.theme)))
+            .children(
+                nodes
+                    .into_iter()
+                    .map(|node| render_node(node, self.theme, cx)),
+            )
             .children(self.error.as_ref().map(|error| {
                 div()
                     .absolute()
@@ -399,7 +504,6 @@ impl Render for Preview {
 }
 
 fn main() {
-    load_scene(include_str!("../dev/mimas-ui/scene.mim")).expect("the default scene");
     let script = std::env::var_os("SCORIA_MIMAS_UI")
         .map(std::path::PathBuf::from)
         .unwrap_or_else(|| {
@@ -422,6 +526,7 @@ fn main() {
                         let mut preview = Preview {
                             theme: Theme::dark(),
                             nodes,
+                            vm: None,
                             script,
                             modified: None,
                             error: None,
