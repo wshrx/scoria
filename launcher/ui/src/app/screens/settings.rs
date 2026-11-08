@@ -118,14 +118,14 @@ impl Shell {
             .w_full()
             .h_full()
             .overflow_y_scroll()
-            .py(px(theme.spacing.xl))
+            .py(px(theme.spacing.md))
             .child(
             card(
                 &theme,
                 div()
                     .flex()
                     .flex_col()
-                    .gap(px(theme.spacing.lg))
+                    .gap(px(theme.spacing.md))
                     .child(page_header(
                         &theme,
                         self.t("Settings"),
@@ -134,18 +134,23 @@ impl Shell {
                     .child(
                         div()
                             .flex()
-                            .flex_col()
-                            .gap(px(theme.spacing.sm))
-                            .child(label(&theme, &self.t("Appearance")))
-                            .child(appearance),
-                    )
-                    .child(
-                        div()
-                            .flex()
-                            .flex_col()
-                            .gap(px(theme.spacing.sm))
-                            .child(label(&theme, &self.t("Language")))
-                            .child(language),
+                            .gap(px(theme.spacing.lg))
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap(px(theme.spacing.sm))
+                                    .child(label(&theme, &self.t("Appearance")))
+                                    .child(appearance),
+                            )
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap(px(theme.spacing.sm))
+                                    .child(label(&theme, &self.t("Language")))
+                                    .child(language),
+                            ),
                     )
                     .child({
                         let mut microsoft = div()
@@ -431,12 +436,6 @@ impl Shell {
                                 None => div(),
                             }),
                     )
-                    .child(
-                        div()
-                            .text_size(px(theme.type_scale.caption))
-                            .text_color(theme.colors.muted)
-                            .child(self.t("Ctrl+1–4 screens · Ctrl+Enter start · Esc close")),
-                    ),
             )
             .w(px(880.0)),
         )
