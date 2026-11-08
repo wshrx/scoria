@@ -31,7 +31,75 @@ impl Shell {
         }
     }
 
-    pub(super) fn topbar(&self, cx: &mut Context<Self>, compact: bool) -> impl IntoElement {
+    /// The screen tabs live in the window body, under the titlebar, not in the titlebar itself.
+    pub(super) fn screen_tabs(&self, cx: &mut Context<Self>, compact: bool) -> impl IntoElement {
+        let theme = self.theme;
+        let mut tabs = div().flex().items_center().gap(px(4.0));
+        for screen in [
+            Screen::Home,
+            Screen::Mods,
+            Screen::Servers,
+            Screen::Settings,
+        ] {
+            let selected = self.screen == screen;
+            let on_click =
+                cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| this.go(screen, cx));
+            let tint = if selected {
+                theme.colors.accent
+            } else {
+                theme.colors.muted
+            };
+            tabs = tabs.child(
+                div()
+                    .id(("screen-tab", screen as usize))
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .gap(px(8.0))
+                    .h(px(36.0))
+                    .px(px(if compact { 10.0 } else { 14.0 }))
+                    .rounded(px(theme.radii.md))
+                    .bg(if selected {
+                        theme.colors.surface_secondary
+                    } else {
+                        rgba(0x00000000)
+                    })
+                    .text_color(if selected {
+                        theme.colors.foreground
+                    } else {
+                        theme.colors.muted
+                    })
+                    .cursor_pointer()
+                    .hover(move |style| {
+                        style
+                            .bg(theme.colors.surface_secondary)
+                            .text_color(theme.colors.foreground)
+                    })
+                    .on_click(on_click)
+                    .child(
+                        gpui::svg()
+                            .data(screen.icon())
+                            .size(px(14.0))
+                            .text_color(tint),
+                    )
+                    .children((!compact).then(|| self.t(screen.label()))),
+            );
+        }
+        div()
+            .flex()
+            .flex_col()
+            .child(
+                div()
+                    .flex()
+                    .items_center()
+                    .h(px(44.0))
+                    .px(px(if compact { 16.0 } else { theme.spacing.page }))
+                    .child(tabs),
+            )
+            .child(div().h(px(1.0)).w_full().bg(theme.colors.separator))
+    }
+
+    pub(super) fn topbar(&self, _cx: &mut Context<Self>, compact: bool) -> impl IntoElement {
         let theme = self.theme;
         let (status, status_color) = self.status();
         let control =
@@ -54,89 +122,6 @@ impl Shell {
                             .text_color(theme.colors.muted),
                     )
             };
-
-        let mut nav = div().flex().items_center().gap(px(4.0));
-        for screen in [Screen::Home, Screen::Mods, Screen::Servers] {
-            let selected = self.screen == screen;
-            let on_click =
-                cx.listener(move |this, _: &gpui::ClickEvent, _window, cx| this.go(screen, cx));
-            let tint = if selected {
-                theme.colors.accent
-            } else {
-                theme.colors.muted
-            };
-            nav = nav.child(
-                div()
-                    .id(("topbar-nav", screen as usize))
-                    .relative()
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .gap(px(8.0))
-                    .h(px(36.0))
-                    .px(px(if compact { 10.0 } else { 14.0 }))
-                    .rounded(px(theme.radii.md))
-                    .bg(if selected {
-                        theme.colors.surface_secondary
-                    } else {
-                        rgba(0x00000000)
-                    })
-                    .cursor_pointer()
-                    .text_color(if selected {
-                        theme.colors.foreground
-                    } else {
-                        theme.colors.muted
-                    })
-                    .hover(move |style| {
-                        style
-                            .bg(theme.colors.surface_secondary)
-                            .text_color(theme.colors.foreground)
-                    })
-                    .on_click(on_click)
-                    .child(
-                        gpui::svg()
-                            .data(screen.icon())
-                            .size(px(14.0))
-                            .text_color(tint),
-                    )
-                    .children((!compact).then(|| self.t(screen.label()))),
-            );
-        }
-
-        let settings = {
-            let selected = self.screen == Screen::Settings;
-            div()
-                .id("topbar-settings")
-                .flex()
-                .items_center()
-                .justify_center()
-                .w(px(32.0))
-                .h(px(32.0))
-                .rounded(px(theme.radii.md))
-                .bg(if selected {
-                    theme.colors.surface_secondary
-                } else {
-                    rgba(0x00000000)
-                })
-                .text_color(if selected {
-                    theme.colors.foreground
-                } else {
-                    theme.colors.muted
-                })
-                .cursor_pointer()
-                .hover(move |style| style.bg(theme.colors.surface_secondary))
-                .on_click(cx.listener(|this, _, _window, cx| this.go(Screen::Settings, cx)))
-                .child(
-                    gpui::svg()
-                        .data(ICON_SETTINGS)
-                        .size(px(14.0))
-                        .text_color(if selected {
-                            theme.colors.foreground
-                        } else {
-                            theme.colors.muted
-                        }),
-                )
-        };
 
         div()
             .flex()
@@ -174,16 +159,7 @@ impl Shell {
                                     .child(env!("SCORIA_VERSION")),
                             ),
                     )
-                    .child(
-                        div()
-                            .flex_1()
-                            .h_full()
-                            .flex()
-                            .items_end()
-                            .justify_center()
-                            .pb(px(2.0))
-                            .child(nav),
-                    )
+                    .child(div().flex_1())
                     .child(
                         div()
                             .flex()
@@ -207,7 +183,6 @@ impl Shell {
                                     )
                                     .child(status),
                             )
-                            .child(settings)
                             .child(
                                 div()
                                     .flex()

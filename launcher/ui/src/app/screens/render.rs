@@ -73,6 +73,7 @@ impl Render for Shell {
                     .size_full()
                     .overflow_hidden()
                     .child(self.topbar(cx, compact))
+                    .child(self.screen_tabs(cx, compact))
                     .child(
                         div()
                             .flex()

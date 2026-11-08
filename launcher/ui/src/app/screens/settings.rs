@@ -1,6 +1,6 @@
 //! Appearance, language and the offline nickname.
 use super::super::*;
-use gpui::{Div, Stateful};
+use gpui::{anchored, deferred, point, AnchoredPositionMode, Div, Stateful};
 use scoria_ui_kit::field;
 
 /// A web-like select: a field with a chevron and a floating list under it.
@@ -46,7 +46,16 @@ fn select_control(
                         .text_color(theme.colors.muted),
                 ),
         )
-        .children(open.then(|| menu.mt(px(theme.spacing.sm))))
+        .children(open.then(|| {
+            deferred(
+                anchored()
+                    .position_mode(AnchoredPositionMode::Local)
+                    .position(point(px(0.0), px(theme.sizes.field + theme.spacing.sm)))
+                    .snap_to_window()
+                    .child(menu.w(px(theme.sizes.select))),
+            )
+            .priority(1)
+        }))
 }
 
 /// Microsoft's four-square mark, 21 px, in its published colours.
@@ -195,14 +204,14 @@ impl Shell {
             .w_full()
             .h_full()
             .overflow_y_scroll()
-            .py(px(theme.spacing.md))
+            .py(px(theme.spacing.sm))
             .child(
             card(
                 &theme,
                 div()
                     .flex()
                     .flex_col()
-                    .gap(px(theme.spacing.md))
+                    .gap(px(theme.spacing.xs))
                     .child(page_header(
                         &theme,
                         self.t("Settings"),

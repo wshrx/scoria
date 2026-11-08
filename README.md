@@ -144,7 +144,8 @@ source only if we can theme it without losing Scoria's identity.
 3. **Auth core** — device code, Xbox/XSTS, Minecraft, ownership, profile, keychain, refresh. ✅
 4. **Profiles UI** — Settings sign-in panel and online rows ✅; full switcher still next.
    Microsoft's four-square mark is used, the button stays on Scoria surfaces instead of the
-   orange primary action.
+   orange primary action. Screen tabs now live in the window body under the titlebar, and
+   appearance/language use a floating opaque popover that does not resize the page.
 5. **Service split** — move filesystem/network out of `app.rs`, add fakes. Next.
 6. **Motion + tokens** — motion tokens, page enter, `_variables.css` and unified control sizes
    done; hover plates, stagger and a full hardcoded-value audit still next.
