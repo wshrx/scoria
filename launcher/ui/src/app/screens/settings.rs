@@ -46,12 +46,7 @@ fn select_control(
                         .text_color(theme.colors.muted),
                 ),
         )
-        .children(open.then(|| {
-            menu.absolute()
-                .top(px(theme.sizes.field + 4.0))
-                .left(px(0.0))
-                .w(px(theme.sizes.select))
-        }))
+        .children(open.then(|| menu.mt(px(theme.spacing.sm))))
 }
 
 /// Microsoft's four-square mark, 21 px, in its published colours.
