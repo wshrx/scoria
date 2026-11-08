@@ -89,6 +89,10 @@ need a decimal point (`42.0`, not `42`).
 - **All hooks**: `hooks-all.mim` shows every event and its getters, including prepare, install,
   servers, accounts, settings and game exit.
 
+The engine is a separate library, [`launcher/hooks`](../launcher/hooks/README.md): one VM per
+`.mim`, per-file error isolation, `notify` watcher and a `capabilities` filter. The window only
+maps its `Command`s to GPUI actions.
+
 The repository examples are in [`launcher/ui/dev/scripts/`](../launcher/ui/dev/scripts/). They are
 developer fixtures, not a supported player API.
 

@@ -1,0 +1,10 @@
+[package]
+name = "scoria-hooks"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Typed Mimas hooks for the Scoria launcher"
+
+[dependencies]
+mimas = { version = "0.4", default-features = false }
+notify = "8"

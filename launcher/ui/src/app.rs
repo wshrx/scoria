@@ -2,18 +2,7 @@
 //! Screens and their drawing live in `screens`, the synthetic QA states in this file.
 mod screens;
 #[cfg(feature = "dev-scripts")]
-mod script;
-#[cfg(not(feature = "dev-scripts"))]
-mod script {
-    //! No-ops for the state setters the app calls outside the hook layer.
-    pub fn set_prepare(_: f64, _: f64, _: &str) {}
-    pub fn set_result(_: &str, _: bool, _: &str) {}
-    pub fn set_prepare_result(_: bool, _: &str) {}
-    pub fn set_screen(_: &str) {}
-    pub fn set_account(_: &str, _: &str) {}
-    pub fn set_server(_: &str, _: &str, _: usize) {}
-    pub fn set_setting(_: &str, _: &str) {}
-}
+use scoria_hooks::{Command as HookCommand, Dispatch as HookDispatch, Event as HookEvent, Hooks};
 mod watch;
 
 use std::{
@@ -215,6 +204,54 @@ enum SignInEvent {
     Done(String),
 }
 
+/// App-level events for the developer hooks. Kept outside the feature so call sites compile in
+/// player builds too; the hook crate only exists with `dev-scripts`.
+#[derive(Clone, Debug)]
+#[allow(dead_code)]
+enum UiEvent {
+    Start,
+    Reload,
+    PrepareStart,
+    PrepareProgress {
+        done: f64,
+        total: f64,
+        line: String,
+    },
+    PrepareDone {
+        ok: bool,
+        error: String,
+    },
+    InstallStart {
+        project: String,
+    },
+    InstallDone {
+        project: String,
+        ok: bool,
+        error: String,
+    },
+    ServerAdd {
+        name: String,
+        ip: String,
+        index: usize,
+    },
+    ServerRemove {
+        index: usize,
+    },
+    AccountSwitch {
+        kind: String,
+        name: String,
+    },
+    ScreenChange {
+        screen: String,
+    },
+    SettingsChange {
+        key: String,
+        value: String,
+    },
+    GameStart,
+    GameExit,
+}
+
 pub(crate) struct Shell {
     theme: Theme,
     screen: Screen,
@@ -255,7 +292,9 @@ pub(crate) struct Shell {
     #[cfg(feature = "dev-scripts")]
     script_running: bool,
     #[cfg(feature = "dev-scripts")]
-    script_watcher: Option<watch::Keep>,
+    hooks: Option<Hooks>,
+    #[cfg(feature = "dev-scripts")]
+    script_watching: bool,
 }
 
 impl Shell {
@@ -308,7 +347,10 @@ impl Shell {
             #[cfg(feature = "dev-scripts")]
             script_running: false,
             #[cfg(feature = "dev-scripts")]
-            script_watcher: None,
+            hooks: std::env::var_os("SCORIA_DEV_SCRIPTS")
+                .map(|dir| Hooks::new(std::path::PathBuf::from(dir))),
+            #[cfg(feature = "dev-scripts")]
+            script_watching: false,
         };
         let qa_state = std::env::var("SCORIA_UI_STATE").ok();
         if let Some(state) = &qa_state {
@@ -333,7 +375,7 @@ impl Shell {
         }
         if qa_state.is_none() {
             shell.watch_instance(cx);
-            shell.run_scripts("on_start", cx);
+            shell.dispatch_event(UiEvent::Start, cx);
             shell.watch_scripts(cx);
         }
         shell
@@ -565,115 +607,131 @@ impl Shell {
         .detach();
     }
 
-    /// Run one Mimas hook, then apply what the script asked for. The guard stops a script's
-    /// `play()` from running `on_game_start` again.
+    /// Dispatch one developer event, then apply the commands the scripts queued. The guard stops
+    /// a script's `play()` from recursively running `on_game_start` on the same dispatch.
     #[cfg(feature = "dev-scripts")]
-    fn run_scripts(&mut self, hook: &str, cx: &mut Context<Self>) {
+    fn dispatch_event(&mut self, event: UiEvent, cx: &mut Context<Self>) {
         if self.script_running {
             return;
         }
-        self.script_running = true;
-        let Some(dir) = std::env::var_os("SCORIA_DEV_SCRIPTS").map(std::path::PathBuf::from) else {
-            self.script_running = false;
-            return;
-        };
         let prepared = self
             .snapshot
             .as_ref()
             .ok()
             .and_then(|snapshot| snapshot["prepared"].as_bool())
             .unwrap_or(false);
-        script::set_state(prepared, self.playing_now());
-        let result = script::run(hook, &dir);
-        match result {
-            Ok(actions) => {
-                for action in actions {
-                    match action {
-                        script::Action::Toast(message) => {
-                            self.show_toast(Tone::Neutral, message, cx)
-                        }
-                        script::Action::Log(message) => self.log_line(&message),
-                        script::Action::Play => self.game_action(cx),
-                        script::Action::Download => self.prepare(cx),
-                        script::Action::Screen(name) => {
-                            let screen = match name.as_str() {
-                                "mods" => Screen::Mods,
-                                "servers" => Screen::Servers,
-                                "settings" => Screen::Settings,
-                                _ => Screen::Home,
-                            };
-                            self.go(screen, cx);
-                        }
-                        script::Action::State(name) => {
-                            self.apply_qa_state(&name);
-                            cx.notify();
-                        }
-                        script::Action::Progress(percent, line) => {
-                            self.apply_qa_state("home-prepared");
-                            self.preparing = true;
-                            self.prepare_percent = Some((percent / 100.0).clamp(0.0, 1.0) as f32);
-                            self.prepare_status = Some(line);
-                            cx.notify();
-                        }
-                        script::Action::Cancel => {
-                            scoria_core::api::cancel_prepare();
-                            self.preparing = false;
-                            self.prepare_percent = None;
-                            self.prepare_status = None;
-                            cx.notify();
-                        }
-                        script::Action::Stop => self.stop_game(cx),
-                        script::Action::Install(project) => self.install(project, cx),
-                        script::Action::AddServer(name, ip) => self.add_server_values(name, ip, cx),
-                        script::Action::RemoveServer(index) => self.remove_server(index, cx),
-                        script::Action::SelectOffline(name) => self.use_account(name, cx),
-                        script::Action::SetAppearance(value) => {
-                            let appearance = match value.as_str() {
-                                "light" => Appearance::Light,
-                                "system" => Appearance::System,
-                                _ => Appearance::Dark,
-                            };
-                            self.set_appearance(cx, appearance);
-                        }
-                        script::Action::SetLanguage(value) => {
-                            let language = match value.as_str() {
-                                "en" => Some(Language::English),
-                                "ru" => Some(Language::Russian),
-                                "fr" => Some(Language::French),
-                                _ => None,
-                            };
-                            self.set_language(cx, language);
-                        }
-                        script::Action::Refresh => {
-                            self.snapshot = scoria_core::api::snapshot();
-                            self.refresh_servers();
-                            cx.notify();
-                        }
-                    }
+        let playing = self.playing_now();
+        let Some(hooks) = self.hooks.as_mut() else {
+            return;
+        };
+        self.script_running = true;
+        hooks.set_snapshot(prepared, playing);
+        let event = match event {
+            UiEvent::Start => HookEvent::Start,
+            UiEvent::Reload => HookEvent::Reload,
+            UiEvent::PrepareStart => HookEvent::PrepareStart,
+            UiEvent::PrepareProgress { done, total, line } => {
+                HookEvent::PrepareProgress { done, total, line }
+            }
+            UiEvent::PrepareDone { ok, error } => HookEvent::PrepareDone { ok, error },
+            UiEvent::InstallStart { project } => HookEvent::InstallStart { project },
+            UiEvent::InstallDone { project, ok, error } => {
+                HookEvent::InstallDone { project, ok, error }
+            }
+            UiEvent::ServerAdd { name, ip, index } => HookEvent::ServerAdd { name, ip, index },
+            UiEvent::ServerRemove { index } => HookEvent::ServerRemove { index },
+            UiEvent::AccountSwitch { kind, name } => HookEvent::AccountSwitch { kind, name },
+            UiEvent::ScreenChange { screen } => HookEvent::ScreenChange { screen },
+            UiEvent::SettingsChange { key, value } => HookEvent::SettingsChange { key, value },
+            UiEvent::GameStart => HookEvent::GameStart,
+            UiEvent::GameExit => HookEvent::GameExit,
+        };
+        let HookDispatch { commands, errors } = hooks.dispatch(event);
+        for error in errors {
+            self.log_line(&format!("script: {error}"));
+        }
+        for command in commands {
+            match command {
+                HookCommand::Toast(message) => self.show_toast(Tone::Neutral, message, cx),
+                HookCommand::Log(message) => self.log_line(&message),
+                HookCommand::Play => self.game_action(cx),
+                HookCommand::Download => self.prepare(cx),
+                HookCommand::Screen(name) => {
+                    let screen = match name.as_str() {
+                        "mods" => Screen::Mods,
+                        "servers" => Screen::Servers,
+                        "settings" => Screen::Settings,
+                        _ => Screen::Home,
+                    };
+                    self.go(screen, cx);
+                }
+                HookCommand::State(name) => {
+                    self.apply_qa_state(&name);
+                    cx.notify();
+                }
+                HookCommand::Progress(percent, line) => {
+                    self.apply_qa_state("home-prepared");
+                    self.preparing = true;
+                    self.prepare_percent = Some((percent / 100.0).clamp(0.0, 1.0) as f32);
+                    self.prepare_status = Some(line);
+                    cx.notify();
+                }
+                HookCommand::Cancel => {
+                    scoria_core::api::cancel_prepare();
+                    self.preparing = false;
+                    self.prepare_percent = None;
+                    self.prepare_status = None;
+                    cx.notify();
+                }
+                HookCommand::Stop => self.stop_game(cx),
+                HookCommand::Install(project) => self.install(project, cx),
+                HookCommand::AddServer(name, ip) => self.add_server_values(name, ip, cx),
+                HookCommand::RemoveServer(index) => self.remove_server(index, cx),
+                HookCommand::SelectOffline(name) => self.use_account(name, cx),
+                HookCommand::SetAppearance(value) => {
+                    let appearance = match value.as_str() {
+                        "light" => Appearance::Light,
+                        "system" => Appearance::System,
+                        _ => Appearance::Dark,
+                    };
+                    self.set_appearance(cx, appearance);
+                }
+                HookCommand::SetLanguage(value) => {
+                    let language = match value.as_str() {
+                        "en" => Some(Language::English),
+                        "ru" => Some(Language::Russian),
+                        "fr" => Some(Language::French),
+                        _ => None,
+                    };
+                    self.set_language(cx, language);
+                }
+                HookCommand::Refresh => {
+                    self.snapshot = scoria_core::api::snapshot();
+                    self.refresh_servers();
+                    cx.notify();
                 }
             }
-            Err(error) => self.show_toast(Tone::Danger, format!("script: {error}"), cx),
         }
         self.script_running = false;
     }
 
     #[cfg(not(feature = "dev-scripts"))]
-    fn run_scripts(&mut self, _hook: &str, _cx: &mut Context<Self>) {}
+    fn dispatch_event(&mut self, _event: UiEvent, _cx: &mut Context<Self>) {}
 
-    /// Re-run `on_reload` when a `.mim` file changes. The OS watcher reports changes; the
-    /// window only debounces the channel, it never scans the folder on a timer.
+    /// Re-run `on_reload` when a `.mim` file changes. The hooks crate owns the OS watcher;
+    /// the window only debounces its channel, it never scans the folder on a timer.
     #[cfg(feature = "dev-scripts")]
     fn watch_scripts(&mut self, cx: &mut Context<Self>) {
-        if self.script_watcher.is_some() {
+        if self.script_watching {
             return;
         }
-        let Some(dir) = std::env::var_os("SCORIA_DEV_SCRIPTS").map(std::path::PathBuf::from) else {
+        let Some(hooks) = self.hooks.as_mut() else {
             return;
         };
-        let Some((keep, changes)) = watch::start_scripts(&dir) else {
+        let Some(changes) = hooks.watch() else {
             return;
         };
-        self.script_watcher = Some(keep);
+        self.script_watching = true;
         cx.spawn(async move |this, cx| loop {
             cx.background_executor().timer(watch::DEBOUNCE).await;
             let mut changed = false;
@@ -685,7 +743,7 @@ impl Shell {
             }
             let alive = this
                 .update(cx, |this, cx| {
-                    this.run_scripts("on_reload", cx);
+                    this.dispatch_event(UiEvent::Reload, cx);
                     this.show_toast(Tone::Neutral, this.t("Scripts reloaded."), cx);
                 })
                 .is_ok();
@@ -715,8 +773,12 @@ impl Shell {
             Screen::Servers => "servers",
             Screen::Settings => "settings",
         };
-        script::set_screen(name);
-        self.run_scripts("on_screen_change", cx);
+        self.dispatch_event(
+            UiEvent::ScreenChange {
+                screen: name.to_string(),
+            },
+            cx,
+        );
         cx.notify();
     }
 
@@ -809,13 +871,19 @@ impl Shell {
                 self.server_name
                     .update(cx, |state, cx| state.emplace("", cx));
                 self.server_ip.update(cx, |state, cx| state.emplace("", cx));
-                script::set_server(&name, &ip, index);
+                self.dispatch_event(
+                    UiEvent::ServerAdd {
+                        name: name.clone(),
+                        ip: ip.clone(),
+                        index,
+                    },
+                    cx,
+                );
                 self.show_toast(
                     Tone::Success,
                     self.tf("Added {name}.", &[("name", &name)]),
                     cx,
                 );
-                self.run_scripts("on_server_add", cx);
             }
             Err(error) => self.show_toast(Tone::Danger, self.td(&error), cx),
         }
@@ -825,9 +893,8 @@ impl Shell {
         match scoria_core::api::remove_saved_server(index) {
             Ok(list) => {
                 self.servers = Ok(list);
-                script::set_server("", "", index);
+                self.dispatch_event(UiEvent::ServerRemove { index }, cx);
                 self.show_toast(Tone::Success, self.t("Removed."), cx);
-                self.run_scripts("on_server_remove", cx);
             }
             Err(error) => self.show_toast(Tone::Danger, self.td(&error), cx),
         }
@@ -837,8 +904,12 @@ impl Shell {
         if self.installing.is_some() {
             return;
         }
-        script::set_result(&project_id, false, "");
-        self.run_scripts("on_install_start", cx);
+        self.dispatch_event(
+            UiEvent::InstallStart {
+                project: project_id.clone(),
+            },
+            cx,
+        );
         self.installing = Some(project_id.clone());
         cx.notify();
         let id = project_id.clone();
@@ -850,7 +921,14 @@ impl Shell {
                 this.installing = None;
                 match result {
                     Ok(_) => {
-                        script::set_result(&project_id, true, "");
+                        this.dispatch_event(
+                            UiEvent::InstallDone {
+                                project: project_id.clone(),
+                                ok: true,
+                                error: String::new(),
+                            },
+                            cx,
+                        );
                         this.show_toast(
                             Tone::Success,
                             this.t("Installed into the selected instance."),
@@ -858,11 +936,17 @@ impl Shell {
                         );
                     }
                     Err(error) => {
-                        script::set_result(&project_id, false, &error);
+                        this.dispatch_event(
+                            UiEvent::InstallDone {
+                                project: project_id.clone(),
+                                ok: false,
+                                error: error.clone(),
+                            },
+                            cx,
+                        );
                         this.show_toast(Tone::Danger, this.td(&error), cx);
                     }
                 }
-                this.run_scripts("on_install_done", cx);
             })
             .ok();
         })
@@ -918,8 +1002,7 @@ impl Shell {
         self.prepare_status = Some("Starting…".to_string());
         self.prepare_percent = None;
         self.progress_step = None;
-        script::set_prepare(0.0, 1.0, "Starting…");
-        self.run_scripts("on_prepare_start", cx);
+        self.dispatch_event(UiEvent::PrepareStart, cx);
         self.log_line("prepare: start");
         cx.notify();
 
@@ -970,12 +1053,14 @@ impl Shell {
                     let step = (percent * 10.0).floor() as i32;
                     if this.progress_step != Some(step) {
                         this.progress_step = Some(step);
-                        script::set_prepare(
-                            (percent * 100.0) as f64,
-                            100.0,
-                            this.prepare_status.as_deref().unwrap_or(""),
+                        this.dispatch_event(
+                            UiEvent::PrepareProgress {
+                                done: (percent * 100.0) as f64,
+                                total: 100.0,
+                                line: this.prepare_status.clone().unwrap_or_default(),
+                            },
+                            cx,
                         );
-                        this.run_scripts("on_prepare_progress", cx);
                     }
                 }
                 if let Some(line) = line {
@@ -987,17 +1072,26 @@ impl Shell {
                     this.snapshot = scoria_core::api::snapshot();
                     match failure {
                         Some(error) => {
-                            script::set_prepare_result(false, &error);
+                            this.dispatch_event(
+                                UiEvent::PrepareDone {
+                                    ok: false,
+                                    error: error.clone(),
+                                },
+                                cx,
+                            );
                             this.log_line(&format!("prepare: failed: {error}"));
                             this.show_toast(Tone::Danger, this.td(&error), cx);
-                            this.run_scripts("on_prepare_done", cx);
                         }
                         None => {
-                            script::set_prepare_result(true, "");
+                            this.dispatch_event(
+                                UiEvent::PrepareDone {
+                                    ok: true,
+                                    error: String::new(),
+                                },
+                                cx,
+                            );
                             this.log_line("prepare: done");
                             this.show_toast(Tone::Success, this.t("26.3 is prepared."), cx);
-                            this.run_scripts("on_download_done", cx);
-                            this.run_scripts("on_prepare_done", cx);
                         }
                     }
                 }
@@ -1035,7 +1129,7 @@ impl Shell {
                     this.snapshot = scoria_core::api::snapshot();
                     let playing = this.playing_now();
                     if was_playing && !playing {
-                        this.run_scripts("on_game_exit", cx);
+                        this.dispatch_event(UiEvent::GameExit, cx);
                     }
                     if !playing {
                         this.polling = false;
@@ -1072,7 +1166,7 @@ impl Shell {
         self.snapshot = scoria_core::api::snapshot();
         if self.playing_now() {
             self.poll_playing(cx);
-            self.run_scripts("on_game_start", cx);
+            self.dispatch_event(UiEvent::GameStart, cx);
         }
         cx.notify();
     }
@@ -1110,10 +1204,15 @@ impl Shell {
         match result {
             Ok(()) => {
                 self.accounts = accounts;
-                script::set_account("offline", &name);
+                self.dispatch_event(
+                    UiEvent::AccountSwitch {
+                        kind: "offline".into(),
+                        name: name.clone(),
+                    },
+                    cx,
+                );
                 self.name_message =
                     Some((true, self.tf("Now playing as {name}.", &[("name", &name)])));
-                self.run_scripts("on_account_switch", cx);
             }
             Err(error) => self.name_message = Some((false, self.td(&error))),
         }
@@ -1146,10 +1245,15 @@ impl Shell {
                     .selected_online()
                     .map(|account| account.name.clone())
                     .unwrap_or_default();
-                script::set_account("microsoft", &name);
+                self.dispatch_event(
+                    UiEvent::AccountSwitch {
+                        kind: "microsoft".into(),
+                        name: name.clone(),
+                    },
+                    cx,
+                );
                 self.name_message =
                     Some((true, self.tf("Now playing as {name}.", &[("name", &name)])));
-                self.run_scripts("on_account_switch", cx);
             }
             Err(error) => self.name_message = Some((false, self.td(&error))),
         }
@@ -1293,11 +1397,16 @@ impl Shell {
                 self.sign_in_running = false;
                 self.sign_in_cancel = None;
                 self.sign_in_code = None;
-                script::set_account("microsoft", &name);
+                self.dispatch_event(
+                    UiEvent::AccountSwitch {
+                        kind: "microsoft".into(),
+                        name: name.clone(),
+                    },
+                    cx,
+                );
                 self.name_message =
                     Some((true, self.tf("Signed in as {name}.", &[("name", &name)])));
                 self.sign_in_message = None;
-                self.run_scripts("on_account_switch", cx);
                 true
             }
         }
@@ -1317,9 +1426,14 @@ impl Shell {
         self.name_message = Some(match result {
             Ok(()) => {
                 self.accounts = accounts;
-                script::set_account("offline", &name);
+                self.dispatch_event(
+                    UiEvent::AccountSwitch {
+                        kind: "offline".into(),
+                        name: name.clone(),
+                    },
+                    cx,
+                );
                 self.name.update(cx, |state, cx| state.emplace("", cx));
-                self.run_scripts("on_account_switch", cx);
                 (true, self.tf("Now playing as {name}.", &[("name", &name)]))
             }
             Err(error) => (false, self.td(&error)),
@@ -1334,17 +1448,20 @@ impl Shell {
             _ => Theme::dark(),
         };
         self.settings.save();
-        script::set_setting(
-            "appearance",
-            match appearance {
-                Appearance::Dark => "dark",
-                Appearance::Light => "light",
-                Appearance::System => "system",
+        self.dispatch_event(
+            UiEvent::SettingsChange {
+                key: "appearance".into(),
+                value: match appearance {
+                    Appearance::Dark => "dark",
+                    Appearance::Light => "light",
+                    Appearance::System => "system",
+                }
+                .into(),
             },
+            cx,
         );
         self.appearance_open = false;
         self.fade = 0.45;
-        self.run_scripts("on_settings_change", cx);
         cx.notify();
         cx.spawn(async move |this, cx| {
             for _ in 0..9 {
@@ -1365,17 +1482,20 @@ impl Shell {
         self.settings.language = language;
         self.settings.save();
         scoria_core::i18n::set(self.language());
-        script::set_setting(
-            "language",
-            match language {
-                None => "system",
-                Some(Language::English) => "en",
-                Some(Language::Russian) => "ru",
-                Some(Language::French) => "fr",
+        self.dispatch_event(
+            UiEvent::SettingsChange {
+                key: "language".into(),
+                value: match language {
+                    None => "system",
+                    Some(Language::English) => "en",
+                    Some(Language::Russian) => "ru",
+                    Some(Language::French) => "fr",
+                }
+                .into(),
             },
+            cx,
         );
         self.language_open = false;
-        self.run_scripts("on_settings_change", cx);
         cx.notify();
     }
 }

@@ -132,7 +132,9 @@ The dev-only Mimas layer is a typed event/command bus, not a second UI:
 - the OS watcher (`notify`) reloads on save with a 350 ms debounce, and a compiled VM is cached
   until the source hash changes.
 
-The example is `launcher/ui/dev/scripts/hooks-all.mim`.
+The engine is extracted into [`launcher/hooks`](launcher/hooks/README.md): one VM per `.mim`,
+per-file errors, an OS watcher and a capability filter. The window only turns `Command`s into
+actions. The example is `launcher/ui/dev/scripts/hooks-all.mim`.
 
 ### 7. Design system
 
