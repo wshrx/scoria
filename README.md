@@ -5,6 +5,10 @@ service layer, a faster development build, motion, and a design system that is n
 
 > Status: branch opened from `dev` (`e6295ae30`). This README is the branch map; the product
 > README stays on `dev`/`main` until this lands there.
+>
+> Implemented so far: dev/fast profiles, game `--session-file`, Microsoft device-code auth core,
+> online profiles in `accounts.json`, CLI `account sign-in` / `sign-out`, Settings sign-in panel,
+> and the upstream motion scale. Still next: full profile UI, service split, gpui-fast spike.
 
 ## Why this branch
 
@@ -130,12 +134,13 @@ source only if we can theme it without losing Scoria's identity.
 
 ## Milestones
 
-1. **Foundation** — branch, README, profiles, dev/fast builds, token rules. (current)
-2. **Game session** — restore `--session-file` / `--session-stdin`, online-mode join end to end.
-3. **Auth core** — Microsoft flow, keychain, refresh, tests with mock endpoints.
-4. **Profiles UI** — online/offline switcher, device-code panel, status.
-5. **Service split** — move filesystem/network out of `app.rs`, add fakes.
-6. **Motion + tokens** — animations and no hardcoded values.
+1. **Foundation** — branch, README, dev/fast builds, token rules. ✅
+2. **Game session** — `--session-file` / `--session-stdin` restored. ✅
+3. **Auth core** — device code, Xbox/XSTS, Minecraft, ownership, profile, keychain, refresh. ✅
+4. **Profiles UI** — Settings sign-in panel and online rows ✅; full switcher still next.
+5. **Service split** — move filesystem/network out of `app.rs`, add fakes. Next.
+6. **Motion + tokens** — motion tokens and page enter done; hovers, stagger and no hardcoded
+   values still next.
 7. **gpui-fast spike** — one screen, measurements, then decision.
 8. **Merge** — `dev`, then `main` and a release.
 
@@ -144,8 +149,17 @@ source only if we can theme it without losing Scoria's identity.
 ```sh
 cargo xtask ui          # quick development build
 cargo xtask ui --fast   # optimised, incremental daily build
-cargo xtask gate        # fmt, clippy, 228 tests, pytest
+cargo xtask gate        # fmt, clippy, 229 tests, pytest
 ```
+
+Sign in from a terminal (the UI has the same flow):
+
+```sh
+SCORIA_MSA_CLIENT_ID=<azure-app-id> \
+  cargo run --manifest-path launcher/Cargo.toml --bin horizon-launcher -- account sign-in
+```
+
+The client ID is Scoria's own Azure public-client app; a build without it still plays offline.
 
 Run with a scratch profile during development:
 

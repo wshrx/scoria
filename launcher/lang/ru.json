@@ -102,5 +102,21 @@
   "New offline name": "Новое офлайн-имя",
   "Use": "Использовать",
   "Selected": "Выбран",
-  "Removed {name}.": "Удалён {name}."
+  "Removed {name}.": "Удалён {name}.",
+  "Microsoft account": "Аккаунт Microsoft",
+  "Sign in to play online-mode servers with your name and skin.": "Войдите, чтобы играть на online-mode серверах под своим именем и скином.",
+  "Sign in with Microsoft": "Войти через Microsoft",
+  "Cancel sign-in": "Отменить вход",
+  "No Microsoft accounts signed in.": "Нет подключённых аккаунтов Microsoft.",
+  "Sign out": "Выйти",
+  "This build has no Microsoft sign-in. Offline play still works.": "В этой сборке нет входа через Microsoft. Офлайн-игра работает.",
+  "Signed in as {name}.": "Вход выполнен как {name}.",
+  "Signed out of the Microsoft account.": "Вы вышли из аккаунта Microsoft.",
+  "Cancelling sign-in…": "Отменяем вход…",
+  "Waiting for Microsoft…": "Ждём Microsoft…",
+  "Signing in to Xbox Live…": "Вход в Xbox Live…",
+  "Getting a Minecraft session…": "Получаем сессию Minecraft…",
+  "Checking Minecraft ownership…": "Проверяем владение Minecraft…",
+  "Loading the Minecraft profile…": "Загружаем профиль Minecraft…",
+  "Microsoft": "Microsoft"
 }

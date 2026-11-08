@@ -18,8 +18,11 @@ impl Render for Shell {
         // screen, so only a change restarts the animation; hover and polling do not.
         .with_animation(
             ("screen", self.screen as usize),
-            Animation::new(std::time::Duration::from_millis(160)).with_easing(ease_out_quint()),
-            |body, delta| body.opacity(delta).mt(px(6.0 * (1.0 - delta))),
+            Animation::new(theme.motion.r#move).with_easing(ease_out_quint()),
+            {
+                let rise = theme.motion.rise;
+                move |body, delta| body.opacity(delta).mt(px(rise * (1.0 - delta)))
+            },
         );
 
         let mut root = div()

@@ -79,8 +79,20 @@ pub struct Typography {
 /// Motion timings. Long enough to read as a transition, short enough not to wait.
 #[derive(Clone, Copy, Debug)]
 pub struct Motion {
+    /// Hover and press.
     pub fast: std::time::Duration,
+    /// Colour and small state changes.
     pub base: std::time::Duration,
+    /// Hover plates; the upstream `QUICK` step.
+    pub quick: std::time::Duration,
+    /// Selection and page changes; the upstream `MOVE` step.
+    pub r#move: std::time::Duration,
+    /// Content arriving; the upstream `ENTER` step.
+    pub enter: std::time::Duration,
+    /// Delay between list rows arriving.
+    pub stagger: std::time::Duration,
+    /// How far content rises while entering, in pixels.
+    pub rise: f32,
 }
 
 impl Motion {
@@ -88,6 +100,11 @@ impl Motion {
         Self {
             fast: std::time::Duration::from_millis(120),
             base: std::time::Duration::from_millis(180),
+            quick: std::time::Duration::from_millis(150),
+            r#move: std::time::Duration::from_millis(240),
+            enter: std::time::Duration::from_millis(600),
+            stagger: std::time::Duration::from_millis(40),
+            rise: 8.0,
         }
     }
 }

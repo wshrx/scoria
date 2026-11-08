@@ -110,7 +110,16 @@ impl Shell {
             language = language.child(language_menu);
         }
 
-        div().flex().justify_center().w_full().child(
+        div()
+            .id("settings-scroll")
+            .flex()
+            .justify_center()
+            .items_start()
+            .w_full()
+            .h_full()
+            .overflow_y_scroll()
+            .py(px(theme.spacing.xl))
+            .child(
             card(
                 &theme,
                 div()
@@ -138,6 +147,165 @@ impl Shell {
                             .child(label(&theme, &self.t("Language")))
                             .child(language),
                     )
+                    .child({
+                        let mut microsoft = div()
+                            .flex()
+                            .flex_col()
+                            .gap(px(theme.spacing.sm))
+                            .child(label(&theme, &self.t("Microsoft account")))
+                            .child(
+                                div()
+                                    .text_size(px(theme.type_scale.caption))
+                                    .text_color(theme.colors.muted)
+                                    .child(self.t(
+                                        "Sign in to play online-mode servers with your name and skin.",
+                                    )),
+                            )
+                            .child(
+                                div()
+                                    .flex()
+                                    .items_center()
+                                    .gap(px(theme.spacing.sm))
+                                    .child(
+                                        Button::new(
+                                            "microsoft-sign-in",
+                                            if self.sign_in_running {
+                                                self.t("Cancel sign-in")
+                                            } else {
+                                                self.t("Sign in with Microsoft")
+                                            },
+                                        )
+                                        .variant(if self.sign_in_running {
+                                            ButtonVariant::Secondary
+                                        } else {
+                                            ButtonVariant::Primary
+                                        })
+                                        .size(ButtonSize::Lg)
+                                        .render(
+                                            &theme,
+                                            Some(cx.listener(|this, _, _window, cx| {
+                                                if this.sign_in_running {
+                                                    this.cancel_sign_in(cx);
+                                                } else {
+                                                    this.sign_in_microsoft(cx);
+                                                }
+                                            })),
+                                        ),
+                                    )
+                                    .children(self.sign_in_code.as_ref().map(|(code, uri)| {
+                                        div()
+                                            .flex()
+                                            .items_center()
+                                            .gap(px(theme.spacing.sm))
+                                            .child(
+                                                div()
+                                                    .text_size(px(theme.type_scale.title))
+                                                    .font_family(theme.type_scale.mono)
+                                                    .child(code.clone()),
+                                            )
+                                            .child(
+                                                div()
+                                                    .text_size(px(theme.type_scale.caption))
+                                                    .text_color(theme.colors.muted)
+                                                    .child(uri.clone()),
+                                            )
+                                    })),
+                            )
+                            .child(match &self.sign_in_message {
+                                Some((ok, text)) => div()
+                                    .text_size(px(theme.type_scale.caption))
+                                    .text_color(if *ok {
+                                        theme.colors.muted
+                                    } else {
+                                        theme.colors.danger
+                                    })
+                                    .child(text.clone()),
+                                None => div(),
+                            });
+                        if self.accounts.online.is_empty() {
+                            microsoft = microsoft.child(
+                                div()
+                                    .text_size(px(theme.type_scale.caption))
+                                    .text_color(theme.colors.muted)
+                                    .child(self.t("No Microsoft accounts signed in.")),
+                            );
+                        } else {
+                            let mut list = div().flex().flex_col().gap(px(4.0)).w(px(460.0));
+                            for account in &self.accounts.online {
+                                let selected = self.accounts.online_selected.as_deref()
+                                    == Some(account.uuid.as_str());
+                                let mut actions = div().flex().items_center().gap(px(4.0));
+                                if !selected {
+                                    let uuid = account.uuid.clone();
+                                    actions = actions.child(
+                                        Button::new(
+                                            format!("use-online-{}", account.uuid),
+                                            self.t("Use"),
+                                        )
+                                        .variant(ButtonVariant::Secondary)
+                                        .size(ButtonSize::Sm)
+                                        .render(
+                                            &theme,
+                                            Some(cx.listener(move |this, _, _window, cx| {
+                                                this.use_online_account(uuid.clone(), cx)
+                                            })),
+                                        ),
+                                    );
+                                }
+                                let uuid = account.uuid.clone();
+                                actions = actions.child(
+                                    Button::new(
+                                        format!("sign-out-online-{}", account.uuid),
+                                        self.t("Sign out"),
+                                    )
+                                    .variant(ButtonVariant::Ghost)
+                                    .size(ButtonSize::Sm)
+                                    .render(
+                                        &theme,
+                                        Some(cx.listener(move |this, _, _window, cx| {
+                                            this.sign_out_online(uuid.clone(), cx)
+                                        })),
+                                    ),
+                                );
+                                list = list.child(
+                                    div()
+                                        .flex()
+                                        .items_center()
+                                        .justify_between()
+                                        .h(px(44.0))
+                                        .px(px(theme.spacing.md))
+                                        .rounded(px(theme.radii.md))
+                                        .bg(theme.colors.surface_secondary)
+                                        .child(
+                                            div()
+                                                .flex()
+                                                .items_center()
+                                                .gap(px(8.0))
+                                                .child(
+                                                    div()
+                                                        .text_size(px(theme.type_scale.body))
+                                                        .child(account.name.clone()),
+                                                )
+                                                .child(badge(
+                                                    &theme,
+                                                    self.t("Microsoft"),
+                                                    Tone::Accent,
+                                                ))
+                                                .children(selected.then(|| {
+                                                    badge(
+                                                        &theme,
+                                                        self.t("Selected"),
+                                                        Tone::Success,
+                                                    )
+                                                })),
+                                        )
+                                        .child(actions),
+                                );
+                            }
+                            microsoft = microsoft.child(list);
+                        }
+                        microsoft
+                    })
                     .child(
                         div()
                             .flex()

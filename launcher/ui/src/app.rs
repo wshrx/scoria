@@ -8,7 +8,10 @@ mod watch;
 use std::{
     fs::OpenOptions,
     io::Write,
-    sync::Arc,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        mpsc, Arc,
+    },
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -33,6 +36,7 @@ use gpui_ce_elements::editable_text::{EditableTextState, StringStorage};
 use scoria_core::account::{Accounts, Player};
 use scoria_core::backend::{Appearance, Settings};
 use scoria_core::i18n::Language;
+use scoria_core::microsoft;
 use scoria_ui_kit::{
     badge, card, clamp_fraction, empty_state, error_panel, page_header, segment, soft_card, toast,
     tone_for_support, Button, ButtonSize, ButtonVariant, Theme, Tone,
@@ -190,6 +194,16 @@ struct Toast {
     message: String,
 }
 
+enum SignInEvent {
+    Code {
+        user_code: String,
+        verification_uri: String,
+    },
+    Phase(String),
+    Error(String),
+    Done(String),
+}
+
 pub(crate) struct Shell {
     theme: Theme,
     screen: Screen,
@@ -197,6 +211,10 @@ pub(crate) struct Shell {
     accounts: Accounts,
     name: gpui::Entity<EditableTextState>,
     name_message: Option<(bool, String)>,
+    sign_in_code: Option<(String, String)>,
+    sign_in_message: Option<(bool, String)>,
+    sign_in_running: bool,
+    sign_in_cancel: Option<Arc<AtomicBool>>,
     snapshot: Result<serde_json::Value, String>,
     play_message: Option<(bool, String)>,
     mods_query: gpui::Entity<EditableTextState>,
@@ -246,6 +264,10 @@ impl Shell {
             accounts,
             name,
             name_message: None,
+            sign_in_code: None,
+            sign_in_message: None,
+            sign_in_running: false,
+            sign_in_cancel: None,
             snapshot: scoria_core::api::snapshot(),
             play_message: None,
             mods_query: cx.new(|cx| EditableTextState::new(StringStorage::default(), cx)),
@@ -975,6 +997,170 @@ impl Shell {
             Err(error) => self.name_message = Some((false, self.td(&error))),
         }
         cx.notify();
+    }
+
+    fn use_online_account(&mut self, uuid: String, cx: &mut Context<Self>) {
+        let mut accounts = self.accounts.clone();
+        let result = accounts.select_online(&uuid).and_then(|()| accounts.save());
+        match result {
+            Ok(()) => {
+                self.accounts = accounts;
+                let name = self
+                    .accounts
+                    .selected_online()
+                    .map(|account| account.name.clone())
+                    .unwrap_or_default();
+                self.name_message =
+                    Some((true, self.tf("Now playing as {name}.", &[("name", &name)])));
+            }
+            Err(error) => self.name_message = Some((false, self.td(&error))),
+        }
+        cx.notify();
+    }
+
+    fn sign_out_online(&mut self, uuid: String, cx: &mut Context<Self>) {
+        let mut accounts = self.accounts.clone();
+        let result = accounts.remove_online(&uuid).and_then(|()| accounts.save());
+        match result {
+            Ok(()) => {
+                self.accounts = accounts;
+                self.name_message = Some((true, self.t("Signed out of the Microsoft account.")));
+            }
+            Err(error) => self.name_message = Some((false, self.td(&error))),
+        }
+        cx.notify();
+    }
+
+    fn cancel_sign_in(&mut self, cx: &mut Context<Self>) {
+        if let Some(cancel) = &self.sign_in_cancel {
+            cancel.store(true, Ordering::Relaxed);
+            self.sign_in_message = Some((true, self.t("Cancelling sign-in…")));
+            cx.notify();
+        }
+    }
+
+    fn sign_in_microsoft(&mut self, cx: &mut Context<Self>) {
+        if self.sign_in_running {
+            return;
+        }
+        let Some(client_id) = microsoft::client_id() else {
+            self.sign_in_message = Some((
+                false,
+                self.t("This build has no Microsoft sign-in. Offline play still works."),
+            ));
+            cx.notify();
+            return;
+        };
+        let (sender, receiver) = mpsc::channel();
+        let cancel = Arc::new(AtomicBool::new(false));
+        let worker_cancel = cancel.clone();
+        self.sign_in_running = true;
+        self.sign_in_code = None;
+        self.sign_in_cancel = Some(cancel);
+        self.sign_in_message = Some((true, self.t("Waiting for Microsoft…")));
+        std::thread::spawn(move || {
+            let endpoints = microsoft::Endpoints::live();
+            let code = match microsoft::device_code(&endpoints, &client_id) {
+                Ok(code) => code,
+                Err(error) => {
+                    let _ = sender.send(SignInEvent::Error(error));
+                    return;
+                }
+            };
+            let _ = sender.send(SignInEvent::Code {
+                user_code: code.user_code.clone(),
+                verification_uri: code.verification_uri.clone(),
+            });
+            let ms = match microsoft::wait_for_sign_in(&endpoints, &client_id, &code, &|| {
+                worker_cancel.load(Ordering::Relaxed)
+            }) {
+                Ok(ms) => ms,
+                Err(error) => {
+                    let _ = sender.send(SignInEvent::Error(error));
+                    return;
+                }
+            };
+            let progress = |phase: microsoft::Phase| {
+                let _ = sender.send(SignInEvent::Phase(phase.label().to_string()));
+            };
+            let (account, secrets) = match microsoft::finish_sign_in(&endpoints, ms, &progress) {
+                Ok(done) => done,
+                Err(error) => {
+                    let _ = sender.send(SignInEvent::Error(error));
+                    return;
+                }
+            };
+            if let Err(error) = microsoft::save_secrets(&account.uuid, &secrets) {
+                let _ = sender.send(SignInEvent::Error(error));
+                return;
+            }
+            let mut accounts = Accounts::load();
+            accounts.add_online(account.clone());
+            if let Err(error) = accounts.save() {
+                let _ = sender.send(SignInEvent::Error(error));
+                return;
+            }
+            let _ = sender.send(SignInEvent::Done(account.name));
+        });
+        cx.spawn(async move |this, cx| loop {
+            cx.background_executor()
+                .timer(std::time::Duration::from_millis(150))
+                .await;
+            let mut events = Vec::new();
+            while let Ok(event) = receiver.try_recv() {
+                events.push(event);
+            }
+            let alive = this
+                .update(cx, |this, cx| {
+                    let mut done = false;
+                    for event in events {
+                        done |= this.apply_sign_in_event(event, cx);
+                    }
+                    cx.notify();
+                    done
+                })
+                .unwrap_or(true);
+            if alive {
+                break;
+            }
+        })
+        .detach();
+        cx.notify();
+    }
+
+    /// Returns true when the sign-in has finished, successfully or not.
+    fn apply_sign_in_event(&mut self, event: SignInEvent, _cx: &mut Context<Self>) -> bool {
+        match event {
+            SignInEvent::Code {
+                user_code,
+                verification_uri,
+            } => {
+                self.sign_in_code = Some((user_code, verification_uri));
+                self.sign_in_message = Some((true, self.t("Waiting for Microsoft…")));
+                false
+            }
+            SignInEvent::Phase(label) => {
+                self.sign_in_message = Some((true, self.td(&label)));
+                false
+            }
+            SignInEvent::Error(error) => {
+                self.sign_in_running = false;
+                self.sign_in_cancel = None;
+                self.sign_in_code = None;
+                self.sign_in_message = Some((false, self.td(&error)));
+                true
+            }
+            SignInEvent::Done(name) => {
+                self.accounts = Accounts::load();
+                self.sign_in_running = false;
+                self.sign_in_cancel = None;
+                self.sign_in_code = None;
+                self.name_message =
+                    Some((true, self.tf("Signed in as {name}.", &[("name", &name)])));
+                self.sign_in_message = None;
+                true
+            }
+        }
     }
 
     fn save_name(&mut self, cx: &mut Context<Self>) {

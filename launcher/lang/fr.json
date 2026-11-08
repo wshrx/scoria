@@ -102,5 +102,21 @@
   "New offline name": "Nouveau nom hors ligne",
   "Use": "Utiliser",
   "Selected": "Sélectionné",
-  "Removed {name}.": "{name} supprimé."
+  "Removed {name}.": "{name} supprimé.",
+  "Microsoft account": "Compte Microsoft",
+  "Sign in to play online-mode servers with your name and skin.": "Connectez-vous pour jouer sur les serveurs en mode en ligne avec votre nom et votre skin.",
+  "Sign in with Microsoft": "Se connecter avec Microsoft",
+  "Cancel sign-in": "Annuler la connexion",
+  "No Microsoft accounts signed in.": "Aucun compte Microsoft connecté.",
+  "Sign out": "Se déconnecter",
+  "This build has no Microsoft sign-in. Offline play still works.": "Cette version n'a pas de connexion Microsoft. Le jeu hors ligne fonctionne.",
+  "Signed in as {name}.": "Connecté en tant que {name}.",
+  "Signed out of the Microsoft account.": "Déconnecté du compte Microsoft.",
+  "Cancelling sign-in…": "Annulation de la connexion…",
+  "Waiting for Microsoft…": "En attente de Microsoft…",
+  "Signing in to Xbox Live…": "Connexion à Xbox Live…",
+  "Getting a Minecraft session…": "Obtention d'une session Minecraft…",
+  "Checking Minecraft ownership…": "Vérification de la possession de Minecraft…",
+  "Loading the Minecraft profile…": "Chargement du profil Minecraft…",
+  "Microsoft": "Microsoft"
 }
