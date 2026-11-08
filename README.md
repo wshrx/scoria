@@ -128,7 +128,9 @@ The dev-only Mimas layer is a typed event/command bus, not a second UI:
   `select_offline`, `set_appearance`, `set_language`, `refresh`;
 - getters: `prepare_done/total/line`, `last_ok/error/project`, `screen_name`, `account_*`,
   `server_*`, `setting_*`;
-- every script is `dev-scripts` only; a player build has no VM and no script folder.
+- every script is `dev-scripts` only; a player build has no VM and no script folder;
+- the OS watcher (`notify`) reloads on save with a 350 ms debounce, and a compiled VM is cached
+  until the source hash changes.
 
 The example is `launcher/ui/dev/scripts/hooks-all.mim`.
 

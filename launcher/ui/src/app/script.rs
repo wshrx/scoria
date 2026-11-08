@@ -301,24 +301,6 @@ fn refresh() {
     push(Action::Refresh);
 }
 
-/// A cheap fingerprint of the script folder: newest modification and file count.
-pub fn stamp(dir: &Path) -> Option<(std::time::SystemTime, usize)> {
-    let mut newest = None;
-    let mut count = 0;
-    for entry in std::fs::read_dir(dir).ok()? {
-        let path = entry.ok()?.path();
-        if path.extension().is_some_and(|extension| extension == "mim") {
-            count += 1;
-            if let Ok(modified) = std::fs::metadata(&path).and_then(|meta| meta.modified()) {
-                newest = Some(newest.map_or(modified, |current: std::time::SystemTime| {
-                    current.max(modified)
-                }));
-            }
-        }
-    }
-    newest.map(|time| (time, count))
-}
-
 /// Compile every `*.mim` in `dir` and call `hook` if a script defines it.
 pub fn run(hook: &str, dir: &Path) -> Result<Vec<Action>, String> {
     let mut sources = Vec::new();

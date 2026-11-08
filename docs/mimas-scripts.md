@@ -33,8 +33,9 @@ The window compiles every `*.mim` file in the folder and calls the function name
 | `on_game_exit` | the game process is gone |
 
 A script without a hook is fine. A type or runtime error becomes a toast and goes to the log.
-The folder is watched every 500 ms; saving any `.mim` calls `on_reload` without recompiling Rust.
-The compiled VM is cached until the source changes.
+The folder is watched by the OS (`notify`); saving any `.mim` calls `on_reload` without
+recompiling Rust. A 350 ms debounce coalesces editor save bursts; the window never scans the
+folder on a timer. The compiled VM is cached until the source changes.
 
 ## Host functions
 

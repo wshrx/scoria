@@ -52,6 +52,26 @@ pub fn watched_paths(home: &Path, data: &Path) -> Vec<PathBuf> {
     paths
 }
 
+/// Watch one developer-scripts folder. Only `.mim` changes reach the channel.
+#[cfg(feature = "dev-scripts")]
+pub fn start_scripts(dir: &Path) -> Option<(Keep, Receiver<()>)> {
+    let (tx, rx) = mpsc::channel();
+    let mut watcher = notify::recommended_watcher(move |event: notify::Result<notify::Event>| {
+        let Ok(event) = event else { return };
+        if event
+            .paths
+            .iter()
+            .any(|path| path.extension().is_some_and(|extension| extension == "mim"))
+        {
+            // One pending event is enough: the window debounces and reloads once.
+            let _ = tx.send(());
+        }
+    })
+    .ok()?;
+    watcher.watch(dir, RecursiveMode::NonRecursive).ok()?;
+    Some((Keep { _watcher: watcher }, rx))
+}
+
 /// The quiet period after the last event before the window refreshes.
 pub const DEBOUNCE: Duration = Duration::from_millis(350);
 

@@ -255,7 +255,7 @@ pub(crate) struct Shell {
     #[cfg(feature = "dev-scripts")]
     script_running: bool,
     #[cfg(feature = "dev-scripts")]
-    script_watching: bool,
+    script_watcher: Option<watch::Keep>,
 }
 
 impl Shell {
@@ -308,7 +308,7 @@ impl Shell {
             #[cfg(feature = "dev-scripts")]
             script_running: false,
             #[cfg(feature = "dev-scripts")]
-            script_watching: false,
+            script_watcher: None,
         };
         let qa_state = std::env::var("SCORIA_UI_STATE").ok();
         if let Some(state) = &qa_state {
@@ -660,36 +660,37 @@ impl Shell {
     #[cfg(not(feature = "dev-scripts"))]
     fn run_scripts(&mut self, _hook: &str, _cx: &mut Context<Self>) {}
 
-    /// Re-run `on_reload` when a `.mim` file changes. Compilation itself happens on the next
-    /// hook call, so editing a script never needs `cargo build`.
+    /// Re-run `on_reload` when a `.mim` file changes. The OS watcher reports changes; the
+    /// window only debounces the channel, it never scans the folder on a timer.
     #[cfg(feature = "dev-scripts")]
     fn watch_scripts(&mut self, cx: &mut Context<Self>) {
-        if self.script_watching {
+        if self.script_watcher.is_some() {
             return;
         }
         let Some(dir) = std::env::var_os("SCORIA_DEV_SCRIPTS").map(std::path::PathBuf::from) else {
             return;
         };
-        self.script_watching = true;
-        cx.spawn(async move |this, cx| {
-            let mut last = script::stamp(&dir);
-            loop {
-                cx.background_executor()
-                    .timer(std::time::Duration::from_millis(500))
-                    .await;
-                let current = script::stamp(&dir);
-                if current != last {
-                    last = current;
-                    let alive = this
-                        .update(cx, |this, cx| {
-                            this.run_scripts("on_reload", cx);
-                            this.show_toast(Tone::Neutral, this.t("Scripts reloaded."), cx);
-                        })
-                        .is_ok();
-                    if !alive {
-                        break;
-                    }
-                }
+        let Some((keep, changes)) = watch::start_scripts(&dir) else {
+            return;
+        };
+        self.script_watcher = Some(keep);
+        cx.spawn(async move |this, cx| loop {
+            cx.background_executor().timer(watch::DEBOUNCE).await;
+            let mut changed = false;
+            while changes.try_recv().is_ok() {
+                changed = true;
+            }
+            if !changed {
+                continue;
+            }
+            let alive = this
+                .update(cx, |this, cx| {
+                    this.run_scripts("on_reload", cx);
+                    this.show_toast(Tone::Neutral, this.t("Scripts reloaded."), cx);
+                })
+                .is_ok();
+            if !alive {
+                break;
             }
         })
         .detach();
