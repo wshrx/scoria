@@ -122,6 +122,11 @@ Respect reduced motion from the OS where GPUI exposes it.
 One source of truth, mirroring upstream Horizon:
 
 - tokens for colour, type, spacing, radii, control heights and motion;
+- `launcher/ui-kit/src/tokens.rs` is the source, and
+  `launcher/ui-kit/_variables.css` is generated from it for the website and tools;
+- a test fails when the CSS and Rust tokens diverge:
+  `WRITE_VARIABLES=1 cargo test -p scoria-ui-kit variables_css_is_in_sync`;
+- buttons, selects, rows and page widths read `Theme.sizes`, not local numbers;
 - no `#RRGGBB` or magic `px` in screens;
 - contrast tests for every text/background pair, both appearances;
 - the existing `scoria-ui-kit` becomes a consumer of tokens, not a second copy.
@@ -138,9 +143,11 @@ source only if we can theme it without losing Scoria's identity.
 2. **Game session** — `--session-file` / `--session-stdin` restored. ✅
 3. **Auth core** — device code, Xbox/XSTS, Minecraft, ownership, profile, keychain, refresh. ✅
 4. **Profiles UI** — Settings sign-in panel and online rows ✅; full switcher still next.
+   Microsoft's four-square mark is used, the button stays on Scoria surfaces instead of the
+   orange primary action.
 5. **Service split** — move filesystem/network out of `app.rs`, add fakes. Next.
-6. **Motion + tokens** — motion tokens and page enter done; hovers, stagger and no hardcoded
-   values still next.
+6. **Motion + tokens** — motion tokens, page enter, `_variables.css` and unified control sizes
+   done; hover plates, stagger and a full hardcoded-value audit still next.
 7. **gpui-fast spike** — one screen, measurements, then decision.
 8. **Merge** — `dev`, then `main` and a release.
 

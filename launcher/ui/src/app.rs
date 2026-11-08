@@ -120,25 +120,25 @@ fn menu_item(
         .flex()
         .items_center()
         .justify_between()
-        .h(px(34.0))
-        .px(px(theme.spacing.md))
-        .rounded(px(theme.radii.md))
-        .border_1()
-        .border_color(theme.colors.border)
+        .h(px(32.0))
+        .px(px(10.0))
+        .rounded(px(theme.radii.sm))
         .bg(if selected {
-            theme.colors.accent_soft
+            theme.colors.surface_secondary
         } else {
-            theme.colors.surface
+            rgba(0x00000000)
         })
-        .text_color(if selected {
-            theme.colors.accent
-        } else {
-            theme.colors.foreground
-        })
+        .text_color(theme.colors.foreground)
         .cursor_pointer()
+        .hover(move |style| style.bg(theme.colors.surface_secondary))
         .on_click(on_click)
         .child(label)
-        .children(selected.then(|| div().text_size(px(theme.type_scale.caption)).child("✓")))
+        .children(selected.then(|| {
+            gpui::svg()
+                .data(ICON_CHECK)
+                .size(px(12.0))
+                .text_color(theme.colors.accent)
+        }))
 }
 
 /// A segmented-control option: the selected one carries the accent.

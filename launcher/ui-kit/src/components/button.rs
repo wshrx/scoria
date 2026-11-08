@@ -141,10 +141,10 @@ impl Button {
             _ => colors.surface_secondary,
         };
         let (height, padding, text) = match self.size {
-            ButtonSize::Sm => (28.0, 10.0, theme.type_scale.caption),
-            ButtonSize::Md => (36.0, 14.0, theme.type_scale.body),
-            ButtonSize::Lg => (40.0, 16.0, theme.type_scale.body),
-            ButtonSize::Xl => (52.0, 20.0, theme.type_scale.subtitle),
+            ButtonSize::Sm => (theme.sizes.button_sm, 10.0, theme.type_scale.caption),
+            ButtonSize::Md => (theme.sizes.button_md, 14.0, theme.type_scale.body),
+            ButtonSize::Lg => (theme.sizes.button_lg, 16.0, theme.type_scale.body),
+            ButtonSize::Xl => (theme.sizes.button_xl, 20.0, theme.type_scale.subtitle),
         };
 
         let mut button = div()

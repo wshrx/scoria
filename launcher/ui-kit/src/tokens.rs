@@ -1,6 +1,7 @@
 //! Scoria's design tokens: basalt surfaces, one ember accent, an 8px radius scale and a 4px
 //! spacing rhythm. The structure follows HeroUI's semantic tokens; only the palette is Scoria's.
 use gpui::{rgb, Rgba};
+use std::fmt::Write as _;
 
 /// Semantic colours. Components take them from the active [`Theme`](crate::Theme) and never
 /// hard-code a value.
@@ -55,6 +56,22 @@ pub struct Spacing {
     pub xxl: f32,
     /// Page gutter on a wide window.
     pub page: f32,
+}
+
+/// Fixed component sizes. One place for control heights, rows and page widths.
+#[derive(Clone, Copy, Debug)]
+pub struct Sizes {
+    pub control: f32,
+    pub control_lg: f32,
+    pub field: f32,
+    pub row: f32,
+    pub topbar: f32,
+    pub select: f32,
+    pub page_max: f32,
+    pub button_sm: f32,
+    pub button_md: f32,
+    pub button_lg: f32,
+    pub button_xl: f32,
 }
 
 /// Type sizes and weights.
@@ -121,6 +138,7 @@ pub struct Theme {
     pub colors: Colors,
     pub radii: Radii,
     pub spacing: Spacing,
+    pub sizes: Sizes,
     pub type_scale: Typography,
     pub motion: Motion,
 }
@@ -166,6 +184,19 @@ impl Theme {
                 xl: 24.0,
                 xxl: 40.0,
                 page: 64.0,
+            },
+            sizes: Sizes {
+                control: 32.0,
+                control_lg: 40.0,
+                field: 40.0,
+                row: 44.0,
+                topbar: 56.0,
+                select: 220.0,
+                page_max: 1100.0,
+                button_sm: 28.0,
+                button_md: 36.0,
+                button_lg: 40.0,
+                button_xl: 52.0,
             },
             type_scale: Typography {
                 sans: "Medeo Sans",
@@ -224,6 +255,19 @@ impl Theme {
                 xxl: 40.0,
                 page: 64.0,
             },
+            sizes: Sizes {
+                control: 32.0,
+                control_lg: 40.0,
+                field: 40.0,
+                row: 44.0,
+                topbar: 56.0,
+                select: 220.0,
+                page_max: 1100.0,
+                button_sm: 28.0,
+                button_md: 36.0,
+                button_lg: 40.0,
+                button_xl: 52.0,
+            },
             type_scale: Typography {
                 sans: "Medeo Sans",
                 mono: "Medeo Mono",
@@ -242,6 +286,149 @@ impl Theme {
 
     pub fn px(value: f32) -> gpui::Pixels {
         gpui::px(value)
+    }
+
+    /// The design tokens as CSS custom properties. GPUI reads the Rust values; this file is the
+    /// same contract for the website, docs and tools, and the test below keeps the two in sync.
+    pub fn variables_css(&self) -> String {
+        let mut css = String::from(
+            "/* Generated from launcher/ui-kit/src/tokens.rs; do not edit by hand. */\n:root {\n",
+        );
+        let c = self.colors;
+        for (name, value) in [
+            ("background", c.background),
+            ("surface", c.surface),
+            ("surface-2", c.surface_secondary),
+            ("surface-3", c.surface_tertiary),
+            ("overlay", c.overlay),
+            ("foreground", c.foreground),
+            ("muted", c.muted),
+            ("border", c.border),
+            ("separator", c.separator),
+            ("accent", c.accent),
+            ("accent-foreground", c.accent_foreground),
+            ("accent-hover", c.accent_hover),
+            ("accent-soft", c.accent_soft),
+            ("success", c.success),
+            ("warning", c.warning),
+            ("danger", c.danger),
+            ("danger-foreground", c.danger_foreground),
+            ("focus-ring", c.focus_ring),
+        ] {
+            let _ = writeln!(css, "  --color-{name}: {};", css_hex(value));
+        }
+        let sp = self.spacing;
+        for (name, value) in [
+            ("xs", sp.xs),
+            ("sm", sp.sm),
+            ("md", sp.md),
+            ("lg", sp.lg),
+            ("xl", sp.xl),
+            ("xxl", sp.xxl),
+            ("page", sp.page),
+        ] {
+            let _ = writeln!(css, "  --space-{name}: {value}px;");
+        }
+        let r = self.radii;
+        for (name, value) in [
+            ("sm", r.sm),
+            ("md", r.md),
+            ("lg", r.lg),
+            ("xl", r.xl),
+            ("field", r.field),
+        ] {
+            let _ = writeln!(css, "  --radius-{name}: {value}px;");
+        }
+        let z = self.sizes;
+        for (name, value) in [
+            ("control", z.control),
+            ("control-lg", z.control_lg),
+            ("field", z.field),
+            ("row", z.row),
+            ("topbar", z.topbar),
+            ("select", z.select),
+            ("page-max", z.page_max),
+            ("button-sm", z.button_sm),
+            ("button-md", z.button_md),
+            ("button-lg", z.button_lg),
+            ("button-xl", z.button_xl),
+        ] {
+            let _ = writeln!(css, "  --size-{name}: {value}px;");
+        }
+        let t = self.type_scale;
+        let _ = writeln!(css, "  --font-sans: \"{}\";", t.sans);
+        let _ = writeln!(css, "  --font-mono: \"{}\";", t.mono);
+        for (name, value) in [
+            ("caption", t.caption),
+            ("body", t.body),
+            ("body-lg", t.body_lg),
+            ("subtitle", t.subtitle),
+            ("title", t.title),
+            ("heading", t.heading),
+            ("hero", t.hero),
+            ("display", t.display),
+        ] {
+            let _ = writeln!(css, "  --type-{name}: {value}px;");
+        }
+        let m = self.motion;
+        for (name, value) in [
+            ("fast", m.fast),
+            ("base", m.base),
+            ("quick", m.quick),
+            ("move", m.r#move),
+            ("enter", m.enter),
+            ("stagger", m.stagger),
+        ] {
+            let _ = writeln!(css, "  --motion-{name}: {}ms;", value.as_millis());
+        }
+        let _ = writeln!(css, "  --motion-rise: {}px;", m.rise);
+        css.push_str("}\n\n:root[data-theme=\"light\"] {\n");
+        let light = Theme::light().colors;
+        for (name, value) in [
+            ("background", light.background),
+            ("surface", light.surface),
+            ("surface-2", light.surface_secondary),
+            ("surface-3", light.surface_tertiary),
+            ("overlay", light.overlay),
+            ("foreground", light.foreground),
+            ("muted", light.muted),
+            ("border", light.border),
+            ("separator", light.separator),
+            ("accent", light.accent),
+            ("accent-foreground", light.accent_foreground),
+            ("accent-hover", light.accent_hover),
+            ("accent-soft", light.accent_soft),
+            ("success", light.success),
+            ("warning", light.warning),
+            ("danger", light.danger),
+            ("danger-foreground", light.danger_foreground),
+            ("focus-ring", light.focus_ring),
+        ] {
+            let _ = writeln!(css, "  --color-{name}: {};", css_hex(value));
+        }
+        css.push_str("}\n");
+        css
+    }
+}
+
+fn css_hex(color: Rgba) -> String {
+    let channel = |value: f32| (value.clamp(0.0, 1.0) * 255.0).round() as u8;
+    let rgb = color.color;
+    if color.alpha >= 0.999 {
+        format!(
+            "#{:02X}{:02X}{:02X}",
+            channel(rgb.red),
+            channel(rgb.green),
+            channel(rgb.blue)
+        )
+    } else {
+        format!(
+            "#{:02X}{:02X}{:02X}{:02X}",
+            channel(rgb.red),
+            channel(rgb.green),
+            channel(rgb.blue),
+            channel(color.alpha)
+        )
     }
 }
 
@@ -287,6 +474,20 @@ mod tests {
             ratio >= 4.5,
             "{label}: contrast {ratio:.2} is below 4.5:1 in the {} theme",
             if theme.dark { "dark" } else { "light" }
+        );
+    }
+
+    #[test]
+    fn variables_css_is_in_sync() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/_variables.css");
+        let expected = Theme::dark().variables_css();
+        if std::env::var_os("WRITE_VARIABLES").is_some() {
+            std::fs::write(path, &expected).expect("write _variables.css");
+        }
+        assert_eq!(
+            std::fs::read_to_string(path).expect("_variables.css exists"),
+            expected,
+            "run WRITE_VARIABLES=1 cargo test -p scoria-ui-kit variables_css_is_in_sync"
         );
     }
 

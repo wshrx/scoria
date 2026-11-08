@@ -72,82 +72,84 @@ impl Shell {
             let id = project["id"].as_str().unwrap_or("").to_string();
             let installable = project["installable"].as_bool().unwrap_or(false);
             let installing = self.installing.as_deref() == Some(id.as_str());
-            results = results.child(soft_card(
-                &theme,
-                div()
-                    .id(id.clone())
-                    .flex()
-                    .flex_col()
-                    .gap(px(theme.spacing.xs))
-                    .cursor_pointer()
-                    .hover(move |style| style.bg(theme.colors.surface_tertiary))
-                    .child(
-                        div()
-                            .flex()
-                            .items_center()
-                            .justify_between()
-                            .child(
-                                div()
-                                    .text_size(px(theme.type_scale.subtitle))
-                                    .child(title.clone()),
-                            )
-                            .child(badge(
-                                &theme,
-                                self.support_label(support),
-                                tone_for_support(support),
-                            )),
-                    )
-                    .child(
-                        div()
-                            .text_size(px(theme.type_scale.body))
-                            .text_color(theme.colors.muted)
-                            .child(summary.to_string()),
-                    )
-                    .child(
-                        div()
-                            .flex()
-                            .items_center()
-                            .justify_between()
-                            .child(
-                                div()
-                                    .text_size(px(theme.type_scale.caption))
-                                    .text_color(theme.colors.muted)
-                                    .child(if author == source {
-                                        self.tf("by {author}", &[("author", author)])
-                                    } else {
-                                        self.tf(
-                                            "by {author} · {source}",
-                                            &[("author", author), ("source", source)],
+            results = results.child(
+                soft_card(
+                    &theme,
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(theme.spacing.xs))
+                        .child(
+                            div()
+                                .flex()
+                                .items_center()
+                                .justify_between()
+                                .child(
+                                    div()
+                                        .text_size(px(theme.type_scale.subtitle))
+                                        .child(title.clone()),
+                                )
+                                .child(badge(
+                                    &theme,
+                                    self.support_label(support),
+                                    tone_for_support(support),
+                                )),
+                        )
+                        .child(
+                            div()
+                                .text_size(px(theme.type_scale.body))
+                                .text_color(theme.colors.muted)
+                                .child(summary.to_string()),
+                        )
+                        .child(
+                            div()
+                                .flex()
+                                .items_center()
+                                .justify_between()
+                                .child(
+                                    div()
+                                        .text_size(px(theme.type_scale.caption))
+                                        .text_color(theme.colors.muted)
+                                        .child(if author == source {
+                                            self.tf("by {author}", &[("author", author)])
+                                        } else {
+                                            self.tf(
+                                                "by {author} · {source}",
+                                                &[("author", author), ("source", source)],
+                                            )
+                                        }),
+                                )
+                                .child(if installing {
+                                    div()
+                                        .text_size(px(theme.type_scale.caption))
+                                        .text_color(theme.colors.muted)
+                                        .child(self.t("Installing…"))
+                                        .into_any_element()
+                                } else if installable {
+                                    let id = id.clone();
+                                    Button::new(format!("install-{id}"), self.t("Install"))
+                                        .variant(ButtonVariant::Secondary)
+                                        .size(ButtonSize::Sm)
+                                        .render(
+                                            &theme,
+                                            Some(cx.listener(move |this, _, _window, cx| {
+                                                this.install(id.clone(), cx)
+                                            })),
                                         )
-                                    }),
-                            )
-                            .child(if installing {
-                                div()
-                                    .text_size(px(theme.type_scale.caption))
-                                    .text_color(theme.colors.muted)
-                                    .child(self.t("Installing…"))
-                                    .into_any_element()
-                            } else if installable {
-                                let id = id.clone();
-                                Button::new(format!("install-{id}"), self.t("Install"))
-                                    .variant(ButtonVariant::Secondary)
-                                    .size(ButtonSize::Sm)
-                                    .render(
-                                        &theme,
-                                        Some(cx.listener(move |this, _, _window, cx| {
-                                            this.install(id.clone(), cx)
-                                        })),
-                                    )
-                                    .into_any_element()
-                            } else {
-                                div()
-                                    .text_size(px(theme.type_scale.caption))
-                                    .text_color(theme.colors.muted)
-                                    .child(self.t("Not installable"))
-                                    .into_any_element()
-                            }),
-                    ),
-            ));
+                                        .into_any_element()
+                                } else {
+                                    div()
+                                        .text_size(px(theme.type_scale.caption))
+                                        .text_color(theme.colors.muted)
+                                        .child(self.t("Not installable"))
+                                        .into_any_element()
+                                }),
+                        ),
+                )
+                .id(id.clone())
+                .cursor_pointer()
+                .hover(move |style| style.bg(theme.colors.surface_tertiary)),
+            );
         }
 
         div().flex().justify_center().w_full().child(card(
@@ -183,6 +185,6 @@ impl Shell {
                 .child(results),
         )
         .w_full()
-        .max_w(px(1100.0)))
+        .max_w(px(theme.sizes.page_max)))
     }
 }

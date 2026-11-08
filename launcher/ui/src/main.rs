@@ -26,6 +26,12 @@ fn main() {
     }
 
     let (screen, query, fullscreen, window_size) = start_screen();
+    if std::env::var_os("SCORIA_DEBUG_SCREEN").is_some() {
+        eprintln!(
+            "start screen: {screen:?}, args: {:?}",
+            std::env::args().collect::<Vec<_>>()
+        );
+    }
     application().run(move |cx| {
         cx.text_system()
             .add_fonts(FONTS.iter().map(|font| Cow::Borrowed(*font)).collect())

@@ -145,7 +145,7 @@ impl Shell {
                 div()
                     .flex()
                     .items_center()
-                    .h(px(56.0))
+                    .h(px(theme.sizes.topbar))
                     .px(px(if compact { 16.0 } else { 32.0 }))
                     .child(
                         div()
@@ -174,7 +174,16 @@ impl Shell {
                                     .child(env!("SCORIA_VERSION")),
                             ),
                     )
-                    .child(div().flex_1().h_full().flex().justify_center().child(nav))
+                    .child(
+                        div()
+                            .flex_1()
+                            .h_full()
+                            .flex()
+                            .items_end()
+                            .justify_center()
+                            .pb(px(2.0))
+                            .child(nav),
+                    )
                     .child(
                         div()
                             .flex()

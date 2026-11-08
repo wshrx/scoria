@@ -1,6 +1,106 @@
 //! Appearance, language and the offline nickname.
 use super::super::*;
+use gpui::{Div, Stateful};
 use scoria_ui_kit::field;
+
+/// A web-like select: a field with a chevron and a floating list under it.
+fn select_control(
+    theme: Theme,
+    id: &'static str,
+    label: String,
+    open: bool,
+    menu: Div,
+    on_click: impl Fn(&gpui::ClickEvent, &mut Window, &mut gpui::App) + 'static,
+) -> Div {
+    div()
+        .relative()
+        .w(px(theme.sizes.select))
+        .flex()
+        .flex_col()
+        .child(
+            div()
+                .id(id)
+                .flex()
+                .items_center()
+                .justify_between()
+                .h(px(theme.sizes.field))
+                .px(px(12.0))
+                .rounded(px(theme.radii.field))
+                .border_1()
+                .border_color(if open {
+                    theme.colors.accent
+                } else {
+                    theme.colors.border
+                })
+                .bg(theme.colors.surface_secondary)
+                .text_size(px(theme.type_scale.body))
+                .text_color(theme.colors.foreground)
+                .cursor_pointer()
+                .hover(move |style| style.bg(theme.colors.surface_tertiary))
+                .on_click(on_click)
+                .child(label)
+                .child(
+                    gpui::svg()
+                        .data(ICON_CHEVRON)
+                        .size(px(12.0))
+                        .text_color(theme.colors.muted),
+                ),
+        )
+        .children(open.then(|| {
+            menu.absolute()
+                .top(px(theme.sizes.field + 4.0))
+                .left(px(0.0))
+                .w(px(theme.sizes.select))
+        }))
+}
+
+/// Microsoft's four-square mark, 21 px, in its published colours.
+fn microsoft_mark() -> Div {
+    const SQUARES: [(f32, f32, u32); 4] = [
+        (1.0, 1.0, 0xf25022),
+        (11.0, 1.0, 0x7fba00),
+        (1.0, 11.0, 0x00a4ef),
+        (11.0, 11.0, 0xffb900),
+    ];
+    div()
+        .relative()
+        .flex_none()
+        .size(px(21.0))
+        .children(SQUARES.map(|(x, y, colour)| {
+            div()
+                .absolute()
+                .left(px(x))
+                .top(px(y))
+                .size(px(9.0))
+                .bg(rgb(colour))
+        }))
+}
+
+/// The Microsoft sign-in control: official mark, Scoria surfaces, no orange takeover.
+fn microsoft_button(
+    theme: Theme,
+    label: String,
+    on_click: impl Fn(&gpui::ClickEvent, &mut Window, &mut gpui::App) + 'static,
+) -> Stateful<Div> {
+    div()
+        .id("microsoft-sign-in")
+        .flex()
+        .items_center()
+        .gap(px(12.0))
+        .h(px(theme.sizes.row))
+        .px(px(12.0))
+        .rounded(px(theme.radii.field))
+        .border_1()
+        .border_color(theme.colors.border)
+        .bg(theme.colors.surface_secondary)
+        .text_size(px(theme.type_scale.body))
+        .text_color(theme.colors.foreground)
+        .cursor_pointer()
+        .hover(move |style| style.bg(theme.colors.surface_tertiary))
+        .on_click(on_click)
+        .child(microsoft_mark())
+        .child(label)
+}
 
 impl Shell {
     pub(super) fn settings(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -12,13 +112,13 @@ impl Shell {
             Appearance::System => self.t("System"),
         };
         let mut appearance_menu = div()
-            .w(px(220.0))
+            .w(px(theme.sizes.select))
             .flex()
             .flex_col()
             .gap(px(2.0))
             .p(px(4.0))
             .rounded(px(theme.radii.xl))
-            .bg(theme.colors.overlay)
+            .bg(theme.colors.surface)
             .border_1()
             .border_color(theme.colors.border);
         for (id, value, label) in [
@@ -33,27 +133,18 @@ impl Shell {
             appearance_menu =
                 appearance_menu.child(menu_item(theme, id, self.t(label), selected, on_click));
         }
-        let mut appearance = div()
-            .flex()
-            .flex_col()
-            .gap(px(theme.spacing.xs))
-            .w(px(220.0))
-            .child(
-                Button::new("appearance-trigger", format!("{appearance_label}   ▾"))
-                    .variant(ButtonVariant::Secondary)
-                    .size(ButtonSize::Lg)
-                    .render(
-                        &theme,
-                        Some(cx.listener(|this, _, _window, cx| {
-                            this.appearance_open = !this.appearance_open;
-                            this.language_open = false;
-                            cx.notify();
-                        })),
-                    ),
-            );
-        if self.appearance_open {
-            appearance = appearance.child(appearance_menu);
-        }
+        let appearance = select_control(
+            theme,
+            "appearance-trigger",
+            appearance_label,
+            self.appearance_open,
+            appearance_menu,
+            cx.listener(|this, _, _window, cx| {
+                this.appearance_open = !this.appearance_open;
+                this.language_open = false;
+                cx.notify();
+            }),
+        );
 
         let language_label = match self.settings.language {
             None => self.t("System"),
@@ -62,13 +153,13 @@ impl Shell {
             Some(Language::French) => "Français".to_string(),
         };
         let mut language_menu = div()
-            .w(px(220.0))
+            .w(px(theme.sizes.select))
             .flex()
             .flex_col()
             .gap(px(2.0))
             .p(px(4.0))
             .rounded(px(theme.radii.xl))
-            .bg(theme.colors.overlay)
+            .bg(theme.colors.surface)
             .border_1()
             .border_color(theme.colors.border);
         for (id, value, label) in [
@@ -88,27 +179,18 @@ impl Shell {
             };
             language_menu = language_menu.child(menu_item(theme, id, text, selected, on_click));
         }
-        let mut language = div()
-            .flex()
-            .flex_col()
-            .gap(px(theme.spacing.xs))
-            .w(px(220.0))
-            .child(
-                Button::new("language-trigger", format!("{language_label}   ▾"))
-                    .variant(ButtonVariant::Secondary)
-                    .size(ButtonSize::Lg)
-                    .render(
-                        &theme,
-                        Some(cx.listener(|this, _, _window, cx| {
-                            this.language_open = !this.language_open;
-                            this.appearance_open = false;
-                            cx.notify();
-                        })),
-                    ),
-            );
-        if self.language_open {
-            language = language.child(language_menu);
-        }
+        let language = select_control(
+            theme,
+            "language-trigger",
+            language_label,
+            self.language_open,
+            language_menu,
+            cx.listener(|this, _, _window, cx| {
+                this.language_open = !this.language_open;
+                this.appearance_open = false;
+                cx.notify();
+            }),
+        );
 
         div()
             .id("settings-scroll")
@@ -171,32 +253,21 @@ impl Shell {
                                     .flex()
                                     .items_center()
                                     .gap(px(theme.spacing.sm))
-                                    .child(
-                                        Button::new(
-                                            "microsoft-sign-in",
-                                            if self.sign_in_running {
-                                                self.t("Cancel sign-in")
-                                            } else {
-                                                self.t("Sign in with Microsoft")
-                                            },
-                                        )
-                                        .variant(if self.sign_in_running {
-                                            ButtonVariant::Secondary
+                                    .child(microsoft_button(
+                                        theme,
+                                        if self.sign_in_running {
+                                            self.t("Cancel sign-in")
                                         } else {
-                                            ButtonVariant::Primary
-                                        })
-                                        .size(ButtonSize::Lg)
-                                        .render(
-                                            &theme,
-                                            Some(cx.listener(|this, _, _window, cx| {
-                                                if this.sign_in_running {
-                                                    this.cancel_sign_in(cx);
-                                                } else {
-                                                    this.sign_in_microsoft(cx);
-                                                }
-                                            })),
-                                        ),
-                                    )
+                                            self.t("Sign in with Microsoft")
+                                        },
+                                        cx.listener(|this, _, _window, cx| {
+                                            if this.sign_in_running {
+                                                this.cancel_sign_in(cx);
+                                            } else {
+                                                this.sign_in_microsoft(cx);
+                                            }
+                                        }),
+                                    ))
                                     .children(self.sign_in_code.as_ref().map(|(code, uri)| {
                                         div()
                                             .flex()
@@ -277,7 +348,7 @@ impl Shell {
                                         .flex()
                                         .items_center()
                                         .justify_between()
-                                        .h(px(44.0))
+                                        .h(px(theme.sizes.row))
                                         .px(px(theme.spacing.md))
                                         .rounded(px(theme.radii.md))
                                         .bg(theme.colors.surface_secondary)
@@ -371,7 +442,7 @@ impl Shell {
                                             .flex()
                                             .items_center()
                                             .justify_between()
-                                            .h(px(44.0))
+                                            .h(px(theme.sizes.row))
                                             .px(px(theme.spacing.md))
                                             .rounded(px(theme.radii.md))
                                             .bg(theme.colors.surface_secondary)
