@@ -5,6 +5,10 @@ fn on_start() {
     log("script started");
 }
 
+fn on_reload() {
+    log("scripts reloaded");
+}
+
 fn on_prepare_start() {
     toast("Preparing the game…");
 }

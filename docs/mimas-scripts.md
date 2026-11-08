@@ -19,6 +19,7 @@ The window compiles every `*.mim` file in the folder and calls the function name
 | Hook | When |
 | --- | --- |
 | `on_start` | the window opens |
+| `on_reload` | a `.mim` file changed on disk |
 | `on_prepare_start` | a prepare starts |
 | `on_prepare_progress` | progress crossed another 10% |
 | `on_prepare_done` | preparation succeeded or failed |
@@ -32,6 +33,8 @@ The window compiles every `*.mim` file in the folder and calls the function name
 | `on_game_exit` | the game process is gone |
 
 A script without a hook is fine. A type or runtime error becomes a toast and goes to the log.
+The folder is watched every 500 ms; saving any `.mim` calls `on_reload` without recompiling Rust.
+The compiled VM is cached until the source changes.
 
 ## Host functions
 
@@ -60,6 +63,15 @@ A script without a hook is fine. A type or runtime error becomes a toast and goe
 | `set_appearance("dark\|light\|system")` | save the appearance |
 | `set_language("system\|en\|ru\|fr")` | save the language |
 | `refresh()` | reload the snapshot and servers |
+
+A folder may limit what scripts can do with a `capabilities` file:
+
+```text
+allow = toast, log, screen, play, download, cancel, install
+```
+
+Without it every dev action is allowed. A listed action not in `allow` is dropped before the
+window sees it.
 
 Scripts only queue actions for the window; they cannot read files, start processes or touch the
 engine. A script's `play()` cannot re-enter a hook: the window has a one-level guard. Mimas floats

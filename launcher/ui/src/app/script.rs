@@ -4,7 +4,13 @@
 //! A script is any `*.mim` file in that folder. The window compiles them at each hook and calls
 //! the one named after the event. Host functions queue actions for the window; a script cannot
 //! touch the file system or the engine directly.
-use std::{path::Path, sync::Mutex};
+use std::{
+    cell::RefCell,
+    collections::{hash_map::DefaultHasher, HashSet},
+    hash::{Hash, Hasher},
+    path::Path,
+    sync::Mutex,
+};
 
 use mimas::mimas;
 
@@ -295,6 +301,24 @@ fn refresh() {
     push(Action::Refresh);
 }
 
+/// A cheap fingerprint of the script folder: newest modification and file count.
+pub fn stamp(dir: &Path) -> Option<(std::time::SystemTime, usize)> {
+    let mut newest = None;
+    let mut count = 0;
+    for entry in std::fs::read_dir(dir).ok()? {
+        let path = entry.ok()?.path();
+        if path.extension().is_some_and(|extension| extension == "mim") {
+            count += 1;
+            if let Ok(modified) = std::fs::metadata(&path).and_then(|meta| meta.modified()) {
+                newest = Some(newest.map_or(modified, |current: std::time::SystemTime| {
+                    current.max(modified)
+                }));
+            }
+        }
+    }
+    newest.map(|time| (time, count))
+}
+
 /// Compile every `*.mim` in `dir` and call `hook` if a script defines it.
 pub fn run(hook: &str, dir: &Path) -> Result<Vec<Action>, String> {
     let mut sources = Vec::new();
@@ -309,16 +333,119 @@ pub fn run(hook: &str, dir: &Path) -> Result<Vec<Action>, String> {
     if sources.is_empty() {
         return Ok(Vec::new());
     }
-    run_source(
+    let actions = run_cached(
         &sources
             .iter()
             .map(|(_, source)| source.as_str())
             .collect::<Vec<_>>()
             .join("\n"),
         hook,
-    )
+    )?;
+    let allowed = capabilities(dir);
+    Ok(actions
+        .into_iter()
+        .filter(|action| {
+            allowed
+                .as_ref()
+                .is_none_or(|allowed| allowed.contains(action.name()))
+        })
+        .collect())
 }
 
+fn capabilities(dir: &Path) -> Option<HashSet<String>> {
+    let text = std::fs::read_to_string(dir.join("capabilities")).ok()?;
+    let mut allowed = HashSet::new();
+    for line in text.lines() {
+        let line = line.trim();
+        let Some((key, value)) = line.split_once('=') else {
+            continue;
+        };
+        if key.trim() != "allow" {
+            continue;
+        }
+        for action in value.split(',') {
+            let action = action.trim();
+            if !action.is_empty() {
+                allowed.insert(action.to_string());
+            }
+        }
+    }
+    (!allowed.is_empty()).then_some(allowed)
+}
+
+impl Action {
+    fn name(&self) -> &'static str {
+        match self {
+            Action::Toast(_) => "toast",
+            Action::Log(_) => "log",
+            Action::Play => "play",
+            Action::Download => "download",
+            Action::Screen(_) => "screen",
+            Action::State(_) => "state",
+            Action::Progress(_, _) => "progress",
+            Action::Cancel => "cancel",
+            Action::Stop => "stop",
+            Action::Install(_) => "install",
+            Action::AddServer(_, _) => "add_server",
+            Action::RemoveServer(_) => "remove_server",
+            Action::SelectOffline(_) => "select_offline",
+            Action::SetAppearance(_) => "set_appearance",
+            Action::SetLanguage(_) => "set_language",
+            Action::Refresh => "refresh",
+        }
+    }
+}
+
+thread_local! {
+    /// The last compiled folder, reused while its source is unchanged. A Mimas VM is not
+    /// `Send`; hooks run on the window's thread, so a thread-local cache is enough.
+    static CACHE: RefCell<Option<(u64, mimas::Vm)>> = const { RefCell::new(None) };
+}
+
+fn hash_source(source: &str) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    source.hash(&mut hasher);
+    hasher.finish()
+}
+
+/// Compile once per source version, then call hooks on the cached VM.
+fn run_cached(source: &str, hook: &str) -> Result<Vec<Action>, String> {
+    let hash = hash_source(source);
+    CACHE.with(|cell| {
+        let mut cache = cell.borrow_mut();
+        if cache.as_ref().is_some_and(|(cached, _)| *cached == hash) {
+            let vm = &mut cache.as_mut().expect("checked above").1;
+            return call_vm(vm, hook);
+        }
+        let mut vm = mimas::compile_source(source).map_err(|error| format!("{error:?}"))?;
+        vm.run().map_err(|error| format!("{error:?}"))?;
+        let result = call_vm(&mut vm, hook);
+        if result.is_ok() {
+            *cache = Some((hash, vm));
+        }
+        result
+    })
+}
+
+fn call_vm(vm: &mut mimas::Vm, hook: &str) -> Result<Vec<Action>, String> {
+    if let Ok(mut queue) = ACTIONS.lock() {
+        queue.clear();
+    }
+    match vm.call::<()>(hook, ()) {
+        Ok(()) => {}
+        Err(error) => {
+            let message = format!("{error:?}");
+            if !message.contains(&format!("no fn `{hook}` is reachable")) {
+                return Err(format!("{hook}: {message}"));
+            }
+        }
+    }
+    Ok(std::mem::take(
+        &mut *ACTIONS.lock().map_err(|e| e.to_string())?,
+    ))
+}
+
+#[cfg(test)]
 fn run_source(source: &str, hook: &str) -> Result<Vec<Action>, String> {
     // Scripts run one at a time: hooks share the action queue, and tests run in parallel.
     static RUN_LOCK: Mutex<()> = Mutex::new(());

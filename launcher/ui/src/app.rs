@@ -254,6 +254,8 @@ pub(crate) struct Shell {
     /// A script action must not start the same hook again.
     #[cfg(feature = "dev-scripts")]
     script_running: bool,
+    #[cfg(feature = "dev-scripts")]
+    script_watching: bool,
 }
 
 impl Shell {
@@ -305,6 +307,8 @@ impl Shell {
             toast_id: 0,
             #[cfg(feature = "dev-scripts")]
             script_running: false,
+            #[cfg(feature = "dev-scripts")]
+            script_watching: false,
         };
         let qa_state = std::env::var("SCORIA_UI_STATE").ok();
         if let Some(state) = &qa_state {
@@ -330,6 +334,7 @@ impl Shell {
         if qa_state.is_none() {
             shell.watch_instance(cx);
             shell.run_scripts("on_start", cx);
+            shell.watch_scripts(cx);
         }
         shell
     }
@@ -654,6 +659,44 @@ impl Shell {
 
     #[cfg(not(feature = "dev-scripts"))]
     fn run_scripts(&mut self, _hook: &str, _cx: &mut Context<Self>) {}
+
+    /// Re-run `on_reload` when a `.mim` file changes. Compilation itself happens on the next
+    /// hook call, so editing a script never needs `cargo build`.
+    #[cfg(feature = "dev-scripts")]
+    fn watch_scripts(&mut self, cx: &mut Context<Self>) {
+        if self.script_watching {
+            return;
+        }
+        let Some(dir) = std::env::var_os("SCORIA_DEV_SCRIPTS").map(std::path::PathBuf::from) else {
+            return;
+        };
+        self.script_watching = true;
+        cx.spawn(async move |this, cx| {
+            let mut last = script::stamp(&dir);
+            loop {
+                cx.background_executor()
+                    .timer(std::time::Duration::from_millis(500))
+                    .await;
+                let current = script::stamp(&dir);
+                if current != last {
+                    last = current;
+                    let alive = this
+                        .update(cx, |this, cx| {
+                            this.run_scripts("on_reload", cx);
+                            this.show_toast(Tone::Neutral, this.t("Scripts reloaded."), cx);
+                        })
+                        .is_ok();
+                    if !alive {
+                        break;
+                    }
+                }
+            }
+        })
+        .detach();
+    }
+
+    #[cfg(not(feature = "dev-scripts"))]
+    fn watch_scripts(&mut self, _cx: &mut Context<Self>) {}
 
     fn go(&mut self, screen: Screen, cx: &mut Context<Self>) {
         self.screen = screen;
