@@ -37,7 +37,7 @@ fn help() {
   pytest   uv run pytest for tests/
   build    cargo build -p scoria-ui (the binary the Python tests drive)
   gate     check + test + build + pytest (what CI runs)
-  ui       run the launcher UI (pass --release for an optimized build)"
+  ui       run the launcher UI (--fast: optimised incremental build; --dev-scripts: Mimas hooks)"
     );
 }
 
@@ -186,9 +186,30 @@ fn gate() -> ExitCode {
 }
 
 fn ui(extra: &[String]) -> ExitCode {
-    let mut args: Vec<&str> = vec!["run", "-p", "scoria-ui"];
-    if extra.iter().any(|arg| arg == "--release") {
-        args.push("--release");
+    let mut args: Vec<String> = vec!["run".into(), "-p".into(), "scoria-ui".into()];
+    let mut program_args: Vec<String> = Vec::new();
+    let mut features: Vec<&str> = Vec::new();
+    let mut fast = false;
+    for arg in extra {
+        match arg.as_str() {
+            "--release" => args.push("--release".into()),
+            "--fast" => fast = true,
+            "--dev-scripts" => features.push("dev-scripts"),
+            other => program_args.push(other.to_string()),
+        }
     }
-    run("cargo", &args, &launcher())
+    if fast {
+        args.push("--profile".into());
+        args.push("fast".into());
+    }
+    if !features.is_empty() {
+        args.push("--features".into());
+        args.push(features.join(","));
+    }
+    if !program_args.is_empty() {
+        args.push("--".into());
+        args.extend(program_args);
+    }
+    let refs: Vec<&str> = args.iter().map(String::as_str).collect();
+    run("cargo", &refs, &launcher())
 }

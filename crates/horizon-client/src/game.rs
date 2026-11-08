@@ -507,6 +507,10 @@ struct Options {
     game_dir: Option<PathBuf>,
     /// `--quickPlaySingleplayer`, checked once the game folder is known.
     quick_play: Option<String>,
+    /// `--session-file PATH`: the Microsoft session the launcher wrote, read once.
+    session_file: Option<String>,
+    /// `--session-stdin`: the same session JSON on standard input.
+    session_stdin: bool,
 }
 impl Options {
     /// The name to join servers with: the one given, else the offline name kept
@@ -531,8 +535,31 @@ impl Options {
         else {
             return Ok(None);
         };
-        // No account file: Scoria has no Microsoft session, and online-mode servers are refused
-        // with NOT_SIGNED_IN instead of trying to sign in.
+        // The launcher's Microsoft account: online-mode servers need it. A bad file only
+        // leaves the game offline.
+        let session = if o.session_stdin {
+            let mut text = String::new();
+            std::io::Read::read_to_string(&mut std::io::stdin(), &mut text)
+                .map_err(|e| e.to_string())
+                .and_then(|_| horizon_client::auth::AuthSession::parse(&text))
+                .map(Some)
+        } else {
+            o.session_file
+                .take()
+                .filter(|path| !path.is_empty())
+                .map(|path| horizon_client::auth::AuthSession::load(path.as_ref()))
+                .transpose()
+        };
+        match session {
+            Ok(Some(session)) => {
+                o.player_name = Some(session.name.clone());
+                horizon_client::auth::set_current(session);
+                // The chat key pair, ready before the first join.
+                horizon_client::auth::prepare_chat_keys(true);
+            }
+            Ok(None) => {}
+            Err(error) => eprintln!("Scoria: not signed in: {error}"),
+        }
         if let Some(dir) = o.game_dir.take() {
             // Paths given on the command line stay relative to where the game was started.
             o.resources = std::path::absolute(&o.resources)?;
@@ -608,12 +635,14 @@ impl Options {
             fullscreen: false,
             game_dir: None,
             quick_play: None,
+            session_file: std::env::var("HORIZON_SESSION_FILE").ok(),
+            session_stdin: false,
         };
         while let Some(arg) = args.next() {
             match arg.as_str() {
                 "--help" | "-h" => {
                     println!(
-                        "Horizon — Minecraft Java Edition {} in Rust\n\n  --resources PATH        Prepared resources (horizon-prepare)\n  --render-distance N     Chunks, 2..128 (default 12)\n  --world NAME            World folder under saves/ (default \"New World\")\n  --seed N                World seed for new worlds (default 0)\n  --width N, --height N   Window size (default 1280 x 720)\n  --creative              Creative mode (default survival)\n  --test-terrain          Simple test terrain instead of vanilla generation\n  --frames N              Exit after N frames (testing)\n  --world-frames N        Exit after N frames drawn in the world (testing)\n  --smoke-report PATH     Write a JSON report on exit\n  --benchmark SCENARIO    Run a benchmark (standard, village, forest, ocean, mountain), write its report to benchmarks/ and quit\n  --control               Accept horizon-ctl commands on a local socket\n  --control-socket PATH   Control socket path (default $XDG_RUNTIME_DIR/horizon-control.sock)\n  --server HOST[:PORT]    Join a multiplayer server (offline mode) at start\n  --quickPlaySingleplayer WORLD  Open this world of saves/ at start, only if it exists (vanilla's)\n  --quickPlayMultiplayer HOST[:PORT]  The same as --server (vanilla's name)\n  --name NAME             Player name for multiplayer (default: generated once, kept in horizon-player.txt)\n  --game-dir DIR          Game folder: saves, options.txt, packs, mods (default: the working directory)\n  --home DIR              Logs and crash reports (default $HORIZON_HOME, else the platform data folder)\n  --player-dir DIR        This player's own files when several play in one game folder: options.txt, logs, horizon-player.txt, servers.dat, screenshots\n  --fullscreen            Open the window fullscreen\n  --launch-api            Print the Launch API version and options as JSON (docs/api/launch.md)\n  --dev-mod PATH          A content mod (.hmod or folder) to develop: always on\n  --pregen                Add Horizon's /pregen command (docs/pregeneration.md)\n\nControls: mouse look, WASD move, Space jump, Left Shift sneak, Left Ctrl sprint,\nleft click break, right click place/use, 1-9/scroll hotbar, E inventory,\nQ drop, F3 debug, Esc pause.",
+                        "Horizon — Minecraft Java Edition {} in Rust\n\n  --resources PATH        Prepared resources (horizon-prepare)\n  --render-distance N     Chunks, 2..128 (default 12)\n  --world NAME            World folder under saves/ (default \"New World\")\n  --seed N                World seed for new worlds (default 0)\n  --width N, --height N   Window size (default 1280 x 720)\n  --creative              Creative mode (default survival)\n  --test-terrain          Simple test terrain instead of vanilla generation\n  --frames N              Exit after N frames (testing)\n  --world-frames N        Exit after N frames drawn in the world (testing)\n  --smoke-report PATH     Write a JSON report on exit\n  --benchmark SCENARIO    Run a benchmark (standard, village, forest, ocean, mountain), write its report to benchmarks/ and quit\n  --control               Accept horizon-ctl commands on a local socket\n  --control-socket PATH   Control socket path (default $XDG_RUNTIME_DIR/horizon-control.sock)\n  --server HOST[:PORT]    Join a multiplayer server (offline mode) at start\n  --quickPlaySingleplayer WORLD  Open this world of saves/ at start, only if it exists (vanilla's)\n  --quickPlayMultiplayer HOST[:PORT]  The same as --server (vanilla's name)\n  --name NAME             Player name for multiplayer (default: generated once, kept in horizon-player.txt)\n  --session-file PATH     Signed-in account from the launcher (read once, then deleted)\n  --session-stdin         The same account as JSON on standard input\n  --game-dir DIR          Game folder: saves, options.txt, packs, mods (default: the working directory)\n  --home DIR              Logs and crash reports (default $HORIZON_HOME, else the platform data folder)\n  --player-dir DIR        This player's own files when several play in one game folder: options.txt, logs, horizon-player.txt, servers.dat, screenshots\n  --fullscreen            Open the window fullscreen\n  --launch-api            Print the Launch API version and options as JSON (docs/api/launch.md)\n  --dev-mod PATH          A content mod (.hmod or folder) to develop: always on\n  --pregen                Add Horizon's /pregen command (docs/pregeneration.md)\n\nControls: mouse look, WASD move, Space jump, Left Shift sneak, Left Ctrl sprint,\nleft click break, right click place/use, 1-9/scroll hotbar, E inventory,\nQ drop, F3 debug, Esc pause.",
                         horizon_core::VANILLA_VERSION
                     );
                     return Ok(None);
@@ -623,6 +652,7 @@ impl Options {
                     return Ok(None);
                 }
                 "--fullscreen" => o.fullscreen = true,
+                "--session-stdin" => o.session_stdin = true,
                 "--dedicated" => {
                     o.execution_role = execution_role::ExecutionRole::DedicatedServer;
                     o.dedicated = Some(args.by_ref().collect());
@@ -713,6 +743,7 @@ impl Options {
                             }
                             "--server" | "--quickPlayMultiplayer" => o.server = Some(value),
                             "--name" => o.player_name = Some(value),
+                            "--session-file" => o.session_file = Some(value),
                             "--control-socket" => o.control = Some(value.into()),
                             "--time" => o.time = Some(value.parse()?),
                             "--weather" => o.weather = Some(value),

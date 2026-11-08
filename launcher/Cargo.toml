@@ -76,5 +76,30 @@ winresource = "0.1"
 # tests/startup.rs writes the consent file with the crate's current version.
 horizon-telemetry = { path = "../crates/horizon-telemetry" }
 
+# Development: compile quickly and keep the debugger useful. Dependencies get one
+# optimisation level so GPUI, image decoding and the archive crates are usable in a
+# debug window without a full release build.
+[profile.dev]
+opt-level = 0
+debug = "line-tables-only"
+incremental = true
+codegen-units = 256
+split-debuginfo = "unpacked"
+
+[profile.dev.package."*"]
+opt-level = 1
+
+# Daily driver: optimised enough to judge motion and scrolling, still incremental and
+# without LTO. `cargo xtask ui --fast`.
+[profile.fast]
+inherits = "dev"
+opt-level = 2
+debug = "line-tables-only"
+incremental = true
+codegen-units = 16
+lto = false
+
 [profile.release]
 strip = true
+lto = "thin"
+codegen-units = 1
