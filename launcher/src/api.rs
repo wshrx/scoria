@@ -186,6 +186,10 @@ fn state() -> Result<Value, String> {
         "playing": playing.is_some(),
         "playingPid": playing,
         "offlineName": offline,
+        "offlineProfiles": &accounts.offline,
+        "onlineProfiles": &accounts.online,
+        "onlineSelected": &accounts.online_selected,
+        "onlineName": accounts.selected_online().map(|account| account.name.as_str()),
         "selectedInstance": instance.id,
         "appearance": appearance,
         "whilePlaying": settings.while_playing.name(),
@@ -254,6 +258,7 @@ fn play(params: &Value) -> Result<Value, String> {
     }
     let tag = instance.resolve_version(None)?;
     let accounts = Accounts::load();
+    let online = accounts.selected_online().cloned();
     let mut cmd = backend::client(&tag)?;
     crate::instances::apply(&mut cmd, &instance)?;
     if let Some(world) = params.get("world").and_then(Value::as_str) {
@@ -262,14 +267,25 @@ fn play(params: &Value) -> Result<Value, String> {
     if let Some(server) = params.get("server").and_then(Value::as_str) {
         cmd.arg("--server").arg(server);
     }
-    if let Some(name) = accounts.name_arg() {
+    let mut session_file = None;
+    if let Some(account) = &online {
+        let path = crate::microsoft::session_for_launch(&instance.home, account)?;
+        cmd.arg("--session-file").arg(&path);
+        session_file = Some(path);
+    } else if let Some(name) = accounts.name_arg() {
         cmd.arg("--name").arg(name);
     }
     cmd.envs(accounts.look_env());
     let mut cmd = crate::launch::wrap(cmd, &instance.launch);
-    let mut child = cmd
-        .spawn()
-        .map_err(|e| format!("The game did not start: {e}"))?;
+    let mut child = match cmd.spawn() {
+        Ok(child) => child,
+        Err(error) => {
+            if let Some(path) = session_file {
+                let _ = std::fs::remove_file(path);
+            }
+            return Err(format!("The game did not start: {error}"));
+        }
+    };
     let pid = child.id();
     crate::running::hold(&instance.home, pid)?;
     let home = instance.home.clone();

@@ -126,6 +126,24 @@ Forget one of your offline names.
 
 MCP: `account_forget_offline`.
 
+## `horizon-launcher account sign-in`
+
+Sign in with a Microsoft account that owns Minecraft: Java Edition.
+
+    horizon-launcher account sign-in
+
+MCP: `account_sign_in`.
+
+## `horizon-launcher account sign-out`
+
+Sign out of a Microsoft account (by name or UUID; the selected one by default).
+
+    horizon-launcher account sign-out [WHO]
+
+- `WHO`
+
+MCP: `account_sign_out`.
+
 ## `horizon-launcher account skin`
 
 Show or set an offline name's skin and cape: a 64x64 (or 64x32) skin PNG, a 64x32 cape PNG, the model. Kept by the launcher and given to the game when that name plays.

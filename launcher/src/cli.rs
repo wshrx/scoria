@@ -83,6 +83,10 @@ enum AccountCmd {
     Offline { name: Option<String> },
     /// Forget one of your offline names
     ForgetOffline { name: String },
+    /// Sign in with a Microsoft account that owns Minecraft: Java Edition
+    SignIn,
+    /// Sign out of a Microsoft account (by name or UUID; the selected one by default)
+    SignOut { who: Option<String> },
     /// Show or set an offline name's skin and cape: a 64x64 (or 64x32) skin PNG, a 64x32 cape
     /// PNG, the model. Kept by the launcher and given to the game when that name plays
     Skin {
@@ -1254,30 +1258,96 @@ fn account_command(action: AccountCmd, as_json: bool) -> Result<(), String> {
                         "name": n,
                         "selected": accounts.name_arg() == Some(n.as_str()),
                     })).collect::<Vec<_>>(),
+                    "online": accounts.online.iter().map(|a| serde_json::json!({
+                        "uuid": a.uuid,
+                        "name": a.name,
+                        "selected": accounts.online_selected.as_deref() == Some(a.uuid.as_str()),
+                    })).collect::<Vec<_>>(),
                     "playing": playing,
                 }));
-            } else if accounts.offline.is_empty() {
-                println!("No offline names yet. Add one: horizon-launcher account offline NAME");
             } else {
                 for n in &accounts.offline {
                     let on = accounts.name_arg() == Some(n.as_str());
                     println!("{} {n}  offline", if on { "*" } else { " " });
                 }
-                println!("Playing as {playing}.");
+                for a in &accounts.online {
+                    let on = accounts.online_selected.as_deref() == Some(a.uuid.as_str());
+                    println!("{} {}  Microsoft", if on { "*" } else { " " }, a.name);
+                }
+                match accounts.selected_online() {
+                    Some(account) => println!("Playing as {} (Microsoft).", account.name),
+                    None => println!("Playing as {playing}."),
+                }
             }
         }
         AccountCmd::Select { who } => {
-            let name = accounts
+            if let Some(name) = accounts
                 .offline
                 .iter()
                 .find(|n| n.eq_ignore_ascii_case(&who))
                 .cloned()
-                .ok_or_else(|| {
-                    format!("No offline name {who}: add it with `account offline {who}`.")
+            {
+                accounts.play_as(account::Player::Offline(name.clone()))?;
+                accounts.save()?;
+                println!("The game plays as {name} (offline).");
+            } else if let Some(account) = accounts
+                .online
+                .iter()
+                .find(|a| a.uuid.eq_ignore_ascii_case(&who) || a.name.eq_ignore_ascii_case(&who))
+                .cloned()
+            {
+                accounts.select_online(&account.uuid)?;
+                accounts.save()?;
+                println!("The game plays as {} (Microsoft).", account.name);
+            } else {
+                return Err(format!(
+                    "No profile {who}: use `account list` to see offline names and Microsoft accounts."
+                ));
+            }
+        }
+        AccountCmd::SignIn => {
+            let client_id = horizon_launcher::microsoft::client_id()
+                .ok_or_else(|| horizon_launcher::microsoft::NOT_CONFIGURED.to_string())?;
+            let endpoints = horizon_launcher::microsoft::Endpoints::live();
+            let code = horizon_launcher::microsoft::device_code(&endpoints, &client_id)?;
+            println!(
+                "Open {} and enter {} (expires in a few minutes).",
+                code.verification_uri, code.user_code
+            );
+            println!("Waiting for Microsoft…");
+            let ms = horizon_launcher::microsoft::wait_for_sign_in(
+                &endpoints,
+                &client_id,
+                &code,
+                &|| false,
+            )?;
+            let (account, secrets) =
+                horizon_launcher::microsoft::finish_sign_in(&endpoints, ms, &|phase| {
+                    println!("{}", phase.label())
                 })?;
-            accounts.play_as(account::Player::Offline(name.clone()))?;
+            horizon_launcher::microsoft::save_secrets(&account.uuid, &secrets)?;
+            let uuid = accounts.add_online(account.clone());
             accounts.save()?;
-            println!("The game plays as {name} (offline).");
+            println!("Signed in as {} ({}).", account.name, uuid);
+        }
+        AccountCmd::SignOut { who } => {
+            let uuid = match who {
+                Some(who) => accounts
+                    .online
+                    .iter()
+                    .find(|a| {
+                        a.uuid.eq_ignore_ascii_case(&who) || a.name.eq_ignore_ascii_case(&who)
+                    })
+                    .map(|a| a.uuid.clone())
+                    .ok_or_else(|| format!("No Microsoft account {who}."))?,
+                None => accounts
+                    .online_selected
+                    .clone()
+                    .ok_or("No Microsoft account is selected.")?,
+            };
+            accounts.remove_online(&uuid)?;
+            accounts.save()?;
+            println!("Signed out ({uuid}).");
         }
         AccountCmd::Offline { name } => {
             let player = match name {

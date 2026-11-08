@@ -228,13 +228,19 @@ pub fn store() -> &'static dyn SecretStore {
 
 // ----- Offline profiles ----------------------------------------------------------------------------
 
-/// accounts.json: the offline names the player keeps, the one that plays, and its skins.
-/// No tokens, no UUIDs, no Microsoft: Scoria has no account service.
+/// accounts.json: the profiles the player keeps and the one that plays. Microsoft accounts
+/// keep only their public profile here; their tokens live in the keychain.
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Accounts {
     /// Offline names the player keeps, to switch between (`--name`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub offline: Vec<String>,
+    /// Microsoft accounts signed in on this computer (public data only).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub online: Vec<crate::microsoft::OnlineAccount>,
+    /// The UUID of the Microsoft account that plays, when one does.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub online_selected: Option<String>,
     /// The offline name that plays; none: the name the game made up (`horizon-player.txt`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub offline_selected: Option<String>,
@@ -289,8 +295,10 @@ impl Accounts {
             None => Player::GameName,
         }
     }
-    /// Plays as `who`. Offline names need no account and no keychain.
+    /// Plays as `who`. Offline names need no account and no keychain; choosing one leaves a
+    /// Microsoft account signed in but not selected.
     pub fn play_as(&mut self, who: Player) -> Result<(), String> {
+        self.online_selected = None;
         match who {
             Player::Offline(name) => {
                 let name = self.add_offline(&name)?;
@@ -298,6 +306,53 @@ impl Accounts {
             }
             Player::GameName => self.offline_selected = None,
         }
+        Ok(())
+    }
+
+    /// The Microsoft account that plays, when one is selected.
+    pub fn selected_online(&self) -> Option<&crate::microsoft::OnlineAccount> {
+        let uuid = self.online_selected.as_deref()?;
+        self.online.iter().find(|account| account.uuid == uuid)
+    }
+
+    /// Keep a signed-in account and select it. The public profile only.
+    pub fn add_online(&mut self, account: crate::microsoft::OnlineAccount) -> String {
+        let uuid = account.uuid.clone();
+        if let Some(existing) = self
+            .online
+            .iter_mut()
+            .find(|existing| existing.uuid == account.uuid)
+        {
+            *existing = account;
+        } else {
+            self.online.push(account);
+        }
+        self.online_selected = Some(uuid.clone());
+        self.offline_selected = None;
+        uuid
+    }
+
+    /// Select an already signed-in account.
+    pub fn select_online(&mut self, uuid: &str) -> Result<(), String> {
+        if !self.online.iter().any(|account| account.uuid == uuid) {
+            return Err(format!("No Microsoft account {uuid}."));
+        }
+        self.online_selected = Some(uuid.to_string());
+        self.offline_selected = None;
+        Ok(())
+    }
+
+    /// Sign out: forget the public profile and delete the keychain entry.
+    pub fn remove_online(&mut self, uuid: &str) -> Result<(), String> {
+        let before = self.online.len();
+        self.online.retain(|account| account.uuid != uuid);
+        if self.online.len() == before {
+            return Err(format!("No Microsoft account {uuid}."));
+        }
+        if self.online_selected.as_deref() == Some(uuid) {
+            self.online_selected = None;
+        }
+        crate::microsoft::forget_secrets(uuid)?;
         Ok(())
     }
     /// Keeps an offline name (once, in any case); returns it as kept.
@@ -345,9 +400,14 @@ impl Accounts {
             None => Vec::new(),
         }
     }
-    /// The game's `--name` for this run: the offline name, when one plays.
+    /// The game's `--name` for this run: the offline name, when one plays. A Microsoft
+    /// account's name comes from the session file instead.
     pub fn name_arg(&self) -> Option<&str> {
-        self.offline_selected.as_deref()
+        if self.online_selected.is_some() {
+            None
+        } else {
+            self.offline_selected.as_deref()
+        }
     }
 }
 

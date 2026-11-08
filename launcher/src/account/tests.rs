@@ -59,3 +59,33 @@ fn the_keychain_store_round_trips_in_memory() {
     assert_eq!(store.get("k").unwrap(), None);
     assert!(!store.persistent());
 }
+
+#[test]
+fn an_online_profile_is_kept_and_selected_without_losing_offline_names() {
+    let mut accounts = Accounts {
+        offline: vec!["Player".into()],
+        ..Accounts::default()
+    };
+    accounts
+        .play_as(Player::Offline("Player".into()))
+        .expect("offline selection");
+    let uuid = accounts.add_online(crate::microsoft::OnlineAccount {
+        uuid: "0123456789abcdef0123456789abcdef".into(),
+        name: "Notch".into(),
+        skin: None,
+        cape: None,
+    });
+    assert_eq!(uuid, "0123456789abcdef0123456789abcdef");
+    assert_eq!(accounts.name_arg(), None);
+    assert_eq!(
+        accounts
+            .selected_online()
+            .map(|account| account.name.as_str()),
+        Some("Notch")
+    );
+    accounts
+        .play_as(Player::Offline("Player".into()))
+        .expect("back to offline");
+    assert_eq!(accounts.name_arg(), Some("Player"));
+    assert_eq!(accounts.online_selected, None);
+}
