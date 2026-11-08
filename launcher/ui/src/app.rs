@@ -3,6 +3,17 @@
 mod screens;
 #[cfg(feature = "dev-scripts")]
 mod script;
+#[cfg(not(feature = "dev-scripts"))]
+mod script {
+    //! No-ops for the state setters the app calls outside the hook layer.
+    pub fn set_prepare(_: f64, _: f64, _: &str) {}
+    pub fn set_result(_: &str, _: bool, _: &str) {}
+    pub fn set_prepare_result(_: bool, _: &str) {}
+    pub fn set_screen(_: &str) {}
+    pub fn set_account(_: &str, _: &str) {}
+    pub fn set_server(_: &str, _: &str, _: usize) {}
+    pub fn set_setting(_: &str, _: &str) {}
+}
 mod watch;
 
 use std::{
@@ -224,6 +235,7 @@ pub(crate) struct Shell {
     installing: Option<String>,
     preparing: bool,
     prepare_status: Option<String>,
+    progress_step: Option<i32>,
     prepare_percent: Option<f32>,
     mods_source: ModsSource,
     appearance_open: bool,
@@ -277,6 +289,7 @@ impl Shell {
             installing: None,
             preparing: false,
             prepare_status: None,
+            progress_step: None,
             prepare_percent: None,
             mods_source: ModsSource::Horizon,
             appearance_open: false,
@@ -605,6 +618,32 @@ impl Shell {
                             cx.notify();
                         }
                         script::Action::Stop => self.stop_game(cx),
+                        script::Action::Install(project) => self.install(project, cx),
+                        script::Action::AddServer(name, ip) => self.add_server_values(name, ip, cx),
+                        script::Action::RemoveServer(index) => self.remove_server(index, cx),
+                        script::Action::SelectOffline(name) => self.use_account(name, cx),
+                        script::Action::SetAppearance(value) => {
+                            let appearance = match value.as_str() {
+                                "light" => Appearance::Light,
+                                "system" => Appearance::System,
+                                _ => Appearance::Dark,
+                            };
+                            self.set_appearance(cx, appearance);
+                        }
+                        script::Action::SetLanguage(value) => {
+                            let language = match value.as_str() {
+                                "en" => Some(Language::English),
+                                "ru" => Some(Language::Russian),
+                                "fr" => Some(Language::French),
+                                _ => None,
+                            };
+                            self.set_language(cx, language);
+                        }
+                        script::Action::Refresh => {
+                            self.snapshot = scoria_core::api::snapshot();
+                            self.refresh_servers();
+                            cx.notify();
+                        }
                     }
                 }
             }
@@ -626,6 +665,14 @@ impl Shell {
             }
             _ => {}
         }
+        let name = match screen {
+            Screen::Home => "home",
+            Screen::Mods => "mods",
+            Screen::Servers => "servers",
+            Screen::Settings => "settings",
+        };
+        script::set_screen(name);
+        self.run_scripts("on_screen_change", cx);
         cx.notify();
     }
 
@@ -704,17 +751,27 @@ impl Shell {
     fn add_server(&mut self, cx: &mut Context<Self>) {
         let name = self.server_name.read(cx).as_str().trim().to_string();
         let ip = self.server_ip.read(cx).as_str().trim().to_string();
+        self.add_server_values(name, ip, cx);
+    }
+
+    fn add_server_values(&mut self, name: String, ip: String, cx: &mut Context<Self>) {
         match scoria_core::api::add_saved_server(&name, &ip) {
             Ok(list) => {
+                let index = list["servers"]
+                    .as_array()
+                    .map(|servers| servers.len().saturating_sub(1))
+                    .unwrap_or(0);
                 self.servers = Ok(list);
                 self.server_name
                     .update(cx, |state, cx| state.emplace("", cx));
                 self.server_ip.update(cx, |state, cx| state.emplace("", cx));
+                script::set_server(&name, &ip, index);
                 self.show_toast(
                     Tone::Success,
                     self.tf("Added {name}.", &[("name", &name)]),
                     cx,
                 );
+                self.run_scripts("on_server_add", cx);
             }
             Err(error) => self.show_toast(Tone::Danger, self.td(&error), cx),
         }
@@ -724,7 +781,9 @@ impl Shell {
         match scoria_core::api::remove_saved_server(index) {
             Ok(list) => {
                 self.servers = Ok(list);
+                script::set_server("", "", index);
                 self.show_toast(Tone::Success, self.t("Removed."), cx);
+                self.run_scripts("on_server_remove", cx);
             }
             Err(error) => self.show_toast(Tone::Danger, self.td(&error), cx),
         }
@@ -734,22 +793,32 @@ impl Shell {
         if self.installing.is_some() {
             return;
         }
+        script::set_result(&project_id, false, "");
+        self.run_scripts("on_install_start", cx);
         self.installing = Some(project_id.clone());
         cx.notify();
+        let id = project_id.clone();
         cx.spawn(async move |this, cx| {
             let result = cx
-                .background_spawn(async move { scoria_core::api::install_project(&project_id) })
+                .background_spawn(async move { scoria_core::api::install_project(&id) })
                 .await;
             this.update(cx, |this, cx| {
                 this.installing = None;
                 match result {
-                    Ok(_) => this.show_toast(
-                        Tone::Success,
-                        this.t("Installed into the selected instance."),
-                        cx,
-                    ),
-                    Err(error) => this.show_toast(Tone::Danger, this.td(&error), cx),
+                    Ok(_) => {
+                        script::set_result(&project_id, true, "");
+                        this.show_toast(
+                            Tone::Success,
+                            this.t("Installed into the selected instance."),
+                            cx,
+                        );
+                    }
+                    Err(error) => {
+                        script::set_result(&project_id, false, &error);
+                        this.show_toast(Tone::Danger, this.td(&error), cx);
+                    }
                 }
+                this.run_scripts("on_install_done", cx);
             })
             .ok();
         })
@@ -804,6 +873,9 @@ impl Shell {
         self.preparing = true;
         self.prepare_status = Some("Starting…".to_string());
         self.prepare_percent = None;
+        self.progress_step = None;
+        script::set_prepare(0.0, 1.0, "Starting…");
+        self.run_scripts("on_prepare_start", cx);
         self.log_line("prepare: start");
         cx.notify();
 
@@ -851,6 +923,16 @@ impl Shell {
             this.update(cx, |this, cx| {
                 if let Some(percent) = percent {
                     this.prepare_percent = Some(percent);
+                    let step = (percent * 10.0).floor() as i32;
+                    if this.progress_step != Some(step) {
+                        this.progress_step = Some(step);
+                        script::set_prepare(
+                            (percent * 100.0) as f64,
+                            100.0,
+                            this.prepare_status.as_deref().unwrap_or(""),
+                        );
+                        this.run_scripts("on_prepare_progress", cx);
+                    }
                 }
                 if let Some(line) = line {
                     this.prepare_status = Some(line);
@@ -861,13 +943,17 @@ impl Shell {
                     this.snapshot = scoria_core::api::snapshot();
                     match failure {
                         Some(error) => {
+                            script::set_prepare_result(false, &error);
                             this.log_line(&format!("prepare: failed: {error}"));
                             this.show_toast(Tone::Danger, this.td(&error), cx);
+                            this.run_scripts("on_prepare_done", cx);
                         }
                         None => {
+                            script::set_prepare_result(true, "");
                             this.log_line("prepare: done");
                             this.show_toast(Tone::Success, this.t("26.3 is prepared."), cx);
                             this.run_scripts("on_download_done", cx);
+                            this.run_scripts("on_prepare_done", cx);
                         }
                     }
                 }
@@ -901,8 +987,12 @@ impl Shell {
                 .await;
             let still_playing = this
                 .update(cx, |this, cx| {
+                    let was_playing = this.playing_now();
                     this.snapshot = scoria_core::api::snapshot();
                     let playing = this.playing_now();
+                    if was_playing && !playing {
+                        this.run_scripts("on_game_exit", cx);
+                    }
                     if !playing {
                         this.polling = false;
                     }
@@ -976,8 +1066,10 @@ impl Shell {
         match result {
             Ok(()) => {
                 self.accounts = accounts;
+                script::set_account("offline", &name);
                 self.name_message =
                     Some((true, self.tf("Now playing as {name}.", &[("name", &name)])));
+                self.run_scripts("on_account_switch", cx);
             }
             Err(error) => self.name_message = Some((false, self.td(&error))),
         }
@@ -1010,8 +1102,10 @@ impl Shell {
                     .selected_online()
                     .map(|account| account.name.clone())
                     .unwrap_or_default();
+                script::set_account("microsoft", &name);
                 self.name_message =
                     Some((true, self.tf("Now playing as {name}.", &[("name", &name)])));
+                self.run_scripts("on_account_switch", cx);
             }
             Err(error) => self.name_message = Some((false, self.td(&error))),
         }
@@ -1129,7 +1223,7 @@ impl Shell {
     }
 
     /// Returns true when the sign-in has finished, successfully or not.
-    fn apply_sign_in_event(&mut self, event: SignInEvent, _cx: &mut Context<Self>) -> bool {
+    fn apply_sign_in_event(&mut self, event: SignInEvent, cx: &mut Context<Self>) -> bool {
         match event {
             SignInEvent::Code {
                 user_code,
@@ -1155,9 +1249,11 @@ impl Shell {
                 self.sign_in_running = false;
                 self.sign_in_cancel = None;
                 self.sign_in_code = None;
+                script::set_account("microsoft", &name);
                 self.name_message =
                     Some((true, self.tf("Signed in as {name}.", &[("name", &name)])));
                 self.sign_in_message = None;
+                self.run_scripts("on_account_switch", cx);
                 true
             }
         }
@@ -1177,7 +1273,9 @@ impl Shell {
         self.name_message = Some(match result {
             Ok(()) => {
                 self.accounts = accounts;
+                script::set_account("offline", &name);
                 self.name.update(cx, |state, cx| state.emplace("", cx));
+                self.run_scripts("on_account_switch", cx);
                 (true, self.tf("Now playing as {name}.", &[("name", &name)]))
             }
             Err(error) => (false, self.td(&error)),
@@ -1192,8 +1290,17 @@ impl Shell {
             _ => Theme::dark(),
         };
         self.settings.save();
+        script::set_setting(
+            "appearance",
+            match appearance {
+                Appearance::Dark => "dark",
+                Appearance::Light => "light",
+                Appearance::System => "system",
+            },
+        );
         self.appearance_open = false;
         self.fade = 0.45;
+        self.run_scripts("on_settings_change", cx);
         cx.notify();
         cx.spawn(async move |this, cx| {
             for _ in 0..9 {
@@ -1214,7 +1321,17 @@ impl Shell {
         self.settings.language = language;
         self.settings.save();
         scoria_core::i18n::set(self.language());
+        script::set_setting(
+            "language",
+            match language {
+                None => "system",
+                Some(Language::English) => "en",
+                Some(Language::Russian) => "ru",
+                Some(Language::French) => "fr",
+            },
+        );
         self.language_open = false;
+        self.run_scripts("on_settings_change", cx);
         cx.notify();
     }
 }

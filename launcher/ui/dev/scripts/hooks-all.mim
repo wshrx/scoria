@@ -1,0 +1,65 @@
+// Every event a developer script can react to. Run with:
+//   SCORIA_DEV_SCRIPTS=$PWD/launcher/ui/dev/scripts cargo run -p scoria-ui --features dev-scripts
+
+fn on_start() {
+    log("script started");
+}
+
+fn on_prepare_start() {
+    toast("Preparing the game…");
+}
+
+fn on_prepare_progress() {
+    if prepare_total() > 0.0 && prepare_done() == prepare_total() {
+        toast("Files are ready");
+    }
+}
+
+fn on_prepare_done() {
+    if last_ok() {
+        toast("Prepared. Starting…");
+        play();
+    } else {
+        toast(f"Prepare failed: {last_error()}");
+    }
+}
+
+fn on_install_start() {
+    toast(f"Installing {last_project()}…");
+}
+
+fn on_install_done() {
+    if last_ok() {
+        toast(f"Installed {last_project()}");
+    } else {
+        toast(f"Install failed: {last_error()}");
+    }
+}
+
+fn on_server_add() {
+    toast(f"Added {server_name()} ({server_ip()})");
+}
+
+fn on_server_remove() {
+    toast("Server removed");
+}
+
+fn on_account_switch() {
+    toast(f"Playing as {account_name()} ({account_kind()})");
+}
+
+fn on_settings_change() {
+    log(f"{setting_key()} = {setting_value()}");
+}
+
+fn on_screen_change() {
+    log(f"screen: {screen_name()}");
+}
+
+fn on_game_start() {
+    toast("Game started");
+}
+
+fn on_game_exit() {
+    toast("Game exited");
+}

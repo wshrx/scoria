@@ -502,10 +502,6 @@ impl Shell {
                     .map(|line| scoria_core::i18n::tr_in(self.language(), line))
                     .unwrap_or("26.3")
             )
-        } else if playing {
-            "26.3".to_string()
-        } else if no_version {
-            "26.3".to_string()
         } else {
             "26.3".to_string()
         };

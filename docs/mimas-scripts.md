@@ -19,9 +19,17 @@ The window compiles every `*.mim` file in the folder and calls the function name
 | Hook | When |
 | --- | --- |
 | `on_start` | the window opens |
+| `on_prepare_start` | a prepare starts |
+| `on_prepare_progress` | progress crossed another 10% |
+| `on_prepare_done` | preparation succeeded or failed |
+| `on_download_done` | the same success hook, kept for old scripts |
+| `on_install_start` / `on_install_done` | a catalogue install starts/finishes |
+| `on_server_add` / `on_server_remove` | a saved server changed |
+| `on_account_switch` | the playing profile changed |
+| `on_screen_change` | the screen changed |
+| `on_settings_change` | appearance or language was saved |
 | `on_game_start` | Play started a game |
 | `on_game_exit` | the game process is gone |
-| `on_download_done` | preparation finished |
 
 A script without a hook is fine. A type or runtime error becomes a toast and goes to the log.
 
@@ -33,12 +41,25 @@ A script without a hook is fine. A type or runtime error becomes a toast and goe
 | `log(message)` | one line in the launcher log |
 | `screen("home"\|"mods"\|"servers"\|"settings")` | switch screens |
 | `prepared()` / `playing()` | read the snapshot, so a script can choose the next action |
+| `prepare_done()` / `prepare_total()` / `prepare_line()` | the current prepare |
+| `last_ok()` / `last_error()` / `last_project()` | the last prepare or install |
+| `screen_name()` | the current screen |
+| `account_kind()` / `account_name()` | the selected profile |
+| `server_name()` / `server_ip()` / `server_index()` | the server that just changed |
+| `setting_key()` / `setting_value()` | the setting that just changed |
 | `state("home-preparing")` | apply one synthetic `SCORIA_UI_STATE` fixture |
 | `progress(42.0, "Downloading…")` | draw a synthetic download at 0..100; no network |
 | `download()` | start the real prepare |
 | `cancel()` | cancel a prepare |
 | `play()` | the same one game action as the button |
 | `stop()` | stop the running game |
+| `install(project)` | install a catalogue project |
+| `add_server(name, ip)` | add a saved server |
+| `remove_server(index)` | remove a saved server by index |
+| `select_offline(name)` | play as an offline name |
+| `set_appearance("dark\|light\|system")` | save the appearance |
+| `set_language("system\|en\|ru\|fr")` | save the language |
+| `refresh()` | reload the snapshot and servers |
 
 Scripts only queue actions for the window; they cannot read files, start processes or touch the
 engine. A script's `play()` cannot re-enter a hook: the window has a one-level guard. Mimas floats
@@ -52,6 +73,8 @@ need a decimal point (`42.0`, not `42`).
 - **Logic**: `logic.mim` uses `playing()`/`prepared()` and `if`/`else` to decide between
   switching Home, starting a prepared game and downloading.
 - **Screens**: `screens.mim` walks to Mods for a quick visual smoke test.
+- **All hooks**: `hooks-all.mim` shows every event and its getters, including prepare, install,
+  servers, accounts, settings and game exit.
 
 The repository examples are in [`launcher/ui/dev/scripts/`](../launcher/ui/dev/scripts/). They are
 developer fixtures, not a supported player API.

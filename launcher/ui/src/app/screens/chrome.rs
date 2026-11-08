@@ -144,7 +144,7 @@ impl Shell {
                             .on_mouse_down(MouseButton::Left, |_, window, _| {
                                 window.start_window_move()
                             })
-                            .children(theme.dark.then(|| Self::mark()))
+                            .children(theme.dark.then(Self::mark))
                             .child(
                                 div()
                                     .text_size(px(14.0))

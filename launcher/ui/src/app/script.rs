@@ -21,27 +21,108 @@ pub enum Action {
     Progress(f64, String),
     Cancel,
     Stop,
+    Install(String),
+    AddServer(String, String),
+    RemoveServer(usize),
+    SelectOffline(String),
+    SetAppearance(String),
+    SetLanguage(String),
+    Refresh,
 }
 
 static ACTIONS: Mutex<Vec<Action>> = Mutex::new(Vec::new());
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Default)]
 struct State {
     prepared: bool,
     playing: bool,
+    progress_done: f64,
+    progress_total: f64,
+    progress_line: String,
+    last_ok: bool,
+    last_error: String,
+    last_project: String,
+    screen: String,
+    account_kind: String,
+    account_name: String,
+    server_name: String,
+    server_ip: String,
+    server_index: f64,
+    setting_key: String,
+    setting_value: String,
 }
 
-static STATE: Mutex<State> = Mutex::new(State {
-    prepared: false,
-    playing: false,
-});
+static STATE: Mutex<Option<State>> = Mutex::new(None);
 
-/// The two snapshot facts a developer script may branch on.
+fn with_state<T>(fallback: T, f: impl FnOnce(&State) -> T) -> T {
+    STATE
+        .lock()
+        .ok()
+        .and_then(|guard| guard.as_ref().map(f))
+        .unwrap_or(fallback)
+}
+
+fn update_state(f: impl FnOnce(&mut State)) {
+    if let Ok(mut guard) = STATE.lock() {
+        f(guard.get_or_insert_with(State::default));
+    }
+}
+
+/// The snapshot facts a developer script may branch on.
 pub fn set_state(prepared: bool, playing: bool) {
-    if let Ok(mut state) = STATE.lock() {
+    update_state(|state| {
         state.prepared = prepared;
         state.playing = playing;
-    }
+    });
+}
+
+pub fn set_prepare(done: f64, total: f64, line: &str) {
+    update_state(|state| {
+        state.progress_done = done;
+        state.progress_total = total;
+        state.progress_line = line.to_string();
+    });
+}
+
+pub fn set_result(project: &str, ok: bool, error: &str) {
+    update_state(|state| {
+        state.last_project = project.to_string();
+        state.last_ok = ok;
+        state.last_error = error.to_string();
+    });
+}
+
+pub fn set_prepare_result(ok: bool, error: &str) {
+    update_state(|state| {
+        state.last_ok = ok;
+        state.last_error = error.to_string();
+    });
+}
+
+pub fn set_screen(screen: &str) {
+    update_state(|state| state.screen = screen.to_string());
+}
+
+pub fn set_account(kind: &str, name: &str) {
+    update_state(|state| {
+        state.account_kind = kind.to_string();
+        state.account_name = name.to_string();
+    });
+}
+
+pub fn set_server(name: &str, ip: &str, index: usize) {
+    update_state(|state| {
+        state.server_name = name.to_string();
+        state.server_ip = ip.to_string();
+        state.server_index = index as f64;
+    });
+}
+
+pub fn set_setting(key: &str, value: &str) {
+    update_state(|state| {
+        state.setting_key = key.to_string();
+        state.setting_value = value.to_string();
+    });
 }
 
 fn push(action: Action) {
@@ -72,12 +153,82 @@ fn download() {
 
 #[mimas]
 fn prepared() -> bool {
-    STATE.lock().map(|state| state.prepared).unwrap_or(false)
+    with_state(false, |state| state.prepared)
 }
 
 #[mimas]
 fn playing() -> bool {
-    STATE.lock().map(|state| state.playing).unwrap_or(false)
+    with_state(false, |state| state.playing)
+}
+
+#[mimas]
+fn prepare_done() -> f64 {
+    with_state(0.0, |state| state.progress_done)
+}
+
+#[mimas]
+fn prepare_total() -> f64 {
+    with_state(0.0, |state| state.progress_total)
+}
+
+#[mimas]
+fn prepare_line() -> String {
+    with_state(String::new(), |state| state.progress_line.clone())
+}
+
+#[mimas]
+fn last_ok() -> bool {
+    with_state(false, |state| state.last_ok)
+}
+
+#[mimas]
+fn last_error() -> String {
+    with_state(String::new(), |state| state.last_error.clone())
+}
+
+#[mimas]
+fn last_project() -> String {
+    with_state(String::new(), |state| state.last_project.clone())
+}
+
+#[mimas]
+fn screen_name() -> String {
+    with_state(String::new(), |state| state.screen.clone())
+}
+
+#[mimas]
+fn account_kind() -> String {
+    with_state(String::new(), |state| state.account_kind.clone())
+}
+
+#[mimas]
+fn account_name() -> String {
+    with_state(String::new(), |state| state.account_name.clone())
+}
+
+#[mimas]
+fn server_name() -> String {
+    with_state(String::new(), |state| state.server_name.clone())
+}
+
+#[mimas]
+fn server_ip() -> String {
+    with_state(String::new(), |state| state.server_ip.clone())
+}
+
+#[mimas]
+fn server_index() -> f64 {
+    with_state(0.0, |state| state.server_index)
+}
+
+#[mimas]
+fn setting_key() -> String {
+    with_state(String::new(), |state| state.setting_key.clone())
+}
+
+#[mimas]
+fn setting_value() -> String {
+    with_state(String::new(), |state| state.setting_value.clone())
 }
 
 #[mimas]
@@ -109,6 +260,41 @@ fn stop() {
     push(Action::Stop);
 }
 
+#[mimas]
+fn install(project: &str) {
+    push(Action::Install(project.to_string()));
+}
+
+#[mimas]
+fn add_server(name: &str, ip: &str) {
+    push(Action::AddServer(name.to_string(), ip.to_string()));
+}
+
+#[mimas]
+fn remove_server(index: f64) {
+    push(Action::RemoveServer(index.max(0.0) as usize));
+}
+
+#[mimas]
+fn select_offline(name: &str) {
+    push(Action::SelectOffline(name.to_string()));
+}
+
+#[mimas]
+fn set_appearance(value: &str) {
+    push(Action::SetAppearance(value.to_string()));
+}
+
+#[mimas]
+fn set_language(value: &str) {
+    push(Action::SetLanguage(value.to_string()));
+}
+
+#[mimas]
+fn refresh() {
+    push(Action::Refresh);
+}
+
 /// Compile every `*.mim` in `dir` and call `hook` if a script defines it.
 pub fn run(hook: &str, dir: &Path) -> Result<Vec<Action>, String> {
     let mut sources = Vec::new();
@@ -134,6 +320,11 @@ pub fn run(hook: &str, dir: &Path) -> Result<Vec<Action>, String> {
 }
 
 fn run_source(source: &str, hook: &str) -> Result<Vec<Action>, String> {
+    // Scripts run one at a time: hooks share the action queue, and tests run in parallel.
+    static RUN_LOCK: Mutex<()> = Mutex::new(());
+    let _guard = RUN_LOCK
+        .lock()
+        .map_err(|_| "script lock poisoned".to_string())?;
     let mut vm = mimas::compile_source(source).map_err(|error| format!("{error:?}"))?;
     vm.run().map_err(|error| format!("{error:?}"))?;
     if let Ok(mut queue) = ACTIONS.lock() {
@@ -186,6 +377,7 @@ mod tests {
             include_str!("../../dev/scripts/download-real.mim"),
             include_str!("../../dev/scripts/download-flow.mim"),
             include_str!("../../dev/scripts/logic.mim"),
+            include_str!("../../dev/scripts/hooks-all.mim"),
         ] {
             run_source(example, "on_start").unwrap();
         }

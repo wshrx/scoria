@@ -117,7 +117,22 @@ Adopt the upstream motion scale:
 First set: page enter/exit, hover plate, segmented slide, progress fill, toast, button press.
 Respect reduced motion from the OS where GPUI exposes it.
 
-### 6. Design system
+### 6. Developer hooks
+
+The dev-only Mimas layer is a typed event/command bus, not a second UI:
+
+- events: `on_prepare_start`, `on_prepare_progress`, `on_prepare_done`, `on_install_start`,
+  `on_install_done`, `on_server_add`, `on_server_remove`, `on_account_switch`,
+  `on_screen_change`, `on_settings_change`, `on_game_start`, `on_game_exit`;
+- commands: `download`, `cancel`, `play`, `stop`, `install`, `add_server`, `remove_server`,
+  `select_offline`, `set_appearance`, `set_language`, `refresh`;
+- getters: `prepare_done/total/line`, `last_ok/error/project`, `screen_name`, `account_*`,
+  `server_*`, `setting_*`;
+- every script is `dev-scripts` only; a player build has no VM and no script folder.
+
+The example is `launcher/ui/dev/scripts/hooks-all.mim`.
+
+### 7. Design system
 
 One source of truth, mirroring upstream Horizon:
 
@@ -131,7 +146,7 @@ One source of truth, mirroring upstream Horizon:
 - contrast tests for every text/background pair, both appearances;
 - the existing `scoria-ui-kit` becomes a consumer of tokens, not a second copy.
 
-### 7. UI stack
+### 8. UI stack
 
 Evaluate `gpui-fast` + `gpui-base` in a spike before migrating the whole window. Upstream
 Horizon already ships on `gpui-fast`; it is the natural target. `gpui-component` is a widget
